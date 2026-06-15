@@ -2,6 +2,7 @@
 
 import React, { Suspense, useCallback, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
+import Link from "next/link"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { apiGet, ApiError } from "@/api/client"
@@ -27,6 +28,10 @@ function ProfileShell() {
   const searchParams = useSearchParams()
   const initialTab = (searchParams.get("tab") as TabKey) || "profile"
   const linkError = searchParams.get("error") === "link_failed"
+  // return_to: rendered as a "Back" affordance when present.
+  // TODO: add same-platform host validation before following the URL if
+  // this page becomes accessible from untrusted contexts (open-redirect risk).
+  const returnTo = searchParams.get("return_to") ?? ""
 
   const [active, setActive] = useState<TabKey>(
     TABS.some((x) => x.key === initialTab) ? initialTab : "profile"
@@ -84,6 +89,17 @@ function ProfileShell() {
 
   return (
     <main className="mx-auto max-w-4xl p-6">
+      {/* Back affordance: shown when the caller (e.g. an RP app) passes return_to */}
+      {returnTo && (
+        <div className="mb-4">
+          <Link
+            href={returnTo}
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground hover:underline"
+          >
+            &#8592; {t("common.back")}
+          </Link>
+        </div>
+      )}
       <h1 className="mb-6 text-2xl font-semibold">{t("profile.heading")}</h1>
 
       <div className="flex flex-col gap-6 md:flex-row">
