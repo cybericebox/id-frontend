@@ -1,0 +1,20 @@
+// Shape of GET /api/account (daemon authModel.AccountInfo, PascalCase JSON).
+export interface Account {
+  FirstName: string
+  LastName: string
+  Email: string
+  EmailConfirmed: boolean
+  Role: string
+  Providers: string[]
+  HasPassword: boolean
+  CreatedAt: string
+}
+
+// Shape of one entry in GET /api/account/sessions (authModel.SessionInfo).
+export interface SessionInfo {
+  ID: string
+  UserAgent: string
+  IP: string
+  LastSeen: string
+  IsCurrent: boolean
+}
