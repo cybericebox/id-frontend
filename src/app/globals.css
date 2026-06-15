@@ -190,3 +190,9 @@
 		scroll-behavior: smooth;
 	}
 }
+
+@keyframes draw-line {
+	from {
+		stroke-dashoffset: var(--draw-len, 600);
+	}
+}
