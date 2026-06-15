@@ -24,6 +24,9 @@
 	--color-accent: var(--accent);
 	--color-accent-foreground: var(--accent-foreground);
 
+	--color-accent-warm: var(--accent-warm);
+	--color-accent-warm-foreground: var(--accent-warm-foreground);
+
 	--color-popover: var(--popover);
 	--color-popover-foreground: var(--popover-foreground);
 
@@ -45,9 +48,9 @@
 	:root {
 		--background: #0A0F1A;
 		--foreground: #E6F0FA;
-		--card: #0E1626;
+		--card: #111C2E;
 		--card-foreground: #E6F0FA;
-		--popover: #0E1626;
+		--popover: #111C2E;
 		--popover-foreground: #E6F0FA;
 		--primary: #38BDF8;
 		--primary-foreground: #04121F;
@@ -57,6 +60,8 @@
 		--muted-foreground: #7C8CA3;
 		--accent: #7DD3FC;
 		--accent-foreground: #04121F;
+		--accent-warm: #F2A742;
+		--accent-warm-foreground: #1A0F02;
 		--destructive: #F43F5E;
 		--destructive-foreground: #FFF1F3;
 		--border: rgba(125, 211, 252, 0.14);
@@ -71,9 +76,9 @@
 	.dark {
 		--background: #0A0F1A;
 		--foreground: #E6F0FA;
-		--card: #0E1626;
+		--card: #111C2E;
 		--card-foreground: #E6F0FA;
-		--popover: #0E1626;
+		--popover: #111C2E;
 		--popover-foreground: #E6F0FA;
 		--primary: #38BDF8;
 		--primary-foreground: #04121F;
@@ -83,6 +88,8 @@
 		--muted-foreground: #7C8CA3;
 		--accent: #7DD3FC;
 		--accent-foreground: #04121F;
+		--accent-warm: #F2A742;
+		--accent-warm-foreground: #1A0F02;
 		--destructive: #F43F5E;
 		--destructive-foreground: #FFF1F3;
 		--border: rgba(125, 211, 252, 0.14);
@@ -175,4 +182,10 @@
 @media (prefers-reduced-motion: reduce) {
   .frost-particles { display: none; }
   .frost-in { animation: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	html {
+		scroll-behavior: smooth;
+	}
 }
