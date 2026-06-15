@@ -94,7 +94,7 @@ export function SecurityTab({ account }: { account: Account }) {
   }
 
   return (
-    <Card>
+    <Card className="frost-panel">
       <CardHeader>
         <CardTitle>{t("profile.security.title")}</CardTitle>
         <CardDescription>

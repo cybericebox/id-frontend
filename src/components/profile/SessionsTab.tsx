@@ -68,7 +68,7 @@ export function SessionsTab() {
   const hasOthers = sessions.some((s) => !s.IsCurrent)
 
   return (
-    <Card>
+    <Card className="frost-panel">
       <CardHeader>
         <CardTitle>{t("profile.sessions.title")}</CardTitle>
         <CardDescription>{t("profile.sessions.description")}</CardDescription>

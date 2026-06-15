@@ -52,7 +52,7 @@ export function ConnectionsTab({
   }
 
   return (
-    <Card>
+    <Card className="frost-panel">
       <CardHeader>
         <CardTitle>{t("profile.connections.title")}</CardTitle>
         <CardDescription>

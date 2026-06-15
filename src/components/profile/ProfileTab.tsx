@@ -74,7 +74,7 @@ export function ProfileTab({
     : "—"
 
   return (
-    <Card>
+    <Card className="frost-panel">
       <CardHeader>
         <CardTitle>{t("profile.profile.title")}</CardTitle>
         <CardDescription>{t("profile.profile.description")}</CardDescription>

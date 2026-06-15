@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Wordmark } from "@/components/brand/Wordmark"
 import { apiGet, ApiError } from "@/api/client"
 import { t } from "@/i18n/t"
 import type { Account } from "@/components/profile/types"
@@ -100,6 +101,7 @@ function ProfileShell() {
           </Link>
         </div>
       )}
+      <div className="mb-4"><Wordmark size="md" /></div>
       <h1 className="mb-6 text-2xl font-semibold">{t("profile.heading")}</h1>
 
       <div className="flex flex-col gap-6 md:flex-row">
@@ -111,10 +113,10 @@ function ProfileShell() {
               type="button"
               onClick={() => setActive(tab.key)}
               className={
-                "rounded-md px-3 py-2 text-left text-sm transition-colors " +
+                "relative rounded-md px-3 py-2 text-left text-sm transition-colors " +
                 (active === tab.key
-                  ? "bg-accent font-medium text-accent-foreground"
-                  : "text-muted-foreground hover:bg-accent/50")
+                  ? "frost-panel text-foreground before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-0.5 before:rounded-full before:bg-primary before:shadow-[0_0_10px_var(--frost-glow)]"
+                  : "text-muted-foreground hover:bg-accent/10")
               }
             >
               {t(tab.label)}

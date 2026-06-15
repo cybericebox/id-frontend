@@ -84,7 +84,7 @@ export function AccountTab({ account }: { account: Account }) {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="frost-panel">
         <CardHeader>
           <CardTitle>{t("profile.account.title")}</CardTitle>
           <CardDescription>{t("profile.account.description")}</CardDescription>
@@ -155,7 +155,7 @@ export function AccountTab({ account }: { account: Account }) {
         </CardContent>
       </Card>
 
-      <Card className="border-destructive/50">
+      <Card className="frost-panel border-destructive/50">
         <CardHeader>
           <CardTitle className="text-destructive">
             {t("profile.account.dangerTitle")}
