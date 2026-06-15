@@ -132,7 +132,7 @@ function ErrorCard({
             <Link href="/sign-in" className="text-primary hover:underline">
               {t("common.signIn")}
             </Link>
-            <Link href="/register" className="text-primary hover:underline">
+            <Link href="/sign-up" className="text-primary hover:underline">
               {t("register.title")}
             </Link>
           </CardFooter>

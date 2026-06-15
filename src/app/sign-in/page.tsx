@@ -126,10 +126,10 @@ function SignInForm() {
     }
   }
 
-  // Build /register link preserving return_to if present
+  // Build /sign-up link preserving return_to if present
   const registerHref = returnTo
-    ? `/register?return_to=${encodeURIComponent(returnTo)}`
-    : "/register"
+    ? `/sign-up?return_to=${encodeURIComponent(returnTo)}`
+    : "/sign-up"
 
   return (
     <main className="flex min-h-screen items-center justify-center p-4">
