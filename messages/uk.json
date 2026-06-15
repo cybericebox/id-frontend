@@ -21,6 +21,8 @@
   "signIn.passwordPlaceholder": "Пароль",
   "signIn.submit": "Увійти",
   "signIn.errorTitle": "Не вдалося увійти",
+  "signOut.title": "Вихід",
+  "signOut.inProgress": "Виходимо…",
   "register.title": "Створення облікового запису",
   "register.subtitle": "Введіть електронну пошту, щоб почати",
   "register.haveAccount": "Вже маєте обліковий запис?",

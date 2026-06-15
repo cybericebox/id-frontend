@@ -21,6 +21,8 @@
   "signIn.passwordPlaceholder": "Password",
   "signIn.submit": "Sign in",
   "signIn.errorTitle": "Sign-in failed",
+  "signOut.title": "Signing out",
+  "signOut.inProgress": "Signing out…",
   "register.title": "Create an account",
   "register.subtitle": "Enter your email to get started",
   "register.haveAccount": "Already have an account?",
