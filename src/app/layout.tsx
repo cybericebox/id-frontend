@@ -14,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className="grid-bg">
         <Providers>{children}</Providers>
       </body>
     </html>
