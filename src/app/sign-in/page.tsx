@@ -27,6 +27,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Wordmark } from "@/components/brand/Wordmark"
 import { t } from "@/i18n/t"
 
 // ---------------------------------------------------------------------------
@@ -132,11 +133,16 @@ function SignInForm() {
 
   return (
     <main className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>{t("signIn.title")}</CardTitle>
-          <CardDescription>{t("signIn.subtitle")}</CardDescription>
-        </CardHeader>
+      <div className="flex w-full max-w-md flex-col">
+        <div className="mb-6 flex justify-center">
+          <Wordmark size="lg" />
+        </div>
+        <Card className="frost-panel frost-in w-full">
+          <CardHeader>
+            <span className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">CyberICEBox</span>
+            <CardTitle>{t("signIn.title")}</CardTitle>
+            <CardDescription>{t("signIn.subtitle")}</CardDescription>
+          </CardHeader>
 
         <CardContent className="space-y-4">
           {/* Google sign-in — plain navigation; the daemon redirects the browser
@@ -234,7 +240,8 @@ function SignInForm() {
             {t("signIn.createAccount")}
           </Link>
         </CardFooter>
-      </Card>
+        </Card>
+      </div>
     </main>
   )
 }

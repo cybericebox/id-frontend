@@ -26,6 +26,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Wordmark } from "@/components/brand/Wordmark"
 import { t } from "@/i18n/t"
 
 // ---------------------------------------------------------------------------
@@ -122,30 +123,41 @@ function ForgotPasswordForm() {
   if (submitted) {
     return (
       <main className="flex min-h-screen items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>{t("forgotPassword.checkEmailTitle")}</CardTitle>
-            <CardDescription>
-              {t("forgotPassword.checkEmailBody")}
-            </CardDescription>
-          </CardHeader>
-          <CardFooter className="justify-center text-sm text-muted-foreground">
-            <Link href="/sign-in" className="text-primary hover:underline">
-              {t("forgotPassword.backToSignIn")}
-            </Link>
-          </CardFooter>
-        </Card>
+        <div className="flex w-full max-w-md flex-col">
+          <div className="mb-6 flex justify-center">
+            <Wordmark size="lg" />
+          </div>
+          <Card className="frost-panel frost-in w-full">
+            <CardHeader>
+              <span className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">CyberICEBox</span>
+              <CardTitle>{t("forgotPassword.checkEmailTitle")}</CardTitle>
+              <CardDescription>
+                {t("forgotPassword.checkEmailBody")}
+              </CardDescription>
+            </CardHeader>
+            <CardFooter className="justify-center text-sm text-muted-foreground">
+              <Link href="/sign-in" className="text-primary hover:underline">
+                {t("forgotPassword.backToSignIn")}
+              </Link>
+            </CardFooter>
+          </Card>
+        </div>
       </main>
     )
   }
 
   return (
     <main className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>{t("forgotPassword.title")}</CardTitle>
-          <CardDescription>{t("forgotPassword.subtitle")}</CardDescription>
-        </CardHeader>
+      <div className="flex w-full max-w-md flex-col">
+        <div className="mb-6 flex justify-center">
+          <Wordmark size="lg" />
+        </div>
+        <Card className="frost-panel frost-in w-full">
+          <CardHeader>
+            <span className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">CyberICEBox</span>
+            <CardTitle>{t("forgotPassword.title")}</CardTitle>
+            <CardDescription>{t("forgotPassword.subtitle")}</CardDescription>
+          </CardHeader>
 
         <CardContent className="space-y-4">
           {errorMsg && (
@@ -195,7 +207,8 @@ function ForgotPasswordForm() {
             {t("forgotPassword.backToSignIn")}
           </Link>
         </CardFooter>
-      </Card>
+        </Card>
+      </div>
     </main>
   )
 }
