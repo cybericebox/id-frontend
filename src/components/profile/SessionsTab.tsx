@@ -174,18 +174,24 @@ export function SessionsTab() {
                 key={s.ID}
                 className="flex items-center justify-between gap-4 rounded-md border p-3"
               >
-                <div className="min-w-0 text-sm">
-                  <div className="truncate font-medium">
-                    {osFromUA(s.UserAgent)}
+                <div className="min-w-0 space-y-0.5 text-sm">
+                  {/* Line 1: device + current badge */}
+                  <div className="flex items-center gap-2 font-medium">
+                    <span className="truncate">{osFromUA(s.UserAgent)}</span>
                     {s.IsCurrent && (
-                      <span className="ml-2 rounded bg-primary/10 px-2 py-0.5 text-xs text-primary">
+                      <span className="shrink-0 rounded bg-primary/10 px-2 py-0.5 text-xs text-primary">
                         {t("profile.sessions.current")}
                       </span>
                     )}
                   </div>
-                  <div className="text-muted-foreground">
+                  {/* Line 2: location · IP */}
+                  <div className="truncate text-muted-foreground">
                     {geoLabel(geo[s.IP]) && `${geoLabel(geo[s.IP])} · `}
-                    {s.IP} · {t("profile.sessions.lastSeen")}:{" "}
+                    {s.IP}
+                  </div>
+                  {/* Line 3: last activity */}
+                  <div className="text-xs text-muted-foreground">
+                    {t("profile.sessions.lastSeen")}:{" "}
                     {s.LastSeen ? new Date(s.LastSeen).toLocaleString() : "—"}
                   </div>
                 </div>
