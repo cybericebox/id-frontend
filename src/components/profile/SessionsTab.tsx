@@ -175,7 +175,7 @@ export function SessionsTab() {
                 className="flex justify-between gap-4 rounded-md border p-3"
               >
                 {/* Left: device + location/IP (two lines) */}
-                <div className="min-w-0 space-y-0.5 text-sm">
+                <div className="min-w-0 flex-1 space-y-0.5 text-sm">
                   <div className="flex items-center gap-2 font-medium">
                     <span className="truncate">{osFromUA(s.UserAgent)}</span>
                     {s.IsCurrent && (
