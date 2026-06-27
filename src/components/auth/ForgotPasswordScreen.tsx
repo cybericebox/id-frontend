@@ -1,6 +1,6 @@
 "use client"
 
-import React, { Suspense, useState } from "react"
+import React, { Suspense, useState, useEffect } from "react"
 import Link from "next/link"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -29,6 +29,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Logo } from "@/components/brand/Logo"
 import { AuthLayout } from "./AuthLayout"
 import { t } from "@/i18n/t"
+import { PageLoader } from "@/components/ui/spinner"
+import { redirectIfAuthed } from "@/lib/auth"
 
 // ---------------------------------------------------------------------------
 // Zod schema — mirrors the daemon's JSON body (Email)
@@ -45,6 +47,16 @@ type ForgotPasswordValues = z.infer<typeof ForgotPasswordSchema>
 // read useSearchParams; the Suspense boundary is harmless and future-proof.)
 // ---------------------------------------------------------------------------
 function ForgotPasswordForm() {
+  const [checking, setChecking] = useState(true)
+  useEffect(() => {
+    let cancelled = false
+    redirectIfAuthed(undefined).then((redirecting) => {
+      if (!cancelled && !redirecting) setChecking(false)
+    })
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const { executeRecaptcha } = useReCaptcha()
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -55,6 +67,8 @@ function ForgotPasswordForm() {
     mode: "onChange",
     defaultValues: { Email: "" },
   })
+
+  if (checking) return <PageLoader />
 
   const onSubmit: SubmitHandler<ForgotPasswordValues> = async (data) => {
     setErrorMsg(null)

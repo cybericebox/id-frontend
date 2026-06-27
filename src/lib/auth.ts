@@ -187,3 +187,37 @@ export function consumeNoSessionParam(): boolean {
 
   return true
 }
+
+/**
+ * safeReturnTo — open-redirect guard. Accepts a return_to only within the
+ * platform domain (any subdomain), mirroring the backend's buildCallbackURL
+ * guard; everything else (off-domain, relative-but-not-/, unparseable) falls
+ * back to /profile. This prevents an attacker-supplied ?return_to=https://evil.com
+ * from bouncing an authed user off-platform.
+ *
+ * id is served from id.<domain>; the platform root domain is the current host
+ * minus the leading "id." prefix.
+ */
+function safeReturnTo(returnTo?: string): string {
+  if (!returnTo) return "/profile"
+  const root = window.location.hostname.replace(/^id\./, "")
+  try {
+    const u = new URL(returnTo)
+    const h = u.hostname.toLowerCase()
+    if (u.protocol === "https:" && (h === root || h.endsWith("." + root))) return returnTo
+  } catch {}
+  return "/profile"
+}
+
+/**
+ * On a guest-only page (sign-in/up, password reset), bounce an already-authed
+ * user away. id reads the master cookie directly, so fetchMe is authoritative.
+ * Returns true while a redirect is in flight (render nothing/loader).
+ */
+export async function redirectIfAuthed(returnTo?: string): Promise<boolean> {
+  const me = await fetchMe()
+  if (!me) return false
+  const dest = safeReturnTo(returnTo)
+  window.location.href = dest
+  return true
+}

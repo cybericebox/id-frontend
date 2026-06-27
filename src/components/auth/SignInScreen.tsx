@@ -1,6 +1,6 @@
 "use client"
 
-import React, { Suspense, useState } from "react"
+import React, { Suspense, useState, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { useForm, type SubmitHandler } from "react-hook-form"
@@ -30,6 +30,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Logo } from "@/components/brand/Logo"
 import { AuthLayout } from "./AuthLayout"
 import { t } from "@/i18n/t"
+import { PageLoader } from "@/components/ui/spinner"
+import { redirectIfAuthed } from "@/lib/auth"
 
 // ---------------------------------------------------------------------------
 // Zod schema — mirrors the daemon's JSON body (Email, Password)
@@ -49,6 +51,16 @@ function SignInForm() {
   const searchParams = useSearchParams()
   const returnTo = searchParams.get("return_to") ?? ""
 
+  const [checking, setChecking] = useState(true)
+  useEffect(() => {
+    let cancelled = false
+    redirectIfAuthed(returnTo || undefined).then((redirecting) => {
+      if (!cancelled && !redirecting) setChecking(false)
+    })
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const { executeRecaptcha } = useReCaptcha()
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -58,6 +70,8 @@ function SignInForm() {
     mode: "onChange",
     defaultValues: { Email: "", Password: "" },
   })
+
+  if (checking) return <PageLoader />
 
   const onSubmit: SubmitHandler<SignInValues> = async (data) => {
     setErrorMsg(null)
