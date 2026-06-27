@@ -3,8 +3,15 @@
 import React, { Suspense, useCallback, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
+import { ChevronDown } from "lucide-react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu"
 import { Wordmark } from "@/components/brand/Wordmark"
 import { apiGet, ApiError } from "@/api/client"
 import { PageLoader } from "@/components/ui/spinner"
@@ -166,23 +173,33 @@ function ProfileShell() {
       )}
 
       <div className="flex flex-col gap-6 md:flex-row">
-        {/* Mobile: a select to switch tabs (the horizontal pill row was cramped). */}
+        {/* Mobile: a custom dropdown to switch tabs (the horizontal pill row was cramped). */}
         <div className="md:hidden">
-          <label htmlFor="profile-tab" className="sr-only">
-            {t("profile.heading")}
-          </label>
-          <select
-            id="profile-tab"
-            value={active}
-            onChange={(e) => setActive(e.target.value as TabKey)}
-            className="h-10 w-full rounded-md border border-input bg-secondary/40 px-3 text-sm text-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-          >
-            {TABS.map((tab) => (
-              <option key={tab.key} value={tab.key}>
-                {t(tab.label)}
-              </option>
-            ))}
-          </select>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-secondary/40 px-3 text-sm text-foreground transition-colors focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+              >
+                {t(TABS.find((x) => x.key === active)?.label ?? "")}
+                <ChevronDown className="h-4 w-4 opacity-60" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="start"
+              className="w-[var(--radix-dropdown-menu-trigger-width)]"
+            >
+              {TABS.map((tab) => (
+                <DropdownMenuItem
+                  key={tab.key}
+                  onSelect={() => setActive(tab.key)}
+                  className={active === tab.key ? "text-primary" : ""}
+                >
+                  {t(tab.label)}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Desktop: left vertical tab list. */}
