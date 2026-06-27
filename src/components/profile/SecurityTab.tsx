@@ -83,7 +83,7 @@ export function SecurityTab({ account }: { account: Account }) {
       if (account.HasPassword && data.OldPassword) {
         body.OldPassword = data.OldPassword
       }
-      await apiPost("/api/account/password", body)
+      await apiPost("/api/auth/change-password", body)
       setOkMsg(t("profile.security.saved"))
       form.reset({ OldPassword: "", NewPassword: "", ConfirmPassword: "" })
     } catch (err) {

@@ -60,7 +60,7 @@ export function AccountTab({ account }: { account: Account }) {
     setOkMsg(null)
     setIsSubmitting(true)
     try {
-      await apiPost("/api/account/email", { Email: data.Email })
+      await apiPost("/api/auth/account/email", { Email: data.Email })
       setOkMsg(t("profile.account.emailSent"))
       form.reset({ Email: "" })
     } catch (err) {
@@ -74,7 +74,7 @@ export function AccountTab({ account }: { account: Account }) {
     setDeleteError(null)
     setIsDeleting(true)
     try {
-      await apiDelete("/api/account")
+      await apiDelete("/api/auth/account")
       window.location.href = "/sign-in"
     } catch (err) {
       setDeleteError(extractError(err))

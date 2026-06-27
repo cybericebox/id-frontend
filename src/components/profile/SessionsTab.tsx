@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { apiGet, apiPost, apiDelete } from "@/api/client"
+import { apiGet, apiDelete } from "@/api/client"
 import { t } from "@/i18n/t"
 import type { SessionInfo } from "./types"
 import { extractError } from "./ProfileTab"
@@ -26,7 +26,7 @@ export function SessionsTab() {
     setErrorMsg(null)
     setIsLoading(true)
     try {
-      const data = await apiGet<SessionInfo[]>("/api/account/sessions")
+      const data = await apiGet<SessionInfo[]>("/api/auth/sessions")
       setSessions(data ?? [])
     } catch (err) {
       setErrorMsg(extractError(err))
@@ -43,7 +43,7 @@ export function SessionsTab() {
     setBusyId(id)
     setErrorMsg(null)
     try {
-      await apiDelete(`/api/account/sessions/${encodeURIComponent(id)}`)
+      await apiDelete(`/api/auth/sessions/${encodeURIComponent(id)}`)
       await load()
     } catch (err) {
       setErrorMsg(extractError(err))
@@ -56,7 +56,7 @@ export function SessionsTab() {
     setBusyId("__all__")
     setErrorMsg(null)
     try {
-      await apiPost("/api/account/sessions/revoke-all", {})
+      await apiDelete("/api/auth/sessions")
       await load()
     } catch (err) {
       setErrorMsg(extractError(err))

@@ -36,7 +36,7 @@ export function ConnectionsTab({
     setErrorMsg(null)
     setIsBusy(true)
     try {
-      await apiDelete("/api/account/providers/google")
+      await apiDelete("/api/auth/google/link")
       onUpdated()
     } catch (err) {
       // 4xx lockout-guard (last login method) surfaces here — show, don't crash.
@@ -48,7 +48,7 @@ export function ConnectionsTab({
 
   const connect = () => {
     // GET endpoint sets the intent cookie, runs OAuth, and returns to /profile.
-    window.location.href = "/api/account/providers/google"
+    window.location.href = "/api/auth/google/link"
   }
 
   return (

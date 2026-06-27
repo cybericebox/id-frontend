@@ -56,7 +56,7 @@ export function ProfileTab({
     setOkMsg(null)
     setIsSubmitting(true)
     try {
-      await apiPatch("/api/account/profile", {
+      await apiPatch("/api/auth/account/profile", {
         FirstName: data.FirstName,
         LastName: data.LastName,
       })
@@ -80,6 +80,22 @@ export function ProfileTab({
         <CardDescription>{t("profile.profile.description")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="flex items-center gap-4 border-b border-border pb-4">
+          <span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary to-[#0091EA] text-2xl font-semibold text-primary-foreground ring-2 ring-card">
+            {`${account.FirstName?.[0] ?? ""}${account.LastName?.[0] ?? ""}`.toUpperCase() || "?"}
+          </span>
+          <div className="space-y-2">
+            <p className="text-sm font-medium">{t("profile.profile.photo")}</p>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" size="sm">
+                {t("profile.profile.changePhoto")}
+              </Button>
+              <Button type="button" variant="ghost" size="sm">
+                {t("profile.profile.removePhoto")}
+              </Button>
+            </div>
+          </div>
+        </div>
         {errorMsg && (
           <Alert variant="destructive">
             <AlertDescription>{errorMsg}</AlertDescription>
@@ -121,9 +137,6 @@ export function ProfileTab({
             />
 
             <div className="grid gap-1 text-sm text-muted-foreground">
-              <span>
-                {t("profile.profile.role")}: {account.Role || "—"}
-              </span>
               <span>
                 {t("profile.profile.createdAt")}: {createdAt}
               </span>
