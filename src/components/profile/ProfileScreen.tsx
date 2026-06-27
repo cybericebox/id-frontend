@@ -166,8 +166,27 @@ function ProfileShell() {
       )}
 
       <div className="flex flex-col gap-6 md:flex-row">
-        {/* Left vertical tab list */}
-        <nav className="flex shrink-0 flex-row gap-1 overflow-x-auto md:w-48 md:flex-col">
+        {/* Mobile: a select to switch tabs (the horizontal pill row was cramped). */}
+        <div className="md:hidden">
+          <label htmlFor="profile-tab" className="sr-only">
+            {t("profile.heading")}
+          </label>
+          <select
+            id="profile-tab"
+            value={active}
+            onChange={(e) => setActive(e.target.value as TabKey)}
+            className="h-10 w-full rounded-md border border-input bg-secondary/40 px-3 text-sm text-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          >
+            {TABS.map((tab) => (
+              <option key={tab.key} value={tab.key}>
+                {t(tab.label)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Desktop: left vertical tab list. */}
+        <nav className="hidden shrink-0 flex-col gap-1 md:flex md:w-48">
           {TABS.map((tab) => (
             <button
               key={tab.key}
