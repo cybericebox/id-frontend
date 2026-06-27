@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
 import { Wordmark } from "@/components/brand/Wordmark"
 import { apiGet } from "@/api/client"
 import { PageLoader } from "@/components/ui/spinner"
@@ -156,7 +157,12 @@ function ProfileShell() {
         </div>
       )}
       <div className="mb-4"><Wordmark size="md" /></div>
-      <h1 className="mb-6 text-2xl font-semibold">{t("profile.heading")}</h1>
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-semibold">{t("profile.heading")}</h1>
+        <Button asChild variant="outline" size="sm">
+          <a href="/sign-out">{t("common.signOut")}</a>
+        </Button>
+      </div>
 
       {account && (
         <div className="mb-6 flex items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-[0_10px_30px_-18px_rgba(11,18,51,0.4)]">
