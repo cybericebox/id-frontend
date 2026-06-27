@@ -11,6 +11,10 @@ import uk from "../../messages/uk.json"
 
 // `en` defines the canonical key set; `uk` is what users see.
 const active = uk
+
+// BCP-47 locale of the active language — use for Intl/date formatting so dates
+// match the UI language (e.g. Ukrainian month names) instead of the browser default.
+export const locale = "uk-UA"
 const fallback = en
 
 type MessageKey = keyof typeof en

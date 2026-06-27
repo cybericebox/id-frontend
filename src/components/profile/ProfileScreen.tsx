@@ -7,7 +7,7 @@ import Link from "next/link"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Wordmark } from "@/components/brand/Wordmark"
 import { apiGet, ApiError } from "@/api/client"
-import { t } from "@/i18n/t"
+import { t, locale } from "@/i18n/t"
 import type { Account } from "@/components/profile/types"
 import { ProfileTab } from "@/components/profile/ProfileTab"
 import { AccountTab } from "@/components/profile/AccountTab"
@@ -38,7 +38,10 @@ function memberSince(createdAt: string): string {
   if (!createdAt) return ""
   const d = new Date(createdAt)
   if (Number.isNaN(d.getTime())) return ""
-  return d.toLocaleDateString(undefined, {
+  // Include the day so locales with grammatical cases (e.g. Ukrainian) render the
+  // month in the genitive ("27 червня 2026") rather than nominative ("червень").
+  return d.toLocaleDateString(locale, {
+    day: "numeric",
     year: "numeric",
     month: "long",
   })
