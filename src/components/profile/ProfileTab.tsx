@@ -270,9 +270,28 @@ export function ProfileTab({
               )}
             />
 
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? t("common.loading") : t("profile.profile.save")}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                type="submit"
+                disabled={
+                  isSubmitting ||
+                  !form.formState.isDirty ||
+                  !form.formState.isValid
+                }
+              >
+                {isSubmitting ? t("common.loading") : t("profile.profile.save")}
+              </Button>
+              {form.formState.isDirty && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => form.reset()}
+                  disabled={isSubmitting}
+                >
+                  {t("common.reset")}
+                </Button>
+              )}
+            </div>
           </form>
         </Form>
       </CardContent>

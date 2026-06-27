@@ -92,7 +92,10 @@ function ProfileShell() {
     if (linkError) setActive("connections")
   }, [linkError])
 
-  if (isLoading) {
+  // Only show the full-page loading state on the INITIAL load. A refetch (e.g.
+  // after an avatar upload) keeps the rendered profile mounted, so the avatar
+  // doesn't unmount/remount and flash the initials placeholder before the image.
+  if (isLoading && !account) {
     return (
       <main className="mx-auto max-w-4xl p-6">
         <p className="text-sm text-muted-foreground">{t("profile.loading")}</p>

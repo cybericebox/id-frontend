@@ -145,11 +145,30 @@ export function AccountTab({ account }: { account: Account }) {
                   </FormItem>
                 )}
               />
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting
-                  ? t("common.loading")
-                  : t("profile.account.changeEmail")}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  type="submit"
+                  disabled={
+                    isSubmitting ||
+                    !form.formState.isDirty ||
+                    !form.formState.isValid
+                  }
+                >
+                  {isSubmitting
+                    ? t("common.loading")
+                    : t("profile.account.changeEmail")}
+                </Button>
+                {form.formState.isDirty && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => form.reset()}
+                    disabled={isSubmitting}
+                  >
+                    {t("common.reset")}
+                  </Button>
+                )}
+              </div>
             </form>
           </Form>
         </CardContent>
