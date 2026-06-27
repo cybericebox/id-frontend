@@ -111,6 +111,11 @@
   "profile.tab.security": "Security",
   "profile.tab.sessions": "Sessions",
   "profile.tab.connections": "Connections",
+  "profile.tab.profile.desc": "Name, profile photo",
+  "profile.tab.account.desc": "Email, account deletion",
+  "profile.tab.security.desc": "Password",
+  "profile.tab.sessions.desc": "Active devices and sign-ins",
+  "profile.tab.connections.desc": "Google and other providers",
   "profile.loading": "Loading your account…",
   "profile.loadError": "Could not load your account",
 

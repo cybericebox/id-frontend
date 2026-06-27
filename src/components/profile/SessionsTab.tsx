@@ -184,7 +184,7 @@ export function SessionsTab() {
                       </span>
                     )}
                   </div>
-                  <div className="truncate text-muted-foreground">
+                  <div className="break-words text-muted-foreground">
                     {geoLabel(geo[s.IP]) && `${geoLabel(geo[s.IP])} · `}
                     {s.IP}
                   </div>

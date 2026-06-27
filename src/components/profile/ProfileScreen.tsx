@@ -3,15 +3,18 @@
 import React, { Suspense, useCallback, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { ChevronDown } from "lucide-react"
+import {
+  ChevronLeft,
+  ChevronRight,
+  AtSign,
+  ShieldCheck,
+  MonitorSmartphone,
+  Link2,
+  User as UserIcon,
+  type LucideIcon,
+} from "lucide-react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu"
 import { Wordmark } from "@/components/brand/Wordmark"
 import { apiGet, ApiError } from "@/api/client"
 import { PageLoader } from "@/components/ui/spinner"
@@ -25,12 +28,12 @@ import { ConnectionsTab } from "@/components/profile/ConnectionsTab"
 
 type TabKey = "profile" | "account" | "security" | "sessions" | "connections"
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: "profile", label: "profile.tab.profile" },
-  { key: "account", label: "profile.tab.account" },
-  { key: "security", label: "profile.tab.security" },
-  { key: "sessions", label: "profile.tab.sessions" },
-  { key: "connections", label: "profile.tab.connections" },
+const TABS: { key: TabKey; label: string; desc: string; icon: LucideIcon }[] = [
+  { key: "profile", label: "profile.tab.profile", desc: "profile.tab.profile.desc", icon: UserIcon },
+  { key: "account", label: "profile.tab.account", desc: "profile.tab.account.desc", icon: AtSign },
+  { key: "security", label: "profile.tab.security", desc: "profile.tab.security.desc", icon: ShieldCheck },
+  { key: "sessions", label: "profile.tab.sessions", desc: "profile.tab.sessions.desc", icon: MonitorSmartphone },
+  { key: "connections", label: "profile.tab.connections", desc: "profile.tab.connections.desc", icon: Link2 },
 ]
 
 // Humanize a backend role string via i18n, falling back to the raw value when
@@ -67,6 +70,11 @@ function ProfileShell() {
   const [active, setActive] = useState<TabKey>(
     TABS.some((x) => x.key === initialTab) ? initialTab : "profile"
   )
+  // Mobile master-detail: null = section list; a key = that section open (with a
+  // back arrow). Desktop ignores this and uses the side-nav + `active`.
+  const [mobileDetail, setMobileDetail] = useState<TabKey | null>(
+    searchParams.get("tab") ? initialTab : null
+  )
   const [account, setAccount] = useState<Account | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -97,7 +105,10 @@ function ProfileShell() {
 
   // If the user just linked Google, jump them to the Connections tab.
   useEffect(() => {
-    if (linkError) setActive("connections")
+    if (linkError) {
+      setActive("connections")
+      setMobileDetail("connections")
+    }
   }, [linkError])
 
   // Only show the full-page loading state on the INITIAL load. A refetch (e.g.
@@ -115,6 +126,25 @@ function ProfileShell() {
         </Alert>
       </main>
     )
+  }
+
+  // Render the content for a given tab — shared by the desktop pane and the
+  // mobile detail view (account is non-null past the guards above).
+  const renderTab = (key: TabKey) => {
+    switch (key) {
+      case "profile":
+        return <ProfileTab account={account} onUpdated={load} />
+      case "account":
+        return <AccountTab account={account} />
+      case "security":
+        return <SecurityTab account={account} />
+      case "sessions":
+        return <SessionsTab />
+      case "connections":
+        return (
+          <ConnectionsTab account={account} linkError={linkError} onUpdated={load} />
+        )
+    }
   }
 
   return (
@@ -172,38 +202,51 @@ function ProfileShell() {
         </div>
       )}
 
-      <div className="flex flex-col gap-6 md:flex-row">
-        {/* Mobile: a custom dropdown to switch tabs (the horizontal pill row was cramped). */}
-        <div className="md:hidden">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-secondary/40 px-3 text-sm text-foreground transition-colors focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-              >
-                {t(TABS.find((x) => x.key === active)?.label ?? "")}
-                <ChevronDown className="h-4 w-4 opacity-60" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="start"
-              className="w-[var(--radix-dropdown-menu-trigger-width)]"
-            >
-              {TABS.map((tab) => (
-                <DropdownMenuItem
-                  key={tab.key}
-                  onSelect={() => setActive(tab.key)}
-                  className={active === tab.key ? "text-primary" : ""}
+      {/* Mobile: master-detail. List of sections by default; tapping one opens
+          that section with a back arrow. */}
+      <div className="md:hidden">
+        {mobileDetail === null ? (
+          <ul className="space-y-2">
+            {TABS.map((tab) => (
+              <li key={tab.key}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActive(tab.key)
+                    setMobileDetail(tab.key)
+                  }}
+                  className="frost-panel flex w-full items-center gap-3 rounded-xl p-4 text-left transition-colors hover:bg-accent/10"
                 >
-                  {t(tab.label)}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+                  <tab.icon className="h-5 w-5 shrink-0 text-primary" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium">{t(tab.label)}</span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {t(tab.desc)}
+                    </span>
+                  </span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="space-y-4">
+            <button
+              type="button"
+              onClick={() => setMobileDetail(null)}
+              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              {t(TABS.find((x) => x.key === mobileDetail)?.label ?? "")}
+            </button>
+            {renderTab(mobileDetail)}
+          </div>
+        )}
+      </div>
 
-        {/* Desktop: left vertical tab list. */}
-        <nav className="hidden shrink-0 flex-col gap-1 md:flex md:w-48">
+      {/* Desktop: left vertical tab list + content. */}
+      <div className="hidden gap-6 md:flex">
+        <nav className="flex w-48 shrink-0 flex-col gap-1">
           {TABS.map((tab) => (
             <button
               key={tab.key}
@@ -220,23 +263,7 @@ function ProfileShell() {
             </button>
           ))}
         </nav>
-
-        {/* Tab content */}
-        <div className="min-w-0 flex-1">
-          {active === "profile" && (
-            <ProfileTab account={account} onUpdated={load} />
-          )}
-          {active === "account" && <AccountTab account={account} />}
-          {active === "security" && <SecurityTab account={account} />}
-          {active === "sessions" && <SessionsTab />}
-          {active === "connections" && (
-            <ConnectionsTab
-              account={account}
-              linkError={linkError}
-              onUpdated={load}
-            />
-          )}
-        </div>
+        <div className="min-w-0 flex-1">{renderTab(active)}</div>
       </div>
     </main>
   )

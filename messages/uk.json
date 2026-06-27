@@ -111,6 +111,11 @@
   "profile.tab.security": "Безпека",
   "profile.tab.sessions": "Сесії",
   "profile.tab.connections": "Підключення",
+  "profile.tab.profile.desc": "Ім'я, фото профілю",
+  "profile.tab.account.desc": "Електронна пошта, видалення акаунта",
+  "profile.tab.security.desc": "Пароль",
+  "profile.tab.sessions.desc": "Активні пристрої та входи",
+  "profile.tab.connections.desc": "Google та інші провайдери",
   "profile.loading": "Завантаження облікового запису…",
   "profile.loadError": "Не вдалося завантажити обліковий запис",
 
