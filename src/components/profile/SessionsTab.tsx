@@ -172,10 +172,10 @@ export function SessionsTab() {
             {sessions.map((s) => (
               <li
                 key={s.ID}
-                className="flex items-center justify-between gap-4 rounded-md border p-3"
+                className="flex justify-between gap-4 rounded-md border p-3"
               >
+                {/* Left: device + location/IP (two lines) */}
                 <div className="min-w-0 space-y-0.5 text-sm">
-                  {/* Line 1: device + current badge */}
                   <div className="flex items-center gap-2 font-medium">
                     <span className="truncate">{osFromUA(s.UserAgent)}</span>
                     {s.IsCurrent && (
@@ -184,27 +184,28 @@ export function SessionsTab() {
                       </span>
                     )}
                   </div>
-                  {/* Line 2: location · IP */}
                   <div className="truncate text-muted-foreground">
                     {geoLabel(geo[s.IP]) && `${geoLabel(geo[s.IP])} · `}
                     {s.IP}
                   </div>
-                  {/* Line 3: last activity */}
-                  <div className="text-xs text-muted-foreground">
-                    {t("profile.sessions.lastSeen")}:{" "}
-                    {s.LastSeen ? new Date(s.LastSeen).toLocaleString() : "—"}
-                  </div>
                 </div>
-                {!s.IsCurrent && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => revokeOne(s.ID)}
-                    disabled={busyId === s.ID}
-                  >
-                    {t("profile.sessions.revoke")}
-                  </Button>
-                )}
+
+                {/* Right: last activity (top) + revoke action */}
+                <div className="flex shrink-0 flex-col items-end gap-2">
+                  <span className="whitespace-nowrap text-xs text-muted-foreground">
+                    {s.LastSeen ? new Date(s.LastSeen).toLocaleString() : "—"}
+                  </span>
+                  {!s.IsCurrent && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => revokeOne(s.ID)}
+                      disabled={busyId === s.ID}
+                    >
+                      {t("profile.sessions.revoke")}
+                    </Button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
