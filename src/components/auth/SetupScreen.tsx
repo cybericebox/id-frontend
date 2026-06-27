@@ -47,6 +47,44 @@ interface SetupInfo {
 }
 
 // ---------------------------------------------------------------------------
+// Draft persistence (sessionStorage) — survives the Google-link full redirect.
+// Only non-secret fields; passwords are never written to web storage.
+// ---------------------------------------------------------------------------
+interface SetupDraft {
+  FirstName?: string
+  LastName?: string
+  AcceptTos?: boolean
+}
+
+function readDraft(key: string): SetupDraft | null {
+  if (!key || typeof window === "undefined") return null
+  try {
+    const raw = window.sessionStorage.getItem(key)
+    return raw ? (JSON.parse(raw) as SetupDraft) : null
+  } catch {
+    return null
+  }
+}
+
+function writeDraft(key: string, draft: SetupDraft) {
+  if (!key || typeof window === "undefined") return
+  try {
+    window.sessionStorage.setItem(key, JSON.stringify(draft))
+  } catch {
+    // storage full / disabled — non-fatal, drafting is best-effort
+  }
+}
+
+function clearDraft(key: string) {
+  if (!key || typeof window === "undefined") return
+  try {
+    window.sessionStorage.removeItem(key)
+  } catch {
+    // ignore
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Zod schema — client-side validation
 // Password and ConfirmPassword are always strings (empty = no password chosen).
 //
@@ -155,6 +193,12 @@ function SetupForm() {
   const domain = process.env.NEXT_PUBLIC_DOMAIN ?? ""
   const termsUrl = domain ? `https://${domain}/terms` : "/terms"
 
+  // Draft persistence: linking Google does a full-page redirect that wipes the
+  // form. Persist the non-secret fields to sessionStorage (per-tab, cleared on
+  // close) keyed by token, so they're restored when the user returns. Passwords
+  // are intentionally NOT persisted (avoid writing secrets to web storage).
+  const draftKey = token ? `setup-draft:${token}` : ""
+
   // Fetch state
   const [setupInfo, setSetupInfo] = useState<SetupInfo | null>(null)
   const [fetchError, setFetchError] = useState<string | null>(null)
@@ -239,13 +283,15 @@ function SetupForm() {
 
         if (!cancelled) {
           setSetupInfo(data)
-          // Prefill editable fields
+          // Restore a saved draft (e.g. after the Google-link redirect); fall
+          // back to the server's prefill. Passwords are never persisted.
+          const draft = readDraft(draftKey)
           form.reset({
-            FirstName: data.FirstName ?? "",
-            LastName: data.LastName ?? "",
+            FirstName: draft?.FirstName ?? data.FirstName ?? "",
+            LastName: draft?.LastName ?? data.LastName ?? "",
             Password: "",
             ConfirmPassword: "",
-            AcceptTos: false,
+            AcceptTos: draft?.AcceptTos ?? false,
           })
           setIsFetching(false)
         }
@@ -262,6 +308,22 @@ function SetupForm() {
       cancelled = true
     }
   }, [token]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ---------------------------------------------------------------------------
+  // Persist non-secret fields to sessionStorage as they change, so the form
+  // survives the full-page Google-link redirect.
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    if (!draftKey) return
+    const sub = form.watch((values) => {
+      writeDraft(draftKey, {
+        FirstName: values.FirstName,
+        LastName: values.LastName,
+        AcceptTos: values.AcceptTos,
+      })
+    })
+    return () => sub.unsubscribe()
+  }, [draftKey, form])
 
   // ---------------------------------------------------------------------------
   // Submit handler
@@ -291,6 +353,7 @@ function SetupForm() {
       })
 
       if (res.ok || res.redirected) {
+        clearDraft(draftKey) // registration complete — drop the saved draft
         window.location.href = "/profile"
         return
       }
