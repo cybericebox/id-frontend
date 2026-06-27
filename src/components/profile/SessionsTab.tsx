@@ -30,11 +30,49 @@ function osFromUA(ua: string): string {
   return t("profile.sessions.unknownDevice")
 }
 
+interface Geo {
+  city: string
+  country: string
+}
+
+// isPrivateIP skips loopback/LAN/empty addresses — geo lookup is pointless for them.
+function isPrivateIP(ip: string): boolean {
+  if (!ip) return true
+  if (ip === "::1" || ip.startsWith("fe80") || ip.startsWith("fc") || ip.startsWith("fd")) return true
+  if (/^127\./.test(ip) || /^10\./.test(ip) || /^192\.168\./.test(ip)) return true
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(ip)) return true
+  return false
+}
+
+// fetchGeo resolves a public IP to city/country via a free, key-less endpoint.
+// Best-effort: returns null on any failure (the row then shows just the IP).
+async function fetchGeo(ip: string): Promise<Geo | null> {
+  try {
+    const res = await fetch(`https://ipwho.is/${encodeURIComponent(ip)}`)
+    if (!res.ok) return null
+    const d = await res.json()
+    if (!d?.success || !d?.country) return null
+    return { city: d.city ?? "", country: d.country }
+  } catch {
+    return null
+  }
+}
+
+function geoLabel(g: Geo | undefined): string {
+  if (!g) return ""
+  return g.city ? `${g.city}, ${g.country}` : g.country
+}
+
+// Cap external geo lookups per render to avoid hammering the API for accounts
+// with many sessions across many IPs.
+const MAX_GEO_LOOKUPS = 20
+
 export function SessionsTab() {
   const [sessions, setSessions] = useState<SessionInfo[]>([])
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [geo, setGeo] = useState<Record<string, Geo>>({})
 
   const load = useCallback(async () => {
     setErrorMsg(null)
@@ -52,6 +90,33 @@ export function SessionsTab() {
   useEffect(() => {
     void load()
   }, [load])
+
+  // Resolve geo for the sessions' public IPs on the client (no server storage),
+  // looking up each unique IP once and caching the result.
+  useEffect(() => {
+    const ips = Array.from(
+      new Set(sessions.map((s) => s.IP).filter((ip) => !isPrivateIP(ip) && !(ip in geo)))
+    ).slice(0, MAX_GEO_LOOKUPS)
+    if (ips.length === 0) return
+
+    let cancelled = false
+    void (async () => {
+      const entries = await Promise.all(
+        ips.map(async (ip) => [ip, await fetchGeo(ip)] as const)
+      )
+      if (cancelled) return
+      setGeo((prev) => {
+        const next = { ...prev }
+        for (const [ip, g] of entries) if (g) next[ip] = g
+        return next
+      })
+    })()
+    return () => {
+      cancelled = true
+    }
+    // geo is intentionally omitted: it's updated here and guarded by the `in geo` filter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessions])
 
   const revokeOne = async (id: string) => {
     setBusyId(id)
@@ -119,6 +184,7 @@ export function SessionsTab() {
                     )}
                   </div>
                   <div className="text-muted-foreground">
+                    {geoLabel(geo[s.IP]) && `${geoLabel(geo[s.IP])} · `}
                     {s.IP} · {t("profile.sessions.lastSeen")}:{" "}
                     {s.LastSeen ? new Date(s.LastSeen).toLocaleString() : "—"}
                   </div>
