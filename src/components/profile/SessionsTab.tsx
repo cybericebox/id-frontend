@@ -17,6 +17,19 @@ import { t } from "@/i18n/t"
 import type { SessionInfo } from "./types"
 import { extractError } from "./ProfileTab"
 
+// osFromUA derives a human OS/platform label from a user-agent string. The raw
+// UA is noise to users; the OS is what they recognize a session by.
+function osFromUA(ua: string): string {
+  if (!ua) return t("profile.sessions.unknownDevice")
+  if (/windows/i.test(ua)) return "Windows"
+  if (/iphone|ipad|ipod/i.test(ua)) return "iOS"
+  if (/android/i.test(ua)) return "Android"
+  if (/mac os x|macintosh/i.test(ua)) return "macOS"
+  if (/cros/i.test(ua)) return "ChromeOS"
+  if (/linux/i.test(ua)) return "Linux"
+  return t("profile.sessions.unknownDevice")
+}
+
 export function SessionsTab() {
   const [sessions, setSessions] = useState<SessionInfo[]>([])
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -98,7 +111,7 @@ export function SessionsTab() {
               >
                 <div className="min-w-0 text-sm">
                   <div className="truncate font-medium">
-                    {s.UserAgent || t("profile.sessions.unknownDevice")}
+                    {osFromUA(s.UserAgent)}
                     {s.IsCurrent && (
                       <span className="ml-2 rounded bg-primary/10 px-2 py-0.5 text-xs text-primary">
                         {t("profile.sessions.current")}
