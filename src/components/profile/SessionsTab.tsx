@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Spinner } from "@/components/ui/spinner"
 import { apiGet, apiDelete } from "@/api/client"
 import { t } from "@/i18n/t"
 import type { SessionInfo } from "./types"
@@ -81,7 +82,9 @@ export function SessionsTab() {
         )}
 
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+          <div className="flex justify-center py-6">
+            <Spinner className="h-6 w-6 text-primary" />
+          </div>
         ) : sessions.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             {t("profile.sessions.empty")}

@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Logo } from "@/components/brand/Logo"
+import { Spinner } from "@/components/ui/spinner"
 import { AuthLayout } from "./AuthLayout"
 import { t } from "@/i18n/t"
 
@@ -402,8 +403,8 @@ function SetupForm() {
             <Logo size={88} />
           </div>
           <Card className="frost-panel frost-in w-full">
-            <CardContent className="py-8 text-center text-sm text-muted-foreground">
-              {t("common.loading")}
+            <CardContent className="flex justify-center py-8">
+              <Spinner className="h-8 w-8 text-primary" />
             </CardContent>
           </Card>
         </div>

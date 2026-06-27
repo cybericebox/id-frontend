@@ -7,6 +7,7 @@ import Link from "next/link"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Wordmark } from "@/components/brand/Wordmark"
 import { apiGet, ApiError } from "@/api/client"
+import { PageLoader } from "@/components/ui/spinner"
 import { t, locale } from "@/i18n/t"
 import type { Account } from "@/components/profile/types"
 import { ProfileTab } from "@/components/profile/ProfileTab"
@@ -96,11 +97,7 @@ function ProfileShell() {
   // after an avatar upload) keeps the rendered profile mounted, so the avatar
   // doesn't unmount/remount and flash the initials placeholder before the image.
   if (isLoading && !account) {
-    return (
-      <main className="mx-auto max-w-4xl p-6">
-        <p className="text-sm text-muted-foreground">{t("profile.loading")}</p>
-      </main>
-    )
+    return <PageLoader />
   }
 
   if (loadError || !account) {
