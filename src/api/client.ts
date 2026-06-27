@@ -38,11 +38,19 @@ async function request<T>(
     parsed = await res.text()
   }
 
+  // The backend wraps every JSON response in an envelope: { Status: { Code,
+  // Message }, Data }. Unwrap it here so callers receive the payload directly.
+  const envelope =
+    parsed && typeof parsed === "object"
+      ? (parsed as { Status?: { Message?: string }; Data?: unknown })
+      : undefined
+
   if (!res.ok) {
-    throw new ApiError(res.status, parsed)
+    throw new ApiError(res.status, parsed, envelope?.Status?.Message)
   }
 
-  return parsed as T
+  // Data is absent for empty 200s (e.g. DELETE) — return undefined in that case.
+  return (envelope ? envelope.Data : parsed) as T
 }
 
 export function apiGet<T>(path: string, init?: RequestInit): Promise<T> {

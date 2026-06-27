@@ -41,7 +41,7 @@ export interface Me {
  */
 export async function fetchMe(): Promise<Me | null> {
   try {
-    return await apiGet<Me>("/api/me")
+    return await apiGet<Me>("/api/auth/me")
   } catch (err) {
     if (err instanceof ApiError && err.status === 401) {
       return null

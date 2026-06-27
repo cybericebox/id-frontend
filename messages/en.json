@@ -50,6 +50,8 @@
   "setup.googleConnected": "Google connected",
   "setup.linkGoogle": "Link Google account",
   "setup.tosLabel": "I accept the Terms of Service",
+  "setup.tosAccept": "I accept the",
+  "setup.tosLink": "Terms of Service",
   "setup.submit": "Complete setup",
   "setup.missingToken": "Invalid or missing setup link",
   "setup.missingTokenDescription": "The setup link is missing or invalid. Please request a new one.",

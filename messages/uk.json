@@ -50,6 +50,8 @@
   "setup.googleConnected": "Google підключено",
   "setup.linkGoogle": "Підключити обліковий запис Google",
   "setup.tosLabel": "Я приймаю Умови використання",
+  "setup.tosAccept": "Я приймаю",
+  "setup.tosLink": "Умови використання",
   "setup.submit": "Завершити налаштування",
   "setup.missingToken": "Недійсне або відсутнє посилання для налаштування",
   "setup.missingTokenDescription": "Посилання для налаштування відсутнє або недійсне. Будь ласка, запитайте нове.",

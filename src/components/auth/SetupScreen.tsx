@@ -151,6 +151,10 @@ function SetupForm() {
   const token = searchParams.get("token") ?? ""
   const linkError = searchParams.get("error") ?? ""
 
+  // Terms of Service live on the apex (main) frontend, not the id subdomain.
+  const domain = process.env.NEXT_PUBLIC_DOMAIN ?? ""
+  const termsUrl = domain ? `https://${domain}/terms` : "/terms"
+
   // Fetch state
   const [setupInfo, setSetupInfo] = useState<SetupInfo | null>(null)
   const [fetchError, setFetchError] = useState<string | null>(null)
@@ -229,7 +233,9 @@ function SetupForm() {
           return
         }
 
-        const data: SetupInfo = await res.json()
+        // Backend wraps the payload in { Status, Data }; unwrap it.
+        const envelope = await res.json()
+        const data: SetupInfo = (envelope?.Data ?? envelope) as SetupInfo
 
         if (!cancelled) {
           setSetupInfo(data)
@@ -294,9 +300,9 @@ function SetupForm() {
       try {
         const payload = await res.json()
         if (typeof payload === "object" && payload !== null) {
+          // Error envelope: { Status: { Code, Message } }.
           message =
-            (payload as { message?: string; error?: string }).message ??
-            (payload as { message?: string; error?: string }).error ??
+            (payload as { Status?: { Message?: string } }).Status?.Message ??
             message
         }
       } catch {
@@ -530,7 +536,19 @@ function SetupForm() {
                         onBlur={field.onBlur}
                         name={field.name}
                         ref={field.ref}
-                        label={t("setup.tosLabel")}
+                        label={
+                          <span>
+                            {t("setup.tosAccept")}{" "}
+                            <a
+                              href={termsUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline"
+                            >
+                              {t("setup.tosLink")}
+                            </a>
+                          </span>
+                        }
                       />
                     </FormControl>
                     <FormMessage />
