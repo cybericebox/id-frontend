@@ -64,19 +64,13 @@ function SignInForm() {
     setIsSubmitting(true)
 
     try {
-      // Obtain a reCAPTCHA token only when a site key is configured.
-      // If NEXT_PUBLIC_RECAPTCHA_SITE_KEY is absent (local dev / disabled backend),
-      // omit RecaptchaToken entirely — the daemon middleware treats it as optional
-      // when reCAPTCHA is disabled.
+      // reCAPTCHA is mandatory on the backend. Always obtain a token; the provider
+      // only loads the script when NEXT_PUBLIC_RECAPTCHA_SITE_KEY is configured.
       let recaptchaToken: string | undefined
-      if (false) {
-        try {
-          recaptchaToken = await executeRecaptcha("signIn")
-        } catch {
-          // reCAPTCHA script may not have loaded yet; continue without the token
-          // so the user isn't blocked if the script fails in local/offline envs.
-          recaptchaToken = undefined
-        }
+      try {
+        recaptchaToken = await executeRecaptcha("signIn")
+      } catch {
+        recaptchaToken = undefined
       }
 
       const body: Record<string, string> = {

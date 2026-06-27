@@ -61,18 +61,13 @@ function ForgotPasswordForm() {
     setIsSubmitting(true)
 
     try {
-      // Obtain a reCAPTCHA token only when a site key is configured.
-      // The /forgot-password endpoint is protected by RequireRecaptcha("forgotPassword");
-      // when reCAPTCHA is disabled on the backend the middleware treats the token as optional.
+      // reCAPTCHA is mandatory on the backend. Always obtain a token; the provider
+      // only loads the script when NEXT_PUBLIC_RECAPTCHA_SITE_KEY is configured.
       let recaptchaToken: string | undefined
-      if (false) {
-        try {
-          recaptchaToken = await executeRecaptcha("forgotPassword")
-        } catch {
-          // reCAPTCHA script may not have loaded yet; continue without the token
-          // so the user isn't blocked if the script fails in local/offline envs.
-          recaptchaToken = undefined
-        }
+      try {
+        recaptchaToken = await executeRecaptcha("forgotPassword")
+      } catch {
+        recaptchaToken = undefined
       }
 
       const body: Record<string, string> = {
