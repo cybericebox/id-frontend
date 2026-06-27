@@ -179,6 +179,8 @@ export function ProfileTab({
                 alt=""
                 className="h-full w-full object-cover"
                 referrerPolicy="no-referrer"
+                fetchPriority="high"
+                decoding="async"
               />
             ) : (
               `${account.FirstName?.[0] ?? ""}${account.LastName?.[0] ?? ""}`.toUpperCase() ||
