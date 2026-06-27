@@ -100,6 +100,11 @@
   "validation.passwordMin": "Пароль має містити щонайменше 8 символів",
 
   "profile.heading": "Обліковий запис",
+  "profile.memberSince": "Учасник з",
+  "role.user": "Користувач",
+  "role.admin": "Адміністратор",
+  "role.admin_viewer": "Адміністратор (перегляд)",
+  "role.super_admin": "Супер-адміністратор",
   "profile.tab.profile": "Профіль",
   "profile.tab.account": "Обліковий запис",
   "profile.tab.security": "Безпека",

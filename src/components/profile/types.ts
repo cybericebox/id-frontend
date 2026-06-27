@@ -3,6 +3,7 @@ export interface Account {
   FirstName: string
   LastName: string
   Email: string
+  Picture: string
   EmailConfirmed: boolean
   Role: string
   Providers: string[]

@@ -100,6 +100,11 @@
   "validation.passwordMin": "Password must be at least 8 characters",
 
   "profile.heading": "Account",
+  "profile.memberSince": "Member since",
+  "role.user": "User",
+  "role.admin": "Administrator",
+  "role.admin_viewer": "Administrator (read-only)",
+  "role.super_admin": "Super administrator",
   "profile.tab.profile": "Profile",
   "profile.tab.account": "Account",
   "profile.tab.security": "Security",

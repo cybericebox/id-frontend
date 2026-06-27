@@ -25,6 +25,25 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "connections", label: "profile.tab.connections" },
 ]
 
+// Humanize a backend role string via i18n, falling back to the raw value when
+// no label key exists (t() returns the key itself on a miss).
+function roleLabel(role: string): string {
+  const key = `role.${role}`
+  const label = t(key)
+  return label === key ? role : label
+}
+
+// Format the join date for "Member since"; returns "" for missing/invalid input.
+function memberSince(createdAt: string): string {
+  if (!createdAt) return ""
+  const d = new Date(createdAt)
+  if (Number.isNaN(d.getTime())) return ""
+  return d.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "long",
+  })
+}
+
 function ProfileShell() {
   const searchParams = useSearchParams()
   const initialTab = (searchParams.get("tab") as TabKey) || "profile"
@@ -107,13 +126,36 @@ function ProfileShell() {
       {account && (
         <div className="mb-6 flex items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-[0_10px_30px_-18px_rgba(11,18,51,0.4)]">
           <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary to-[#0091EA] text-xl font-semibold text-primary-foreground ring-2 ring-card">
-            {`${account.FirstName?.[0] ?? ""}${account.LastName?.[0] ?? ""}`.toUpperCase() || "?"}
+            {account.Picture ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={account.Picture}
+                alt=""
+                className="h-full w-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              `${account.FirstName?.[0] ?? ""}${account.LastName?.[0] ?? ""}`.toUpperCase() ||
+              "?"
+            )}
           </span>
           <div className="min-w-0">
-            <p className="truncate text-lg font-semibold leading-tight">
-              {account.FirstName} {account.LastName}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="truncate text-lg font-semibold leading-tight">
+                {account.FirstName} {account.LastName}
+              </p>
+              {account.Role && (
+                <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                  {roleLabel(account.Role)}
+                </span>
+              )}
+            </div>
             <p className="truncate text-sm text-muted-foreground">{account.Email}</p>
+            {memberSince(account.CreatedAt) && (
+              <p className="text-xs text-muted-foreground">
+                {t("profile.memberSince")} {memberSince(account.CreatedAt)}
+              </p>
+            )}
           </div>
         </div>
       )}
