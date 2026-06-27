@@ -41,7 +41,8 @@ export interface Me {
  */
 export async function fetchMe(): Promise<Me | null> {
   try {
-    return await apiGet<Me>("/api/auth/me")
+    // Opt out of the client's auto-redirect: here a 401 simply means "anonymous".
+    return await apiGet<Me>("/api/auth/me", undefined, { on401: "throw" })
   } catch (err) {
     if (err instanceof ApiError && err.status === 401) {
       return null
@@ -115,6 +116,22 @@ export function clearAnonMarker(): void {
  *                        Defaults to NEXT_PUBLIC_ID_ORIGIN env var, then "".
  * @param opts.returnTo   URL the AS should redirect back to. Defaults to current page URL.
  */
+/**
+ * Redirect to the sign-in page, preserving where to return after auth. Prefer
+ * the backend-advertised URL (ApiError.signInUrl from the X-Sign-In-URL header)
+ * so the address isn't hardcoded; fall back to the local /sign-in. The return_to
+ * is appended here because only the client knows the current page URL.
+ */
+export function redirectToSignIn(signInUrl?: string, returnTo?: string): void {
+  if (typeof window === "undefined") return
+  const ret = returnTo ?? window.location.href
+  const base = signInUrl || "/sign-in"
+  const url = new URL(base, window.location.origin)
+  url.searchParams.set("return_to", ret)
+  window.location.href = url.toString()
+}
+
+
 export function attemptSilentAuthn(opts: {
   idOrigin?: string
   returnTo?: string

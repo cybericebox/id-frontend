@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -36,6 +36,8 @@ import { t } from "@/i18n/t"
 import type { Account } from "./types"
 import { extractError } from "./ProfileTab"
 
+const EMAIL_DRAFT_KEY = "draft:account-email"
+
 const EmailSchema = z.object({
   Email: z.string().email({ message: t("validation.invalidEmail") }),
 })
@@ -55,12 +57,33 @@ export function AccountTab({ account }: { account: Account }) {
     defaultValues: { Email: "" },
   })
 
+  // Draft persistence: restore on mount, persist edits continuously so the new
+  // email survives an auth redirect (client auto-redirects on 401). Cleared on send.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(EMAIL_DRAFT_KEY)
+      if (raw) form.reset(JSON.parse(raw))
+    } catch {
+      /* ignore */
+    }
+    const sub = form.watch((values) => {
+      try {
+        sessionStorage.setItem(EMAIL_DRAFT_KEY, JSON.stringify(values))
+      } catch {
+        /* ignore */
+      }
+    })
+    return () => sub.unsubscribe()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const onSubmit: SubmitHandler<EmailValues> = async (data) => {
     setErrorMsg(null)
     setOkMsg(null)
     setIsSubmitting(true)
     try {
       await apiPost("/api/auth/account/email", { Email: data.Email })
+      sessionStorage.removeItem(EMAIL_DRAFT_KEY) // sent — drop the draft
       setOkMsg(t("profile.account.emailSent"))
       form.reset({ Email: "" })
     } catch (err) {

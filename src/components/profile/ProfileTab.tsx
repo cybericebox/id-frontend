@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useRef } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -26,6 +26,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { apiPatch, ApiError } from "@/api/client"
 import { t } from "@/i18n/t"
 import type { Account } from "./types"
+
+const NAME_DRAFT_KEY = "draft:profile-name"
 import { AvatarCropDialog } from "./AvatarCropDialog"
 
 const ProfileSchema = z.object({
@@ -54,6 +56,27 @@ export function ProfileTab({
     mode: "onChange",
     defaultValues: { FirstName: account.FirstName, LastName: account.LastName },
   })
+
+  // Draft persistence: restore on mount, then persist edits continuously so the
+  // in-progress name survives an auth redirect (the client auto-redirects on 401).
+  // Cleared on a successful save.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(NAME_DRAFT_KEY)
+      if (raw) form.reset(JSON.parse(raw))
+    } catch {
+      /* ignore */
+    }
+    const sub = form.watch((values) => {
+      try {
+        sessionStorage.setItem(NAME_DRAFT_KEY, JSON.stringify(values))
+      } catch {
+        /* ignore */
+      }
+    })
+    return () => sub.unsubscribe()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const MAX_PHOTO_BYTES = 5 * 1024 * 1024
 
@@ -154,9 +177,11 @@ export function ProfileTab({
         FirstName: data.FirstName,
         LastName: data.LastName,
       })
+      sessionStorage.removeItem(NAME_DRAFT_KEY) // saved — drop the draft
       setOkMsg(t("profile.profile.saved"))
       onUpdated()
     } catch (err) {
+      // A 401 is auto-redirected by the api client (the draft is already persisted).
       setErrorMsg(extractError(err))
     } finally {
       setIsSubmitting(false)

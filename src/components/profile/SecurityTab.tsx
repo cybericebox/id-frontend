@@ -87,6 +87,7 @@ export function SecurityTab({ account }: { account: Account }) {
       setOkMsg(t("profile.security.saved"))
       form.reset({ OldPassword: "", NewPassword: "", ConfirmPassword: "" })
     } catch (err) {
+      // A 401 is auto-redirected by the api client (passwords are never persisted).
       setErrorMsg(extractError(err))
     } finally {
       setIsSubmitting(false)

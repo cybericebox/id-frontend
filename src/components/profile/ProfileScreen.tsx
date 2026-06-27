@@ -16,7 +16,7 @@ import {
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Wordmark } from "@/components/brand/Wordmark"
-import { apiGet, ApiError } from "@/api/client"
+import { apiGet } from "@/api/client"
 import { PageLoader } from "@/components/ui/spinner"
 import { t, locale } from "@/i18n/t"
 import type { Account } from "@/components/profile/types"
@@ -85,14 +85,9 @@ function ProfileShell() {
     try {
       const data = await apiGet<Account>("/api/auth/account")
       setAccount(data)
-    } catch (err) {
-      // 401 → not authenticated: bounce to sign-in with return_to (full
-      // silent-authn handling comes in F2.7).
-      if (err instanceof ApiError && err.status === 401) {
-        window.location.href =
-          "/sign-in?return_to=" + encodeURIComponent(window.location.href)
-        return
-      }
+    } catch {
+      // A 401 is handled centrally by the api client (auto-redirect to sign-in);
+      // anything else is a genuine load failure.
       setLoadError(t("profile.loadError"))
     } finally {
       setIsLoading(false)
