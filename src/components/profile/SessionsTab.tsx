@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Spinner } from "@/components/ui/spinner"
 import { apiGet, apiDelete } from "@/api/client"
-import { t } from "@/i18n/t"
+import { t, locale } from "@/i18n/t"
 import type { SessionInfo } from "./types"
 import { extractError } from "./ProfileTab"
 
@@ -170,32 +170,35 @@ export function SessionsTab() {
         ) : (
           <ul className="space-y-3">
             {sessions.map((s) => (
-              <li
-                key={s.ID}
-                className="flex justify-between gap-4 rounded-md border p-3"
-              >
-                {/* Left: device + location/IP (two lines) */}
-                <div className="min-w-0 flex-1 space-y-0.5 text-sm">
-                  <div className="flex items-center gap-2 font-medium">
-                    <span className="truncate">{osFromUA(s.UserAgent)}</span>
+              <li key={s.ID} className="space-y-1 rounded-md border p-3">
+                {/* Row 1: OS + current badge ↔ last-activity time */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
+                    <span>{osFromUA(s.UserAgent)}</span>
                     {s.IsCurrent && (
-                      <span className="shrink-0 rounded bg-primary/10 px-2 py-0.5 text-xs text-primary">
+                      <span className="rounded bg-primary/10 px-2 py-0.5 text-xs text-primary">
                         {t("profile.sessions.current")}
                       </span>
                     )}
                   </div>
-                  <div className="break-words text-muted-foreground">
-                    {geoLabel(geo[s.IP]) && `${geoLabel(geo[s.IP])} · `}
-                    {s.IP}
-                  </div>
+                  <span className="whitespace-nowrap text-xs text-muted-foreground">
+                    {s.LastSeen
+                      ? new Date(s.LastSeen).toLocaleString(locale, {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                        })
+                      : "—"}
+                  </span>
                 </div>
 
-                {/* Right: last activity (top) + revoke action */}
-                <div className="flex shrink-0 flex-col items-end gap-2">
-                  <span className="whitespace-nowrap text-xs text-muted-foreground">
-                    {s.LastSeen ? new Date(s.LastSeen).toLocaleString() : "—"}
-                  </span>
-                  {!s.IsCurrent && (
+                {/* Body: full-width location · IP (no reserved time column) */}
+                <div className="break-words text-sm text-muted-foreground">
+                  {geoLabel(geo[s.IP]) && `${geoLabel(geo[s.IP])} · `}
+                  {s.IP}
+                </div>
+
+                {!s.IsCurrent && (
+                  <div className="flex justify-end">
                     <Button
                       variant="outline"
                       size="sm"
@@ -204,8 +207,8 @@ export function SessionsTab() {
                     >
                       {t("profile.sessions.revoke")}
                     </Button>
-                  )}
-                </div>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
