@@ -165,7 +165,7 @@ function ProfileShell() {
       </div>
 
       {account && (
-        <div className="mb-6 flex items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-[0_10px_30px_-18px_rgba(11,18,51,0.4)]">
+        <div className="mb-6 flex items-start gap-4 rounded-xl border border-border bg-card p-4 shadow-[0_10px_30px_-18px_rgba(11,18,51,0.4)]">
           <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary to-[#0091EA] text-xl font-semibold text-primary-foreground ring-2 ring-card">
             {account.Picture ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -182,18 +182,19 @@ function ProfileShell() {
               "?"
             )}
           </span>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="truncate text-lg font-semibold leading-tight">
-                {account.FirstName} {account.LastName}
-              </p>
-              {account.Role && (
+          <div className="min-w-0 flex-1">
+            {/* Role badge in the top-right corner; full name on the next line. */}
+            {account.Role && (
+              <div className="mb-1 flex justify-end">
                 <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                   {roleLabel(account.Role)}
                 </span>
-              )}
-            </div>
-            <p className="truncate text-sm text-muted-foreground">{account.Email}</p>
+              </div>
+            )}
+            <p className="text-lg font-semibold leading-tight break-words">
+              {account.FirstName} {account.LastName}
+            </p>
+            <p className="break-all text-sm text-muted-foreground">{account.Email}</p>
             {memberSince(account.CreatedAt) && (
               <p className="text-xs text-muted-foreground">
                 {t("profile.memberSince")} {memberSince(account.CreatedAt)}
