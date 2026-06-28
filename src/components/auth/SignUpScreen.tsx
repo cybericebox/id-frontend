@@ -55,6 +55,10 @@ function RegisterForm() {
     let cancelled = false
     redirectIfAuthed(returnTo || undefined).then((redirecting) => {
       if (!cancelled && !redirecting) setChecking(false)
+    }).catch(() => {
+      // On any failure (e.g. the /me probe errored), never hang the loader —
+      // reveal the form.
+      if (!cancelled) setChecking(false)
     })
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
