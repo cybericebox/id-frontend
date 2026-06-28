@@ -18,6 +18,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Wordmark } from "@/components/brand/Wordmark"
 import { apiGet } from "@/api/client"
+import { safeReturnTo } from "@/lib/auth"
 import { PageLoader } from "@/components/ui/spinner"
 import { t, locale } from "@/i18n/t"
 import type { Account } from "@/components/profile/types"
@@ -63,10 +64,10 @@ function ProfileShell() {
   const searchParams = useSearchParams()
   const initialTab = (searchParams.get("tab") as TabKey) || "profile"
   const linkError = searchParams.get("error") === "link_failed"
-  // return_to: rendered as a "Back" affordance when present.
-  // TODO: add same-platform host validation before following the URL if
-  // this page becomes accessible from untrusted contexts (open-redirect risk).
-  const returnTo = searchParams.get("return_to") ?? ""
+  // return_to: rendered as a "Back" affordance when present. Sanitized via
+  // safeReturnTo (same-platform https only) to prevent open-redirect / javascript:
+  // URL injection; an invalid value falls back to "" so the Back link is hidden.
+  const returnTo = safeReturnTo(searchParams.get("return_to") ?? "", "")
 
   const [active, setActive] = useState<TabKey>(
     TABS.some((x) => x.key === initialTab) ? initialTab : "profile"
