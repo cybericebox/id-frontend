@@ -130,11 +130,11 @@ export function SessionsTab() {
         ) : (
           <ul className="max-h-96 space-y-3 overflow-y-auto pr-1">
             {sessions.map((s) => (
-              <li key={s.ID} className="flex items-start justify-between gap-3 rounded-md border p-3">
-                {/* Left: browser · OS, IP · last-activity, created */}
-                <div className="min-w-0">
-                  {/* Line 1: browser · OS + current badge */}
-                  <div className="flex flex-wrap items-center gap-2 text-sm font-semibold">
+              <li key={s.ID} className="rounded-md border p-3">
+                {/* Line 1: browser · OS (+ current badge) on the left, revoke
+                    button only in the top-right of this row. */}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm font-semibold">
                     <span>{browserFromUA(s.UserAgent)} · {osFromUA(s.UserAgent)}</span>
                     {s.IsCurrent && (
                       <span className="rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
@@ -142,19 +142,7 @@ export function SessionsTab() {
                       </span>
                     )}
                   </div>
-                  {/* Line 2: IP · last activity */}
-                  <div className="mt-0.5 text-xs text-muted-foreground">
-                    {s.IP} · {t("profile.sessions.lastActivity")}: {formatDate(s.LastSeen)}
-                  </div>
-                  {/* Line 3: created */}
-                  <div className="text-xs text-muted-foreground">
-                    {t("profile.sessions.createdAt")}: {formatDate(s.CreatedAt)}
-                  </div>
-                </div>
-
-                {/* Right: revoke button — only for non-current sessions */}
-                {!s.IsCurrent && (
-                  <div className="shrink-0">
+                  {!s.IsCurrent && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -163,8 +151,16 @@ export function SessionsTab() {
                     >
                       {t("profile.sessions.revoke")}
                     </Button>
-                  </div>
-                )}
+                  )}
+                </div>
+
+                {/* Meta: IP · last activity, created — full width below. */}
+                <div className="mt-1.5 text-xs text-muted-foreground">
+                  {s.IP} · {t("profile.sessions.lastActivity")}: {formatDate(s.LastSeen)}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {t("profile.sessions.createdAt")}: {formatDate(s.CreatedAt)}
+                </div>
               </li>
             ))}
           </ul>
