@@ -31,6 +31,7 @@ import { Logo } from "@/components/brand/Logo"
 import { Spinner } from "@/components/ui/spinner"
 import { AuthLayout } from "./AuthLayout"
 import { t } from "@/i18n/t"
+import { apiPost } from "@/api/client"
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -342,37 +343,22 @@ function SetupForm() {
         TosVersion: data.AcceptTos ? TOS_VERSION : 0,
       }
 
-      // The endpoint responds with 302 (sign-in redirect).
-      // redirect:'follow' lets fetch chase the redirect automatically.
-      // On res.ok or res.redirected → navigate to /profile.
-      const res = await fetch("/api/auth/setup", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        redirect: "follow",
-      })
+      // The backend now returns 200 JSON { Status, Data: { RedirectURL } } instead
+      // of a 307 redirect. apiPost unwraps the envelope and throws ApiError on 4xx
+      // (with ApiError.message = envelope Status.Message, handled in the catch below).
+      // Top-level navigation to RedirectURL is NOT CORS-restricted; the callback
+      // plants the per-subdomain local token and redirects to the final page.
+      const { RedirectURL } = await apiPost<{ RedirectURL: string }>(
+        "/api/auth/setup",
+        body
+      )
 
-      if (res.ok || res.redirected) {
-        clearDraft(draftKey) // registration complete — drop the saved draft
-        window.location.href = "/profile"
-        return
+      clearDraft(draftKey) // registration complete — drop the saved draft
+      if (RedirectURL) {
+        window.location.assign(RedirectURL)
+      } else {
+        window.location.assign("/profile")
       }
-
-      // Parse 4xx error body from daemon
-      let message: string = t("setup.errorTitle")
-      try {
-        const payload = await res.json()
-        if (typeof payload === "object" && payload !== null) {
-          // Error envelope: { Status: { Code, Message } }.
-          message =
-            (payload as { Status?: { Message?: string } }).Status?.Message ??
-            message
-        }
-      } catch {
-        // non-JSON body — keep the generic message
-      }
-      setSubmitError(message)
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : t("error.generic"))
     } finally {

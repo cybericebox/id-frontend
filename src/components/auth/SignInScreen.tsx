@@ -32,6 +32,7 @@ import { AuthLayout } from "./AuthLayout"
 import { t } from "@/i18n/t"
 import { PageLoader } from "@/components/ui/spinner"
 import { redirectIfAuthed, rememberReturnTo, safeReturnTo } from "@/lib/auth"
+import { apiPost, ApiError } from "@/api/client"
 
 // ---------------------------------------------------------------------------
 // Zod schema — mirrors the daemon's JSON body (Email, Password)
@@ -100,40 +101,23 @@ function SignInForm() {
         body.RecaptchaToken = recaptchaToken
       }
 
-      // POST with redirect:'follow' so fetch follows the 302 chain automatically.
-      // The daemon sets the session cookie during the callback redirect.
-      // On success (res.ok or res.redirected), navigate the browser to the
-      // return_to URL (or /profile) — this lets the daemon issue the local token
-      // on the next page load.
-      // NOTE: exact redirect/cookie handoff is verified during dev-env smoke (F2.7).
-      const res = await fetch("/api/auth/sign-in", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        redirect: "follow",
-      })
+      // The backend now returns 200 JSON { Status, Data: { RedirectURL } } instead
+      // of a 307 redirect. apiPost unwraps the envelope and throws ApiError on 4xx.
+      // We perform a top-level navigation to RedirectURL — this is NOT CORS-restricted
+      // and allows the callback to plant the per-subdomain local token before
+      // redirecting to the final page.
+      const { RedirectURL } = await apiPost<{ RedirectURL: string }>(
+        "/api/auth/sign-in",
+        body
+      )
 
-      if (res.ok || res.redirected) {
-        window.location.href = safeReturnTo(returnTo || undefined)
-        return
+      if (RedirectURL) {
+        window.location.assign(RedirectURL)
+      } else {
+        window.location.assign(safeReturnTo(returnTo || undefined))
       }
-
-      // Parse the 4xx JSON error from the daemon and surface it inline.
-      let message: string = t("signIn.errorTitle")
-      try {
-        const payload = await res.json()
-        if (typeof payload === "object" && payload !== null) {
-          message =
-            (payload as { message?: string; error?: string }).message ??
-            (payload as { message?: string; error?: string }).error ??
-            message
-        }
-      } catch {
-        // non-JSON error body — keep the generic message
-      }
-      setErrorMsg(message)
     } catch (err) {
+      // ApiError.message is already the envelope Status.Message (unwrapped in client.ts)
       setErrorMsg(err instanceof Error ? err.message : t("error.generic"))
     } finally {
       setIsSubmitting(false)
