@@ -198,15 +198,19 @@ export function consumeNoSessionParam(): boolean {
  * id is served from id.<domain>; the platform root domain is the current host
  * minus the leading "id." prefix.
  */
-export function safeReturnTo(returnTo?: string): string {
-  if (!returnTo) return "/profile"
+export function safeReturnTo(returnTo?: string, fallback = "/profile"): string {
+  if (!returnTo) return fallback
   const root = window.location.hostname.replace(/^id\./, "")
   try {
     const u = new URL(returnTo)
     const h = u.hostname.toLowerCase()
-    if (u.protocol === "https:" && (h === root || h.endsWith("." + root))) return returnTo
+    if (u.protocol === "https:" && (h === root || h.endsWith("." + root))) {
+      // Strip any port: the platform is always reached on its fixed external
+      // port, so a redirect target must never carry one (e.g. a dev :3001).
+      return `https://${u.hostname}${u.pathname}${u.search}${u.hash}`
+    }
   } catch {}
-  return "/profile"
+  return fallback
 }
 
 /**

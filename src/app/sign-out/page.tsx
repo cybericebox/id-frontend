@@ -4,6 +4,7 @@ import React, { Suspense, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 
 import { Wordmark } from "@/components/brand/Wordmark"
+import { safeReturnTo } from "@/lib/auth"
 import { t } from "@/i18n/t"
 
 // ---------------------------------------------------------------------------
@@ -20,28 +21,6 @@ import { t } from "@/i18n/t"
 // NOTE: cross-domain /me + sign-out cookie handoff is verified during dev-env
 // smoke; here we only drive the same-origin logout + safe redirect.
 // ---------------------------------------------------------------------------
-
-const PLATFORM_DOMAIN = process.env.NEXT_PUBLIC_DOMAIN ?? ""
-
-/**
- * safeReturnTo — only follow a return_to URL whose host equals or is a subdomain
- * of the platform domain. Anything else (open-redirect attempt, empty) falls
- * back to /sign-in on the id origin. SSR/static-safe.
- */
-function safeReturnTo(returnTo: string | null): string {
-  if (!returnTo) return "/sign-in"
-  if (typeof window === "undefined") return "/sign-in"
-  try {
-    const url = new URL(returnTo, window.location.origin)
-    const host = url.hostname
-    const ok =
-      PLATFORM_DOMAIN !== "" &&
-      (host === PLATFORM_DOMAIN || host.endsWith(`.${PLATFORM_DOMAIN}`))
-    return ok ? url.toString() : "/sign-in"
-  } catch {
-    return "/sign-in"
-  }
-}
 
 function SignOut() {
   const searchParams = useSearchParams()
@@ -61,7 +40,9 @@ function SignOut() {
         // redirect — the user intends to leave; don't trap them on this page.
       }
       if (cancelled) return
-      window.location.href = safeReturnTo(returnTo)
+      // Fall back to /sign-in (not /profile) after a logout; the shared guard
+      // strips any port and rejects off-platform return_to values.
+      window.location.href = safeReturnTo(returnTo ?? undefined, "/sign-in")
     }
     void run()
     return () => {
