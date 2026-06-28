@@ -5,8 +5,8 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 
 export const metadata: Metadata = {
-  title: "CyberICEBox ID",
-  description: "CyberICEBox identity & authentication portal",
+  title: "CyberICEBox — Platform ID",
+  description: "CyberICEBox Platform ID — identity & authentication portal",
 }
 
 export default function RootLayout({
