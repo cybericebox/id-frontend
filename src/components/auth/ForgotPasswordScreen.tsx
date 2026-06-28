@@ -1,6 +1,7 @@
 "use client"
 
 import React, { Suspense, useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -30,7 +31,7 @@ import { Logo } from "@/components/brand/Logo"
 import { AuthLayout } from "./AuthLayout"
 import { t } from "@/i18n/t"
 import { PageLoader } from "@/components/ui/spinner"
-import { redirectIfAuthed } from "@/lib/auth"
+import { redirectIfAuthed, rememberReturnTo } from "@/lib/auth"
 
 // ---------------------------------------------------------------------------
 // Zod schema — mirrors the daemon's JSON body (Email)
@@ -43,12 +44,15 @@ type ForgotPasswordValues = z.infer<typeof ForgotPasswordSchema>
 
 // ---------------------------------------------------------------------------
 // Inner component — wrapped in <Suspense> for static-export compatibility.
-// (Kept consistent with the other auth pages even though this one does not
-// read useSearchParams; the Suspense boundary is harmless and future-proof.)
+// useSearchParams reads an optional ?return_to for rememberReturnTo.
 // ---------------------------------------------------------------------------
 function ForgotPasswordForm() {
+  const searchParams = useSearchParams()
+  const returnTo = searchParams.get("return_to") ?? undefined
+
   const [checking, setChecking] = useState(true)
   useEffect(() => {
+    rememberReturnTo(returnTo)
     let cancelled = false
     redirectIfAuthed(undefined).then((redirecting) => {
       if (!cancelled && !redirecting) setChecking(false)

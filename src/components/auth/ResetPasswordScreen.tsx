@@ -30,7 +30,7 @@ import { Logo } from "@/components/brand/Logo"
 import { AuthLayout } from "./AuthLayout"
 import { t } from "@/i18n/t"
 import { PageLoader } from "@/components/ui/spinner"
-import { redirectIfAuthed } from "@/lib/auth"
+import { redirectIfAuthed, rememberReturnTo } from "@/lib/auth"
 
 // ---------------------------------------------------------------------------
 // Zod schema — NewPassword + ConfirmPassword (refine: must match).
@@ -94,9 +94,11 @@ function ErrorCard({
 function ResetPasswordForm() {
   const searchParams = useSearchParams()
   const code = searchParams.get("code") ?? ""
+  const returnTo = searchParams.get("return_to") ?? undefined
 
   const [checking, setChecking] = useState(true)
   useEffect(() => {
+    rememberReturnTo(returnTo)
     let cancelled = false
     redirectIfAuthed(undefined).then((redirecting) => {
       if (!cancelled && !redirecting) setChecking(false)

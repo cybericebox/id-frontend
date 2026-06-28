@@ -31,7 +31,7 @@ import { Logo } from "@/components/brand/Logo"
 import { AuthLayout } from "./AuthLayout"
 import { t } from "@/i18n/t"
 import { PageLoader } from "@/components/ui/spinner"
-import { redirectIfAuthed } from "@/lib/auth"
+import { redirectIfAuthed, rememberReturnTo } from "@/lib/auth"
 
 // ---------------------------------------------------------------------------
 // Zod schema — mirrors the daemon's JSON body (Email only for registration)
@@ -52,6 +52,7 @@ function RegisterForm() {
 
   const [checking, setChecking] = useState(true)
   useEffect(() => {
+    rememberReturnTo(returnTo || undefined)
     let cancelled = false
     redirectIfAuthed(returnTo || undefined).then((redirecting) => {
       if (!cancelled && !redirecting) setChecking(false)
