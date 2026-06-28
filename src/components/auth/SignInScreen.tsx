@@ -32,7 +32,7 @@ import { AuthLayout } from "./AuthLayout"
 import { t } from "@/i18n/t"
 import { PageLoader } from "@/components/ui/spinner"
 import { redirectIfAuthed, rememberReturnTo, safeReturnTo } from "@/lib/auth"
-import { apiPost, ApiError } from "@/api/client"
+import { apiPost } from "@/api/client"
 
 // ---------------------------------------------------------------------------
 // Zod schema — mirrors the daemon's JSON body (Email, Password)

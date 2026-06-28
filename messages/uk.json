@@ -174,6 +174,9 @@
   "profile.sessions.revokeAll": "Відкликати всі інші сесії",
   "profile.sessions.empty": "Активних сесій не знайдено.",
   "profile.sessions.unknownDevice": "Невідомий пристрій",
+  "profile.sessions.lastActivity": "Остання активність",
+  "profile.sessions.createdAt": "Створено",
+  "profile.sessions.unknownBrowser": "Невідомий браузер",
 
   "profile.connections.title": "Підключені облікові записи",
   "profile.connections.description": "Підключіть зовнішні облікові записи для входу.",
@@ -181,8 +184,5 @@
   "profile.connections.googleNotConnected": "Google не підключено",
   "profile.connections.unlink": "Відключити",
   "profile.connections.connect": "Підключити Google",
-  "profile.connections.linkFailed": "Не вдалося підключити обліковий запис Google. Спробуйте ще раз.",
-  "profile.sessions.lastActivity": "Остання активність",
-  "profile.sessions.createdAt": "Створено",
-  "profile.sessions.unknownBrowser": "Невідомий браузер"
+  "profile.connections.linkFailed": "Не вдалося підключити обліковий запис Google. Спробуйте ще раз."
 }
