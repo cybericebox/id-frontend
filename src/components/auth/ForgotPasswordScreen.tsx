@@ -72,7 +72,7 @@ function ForgotPasswordForm() {
 
   const form = useForm<ForgotPasswordValues>({
     resolver: zodResolver(ForgotPasswordSchema),
-    mode: "onChange",
+    mode: "onBlur",
     defaultValues: { Email: "" },
   })
 

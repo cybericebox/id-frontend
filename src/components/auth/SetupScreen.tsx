@@ -226,7 +226,7 @@ function SetupForm() {
 
   const form = useForm<SetupValues>({
     resolver: zodResolver(schema),
-    mode: "onChange",
+    mode: "onBlur",
     defaultValues: {
       FirstName: "",
       LastName: "",

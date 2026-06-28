@@ -72,7 +72,7 @@ function RegisterForm() {
 
   const form = useForm<RegisterValues>({
     resolver: zodResolver(RegisterSchema),
-    mode: "onChange",
+    mode: "onBlur",
     defaultValues: { Email: "" },
   })
 

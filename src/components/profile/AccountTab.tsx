@@ -53,7 +53,7 @@ export function AccountTab({ account }: { account: Account }) {
 
   const form = useForm<EmailValues>({
     resolver: zodResolver(EmailSchema),
-    mode: "onChange",
+    mode: "onBlur",
     defaultValues: { Email: "" },
   })
 

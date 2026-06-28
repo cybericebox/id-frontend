@@ -70,7 +70,7 @@ export function SecurityTab({ account }: { account: Account }) {
 
   const form = useForm<SecurityValues>({
     resolver: zodResolver(schema),
-    mode: "onChange",
+    mode: "onBlur",
     defaultValues: { OldPassword: "", NewPassword: "", ConfirmPassword: "" },
   })
 

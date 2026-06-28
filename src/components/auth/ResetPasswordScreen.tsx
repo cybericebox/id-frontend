@@ -117,7 +117,7 @@ function ResetPasswordForm() {
 
   const form = useForm<ResetPasswordValues>({
     resolver: zodResolver(ResetPasswordSchema),
-    mode: "onChange",
+    mode: "onBlur",
     defaultValues: { NewPassword: "", ConfirmPassword: "" },
   })
 

@@ -53,7 +53,7 @@ export function ProfileTab({
 
   const form = useForm<ProfileValues>({
     resolver: zodResolver(ProfileSchema),
-    mode: "onChange",
+    mode: "onBlur",
     defaultValues: { FirstName: account.FirstName, LastName: account.LastName },
   })
 

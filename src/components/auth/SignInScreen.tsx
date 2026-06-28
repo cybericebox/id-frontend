@@ -73,7 +73,7 @@ function SignInForm() {
 
   const form = useForm<SignInValues>({
     resolver: zodResolver(SignInSchema),
-    mode: "onChange",
+    mode: "onBlur",
     defaultValues: { Email: "", Password: "" },
   })
 
