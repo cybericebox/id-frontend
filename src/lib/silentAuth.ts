@@ -52,12 +52,13 @@ export function runSilentAuthOnce(): Promise<void> {
   return bootstrap
 }
 
-// runSilentIframe loads id/authorize?prompt=none in a hidden iframe that always
-// ends on THIS origin's /auth/silent page and postMessages the result. We accept
-// only same-origin messages. Resolves when the result arrives or on a safety timeout.
+// runSilentIframe loads id/authorize?prompt=none in a hidden iframe. The AS uses
+// only the return_to HOST for routing; the path must be THIS origin's /auth/silent
+// terminal page, which postMessages the result back. We accept only same-origin
+// messages. Resolves when the result arrives or on a safety timeout.
 function runSilentIframe(): Promise<void> {
   return new Promise<void>((resolve) => {
-    const here = `https://${window.location.hostname}${window.location.pathname}`
+    const here = `${window.location.origin}/auth/silent`
     const url = new URL("/api/auth/authorize", ID_ORIGIN || `https://${window.location.hostname}`)
     url.searchParams.set("prompt", "none")
     url.searchParams.set("return_to", here)
