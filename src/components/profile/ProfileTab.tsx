@@ -212,7 +212,7 @@ export function ProfileTab({
               "?"
             )}
           </span>
-          <div className="space-y-2">
+          <div className="min-w-0 space-y-2">
             <p className="text-sm font-medium">{t("profile.profile.photo")}</p>
             <input
               ref={fileInputRef}
@@ -221,7 +221,7 @@ export function ProfileTab({
               className="hidden"
               onChange={onPhotoChosen}
             />
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
                 variant="outline"
