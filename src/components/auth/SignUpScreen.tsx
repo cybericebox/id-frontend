@@ -49,6 +49,7 @@ type RegisterValues = z.infer<typeof RegisterSchema>
 function RegisterForm() {
   const searchParams = useSearchParams()
   const returnTo = searchParams.get("return_to") ?? ""
+  const googleError = searchParams.get("google_error")
 
   const [checking, setChecking] = useState(true)
   useEffect(() => {
@@ -203,6 +204,26 @@ function RegisterForm() {
           {errorMsg && (
             <Alert variant="destructive">
               <AlertDescription>{errorMsg}</AlertDescription>
+            </Alert>
+          )}
+
+          {googleError === "not_registered" && (
+            <Alert>
+              <AlertDescription>
+                {t("signUp.googleNotRegistered")}{" "}
+                <Link
+                  href={returnTo ? `/sign-in?return_to=${encodeURIComponent(returnTo)}` : "/sign-in"}
+                  className="text-primary underline hover:no-underline"
+                >
+                  {t("register.signIn")}
+                </Link>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {googleError === "failed" && (
+            <Alert variant="destructive">
+              <AlertDescription>{t("signUp.googleFailed")}</AlertDescription>
             </Alert>
           )}
 

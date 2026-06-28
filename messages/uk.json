@@ -184,5 +184,11 @@
   "profile.connections.googleNotConnected": "Google не підключено",
   "profile.connections.unlink": "Відключити",
   "profile.connections.connect": "Підключити Google",
-  "profile.connections.linkFailed": "Не вдалося підключити обліковий запис Google. Спробуйте ще раз."
+  "profile.connections.linkFailed": "Не вдалося підключити обліковий запис Google. Спробуйте ще раз.",
+
+  "signUp.googleNotRegistered": "Цей Google-акаунт ще не зареєстровано. Завершіть реєстрацію нижче (можна через Google) або увійдіть у наявний акаунт.",
+  "signUp.googleFailed": "Не вдалося зареєструватися через Google. Спробуйте ще раз.",
+  "signIn.googleFailed": "Не вдалося увійти через Google.",
+  "signIn.googleAlreadyRegistered": "Цей акаунт уже існує — увійдіть.",
+  "signIn.googleNotRegistered": "Цей Google-акаунт не зареєстровано. Зареєструйтеся."
 }

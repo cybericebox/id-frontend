@@ -184,5 +184,11 @@
   "profile.connections.googleNotConnected": "Google not connected",
   "profile.connections.unlink": "Unlink",
   "profile.connections.connect": "Connect Google",
-  "profile.connections.linkFailed": "Failed to link Google account. Please try again."
+  "profile.connections.linkFailed": "Failed to link Google account. Please try again.",
+
+  "signUp.googleNotRegistered": "This Google account is not registered yet. Complete registration below (you can use Google) or sign in to an existing account.",
+  "signUp.googleFailed": "Failed to sign up with Google. Please try again.",
+  "signIn.googleFailed": "Failed to sign in with Google.",
+  "signIn.googleAlreadyRegistered": "This account already exists — sign in.",
+  "signIn.googleNotRegistered": "This Google account is not registered. Please sign up."
 }

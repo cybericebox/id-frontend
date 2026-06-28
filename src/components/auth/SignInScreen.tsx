@@ -71,9 +71,11 @@ function SignInForm() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  const googleError = searchParams.get("google_error")
+
   const form = useForm<SignInValues>({
     resolver: zodResolver(SignInSchema),
-    mode: "onBlur",
+    mode: "onSubmit",
     defaultValues: { Email: "", Password: "" },
   })
 
@@ -166,6 +168,32 @@ function SignInForm() {
           {errorMsg && (
             <Alert variant="destructive">
               <AlertDescription>{errorMsg}</AlertDescription>
+            </Alert>
+          )}
+
+          {googleError === "failed" && (
+            <Alert variant="destructive">
+              <AlertDescription>{t("signIn.googleFailed")}</AlertDescription>
+            </Alert>
+          )}
+
+          {googleError === "already_registered" && (
+            <Alert>
+              <AlertDescription>{t("signIn.googleAlreadyRegistered")}</AlertDescription>
+            </Alert>
+          )}
+
+          {googleError === "not_registered" && (
+            <Alert>
+              <AlertDescription>
+                {t("signIn.googleNotRegistered")}{" "}
+                <Link
+                  href={returnTo ? `/sign-up?return_to=${encodeURIComponent(returnTo)}` : "/sign-up"}
+                  className="text-primary underline hover:no-underline"
+                >
+                  {t("signIn.createAccount")}
+                </Link>
+              </AlertDescription>
             </Alert>
           )}
 
