@@ -1,5 +1,10 @@
 import { SignUpScreen } from "@/components/auth/SignUpScreen"
+import { RecaptchaGate } from "@/components/RecaptchaGate"
 
 export default function RegisterPage() {
-  return <SignUpScreen />
+  return (
+    <RecaptchaGate>
+      <SignUpScreen />
+    </RecaptchaGate>
+  )
 }
