@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import "./globals.css"
 import Providers from "@/components/providers"
+import { QueryProvider } from "@/components/QueryProvider"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 
@@ -17,7 +18,7 @@ export default function RootLayout({
   return (
     <html lang="uk" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body className="grid-bg">
-        <Providers>{children}</Providers>
+        <Providers><QueryProvider>{children}</QueryProvider></Providers>
       </body>
     </html>
   )
