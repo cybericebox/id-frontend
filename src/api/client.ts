@@ -42,6 +42,7 @@ function portless(href: string): string {
     u.protocol = "https:"
     return u.toString()
   } catch {
+    console.warn("[client] portless: unexpected unparseable URL:", href)
     return href
   }
 }
@@ -58,9 +59,11 @@ function writeReturnToCookie(): void {
 // circular dependency, since lib/auth imports ApiError from this module.
 // The return_to is carried by the cookie written before calling this function;
 // we navigate directly to signInUrl without appending query params.
+// replace() is used so the 401'd page is NOT left in browser history, preventing
+// a back-button re-triggering the 401 redirect loop.
 function redirectToSignInPage(signInUrl: string | null): void {
   if (typeof window === "undefined") return
-  window.location.href = signInUrl || "/sign-in"
+  window.location.replace(signInUrl || portless(window.location.origin) + "/sign-in")
 }
 
 async function request<T>(
