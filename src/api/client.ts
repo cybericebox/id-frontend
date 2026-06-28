@@ -94,13 +94,18 @@ async function request<T>(
     return new Promise<never>(() => {})
   }
 
-  let parsed: unknown
   const contentType = res.headers.get("content-type") ?? ""
-  if (contentType.includes("application/json")) {
-    parsed = await res.json()
-  } else {
-    parsed = await res.text()
+  const raw = await res.text()
+  let parsed: unknown = raw
+  if (raw && contentType.includes("application/json")) {
+    try {
+      parsed = JSON.parse(raw)
+    } catch {
+      // Malformed JSON body — keep the raw text rather than throwing.
+      parsed = raw
+    }
   }
+  // (empty body → parsed stays "" → envelope undefined → handled below)
 
   // The backend wraps every JSON response in an envelope: { Status: { Code,
   // Message }, Data }. Unwrap it here so callers receive the payload directly.
