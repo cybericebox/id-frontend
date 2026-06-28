@@ -198,7 +198,7 @@ export function consumeNoSessionParam(): boolean {
  * id is served from id.<domain>; the platform root domain is the current host
  * minus the leading "id." prefix.
  */
-function safeReturnTo(returnTo?: string): string {
+export function safeReturnTo(returnTo?: string): string {
   if (!returnTo) return "/profile"
   const root = window.location.hostname.replace(/^id\./, "")
   try {

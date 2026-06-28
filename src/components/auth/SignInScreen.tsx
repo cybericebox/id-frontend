@@ -31,7 +31,7 @@ import { Logo } from "@/components/brand/Logo"
 import { AuthLayout } from "./AuthLayout"
 import { t } from "@/i18n/t"
 import { PageLoader } from "@/components/ui/spinner"
-import { redirectIfAuthed } from "@/lib/auth"
+import { redirectIfAuthed, safeReturnTo } from "@/lib/auth"
 
 // ---------------------------------------------------------------------------
 // Zod schema — mirrors the daemon's JSON body (Email, Password)
@@ -110,7 +110,7 @@ function SignInForm() {
       })
 
       if (res.ok || res.redirected) {
-        window.location.href = returnTo || "/profile"
+        window.location.href = safeReturnTo(returnTo || undefined)
         return
       }
 
