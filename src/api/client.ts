@@ -2,6 +2,8 @@
 // Base URL is same-origin by default; the daemon proxies /api/* paths.
 // Override via NEXT_PUBLIC_API_BASE_URL env var for local development.
 
+import { awaitAuthBootstrap } from "@/lib/silentAuth"
+
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? ""
 
 export class ApiError extends Error {
@@ -19,21 +21,46 @@ export class ApiError extends Error {
 }
 
 // ApiOptions controls cross-cutting request behavior.
-//   on401: "redirect" (default) — a 401 transparently redirects the browser to
-//          the backend-advertised sign-in page (X-Sign-In-URL) with return_to,
-//          so callers never repeat 401 handling. The promise never resolves
-//          (navigation is underway), so no catch/finally runs.
-//   on401: "throw" — opt out (e.g. fetchMe, which treats 401 as "anonymous").
-export type ApiOptions = { on401?: "redirect" | "throw" }
+//   required (default true) — a 401 writes the return_to cookie and redirects
+//       the browser to the backend-advertised sign-in page (X-Sign-In-URL).
+//       The promise never resolves (navigation is underway), so no catch/finally
+//       runs on the caller.
+//   required: false — opt out (e.g. fetchMe, which treats 401 as "anonymous").
+//       The 401 is thrown as ApiError so the caller can handle it.
+//   skipBootstrap — skip awaiting the silent-auth bootstrap. Used only by the
+//       probe (fetchMe) that IS the bootstrap, to avoid a deadlock.
+export type ApiOptions = { required?: boolean; skipBootstrap?: boolean }
+
+// portless strips the port from a URL and forces https:, matching the backend's
+// expectations for return_to (port-free, https-only). Returns the input unchanged
+// in non-browser contexts (SSR/static export safety).
+function portless(href: string): string {
+  if (typeof window === "undefined") return href
+  try {
+    const u = new URL(href)
+    u.port = ""
+    u.protocol = "https:"
+    return u.toString()
+  } catch {
+    return href
+  }
+}
+
+// writeReturnToCookie writes the current page URL (portless, https) as the
+// return_to cookie the backend consumes at session creation. The backend rejects
+// URLs with a port and requires https, so the value must be portless https.
+function writeReturnToCookie(): void {
+  if (typeof window === "undefined") return
+  document.cookie = `return_to=${encodeURIComponent(portless(window.location.href))}; path=/; SameSite=Lax; Secure`
+}
 
 // redirectToSignInPage is inlined here (no import of lib/auth) to avoid a
 // circular dependency, since lib/auth imports ApiError from this module.
+// The return_to is carried by the cookie written before calling this function;
+// we navigate directly to signInUrl without appending query params.
 function redirectToSignInPage(signInUrl: string | null): void {
   if (typeof window === "undefined") return
-  const base = signInUrl || "/sign-in"
-  const url = new URL(base, window.location.origin)
-  url.searchParams.set("return_to", window.location.href)
-  window.location.href = url.toString()
+  window.location.href = signInUrl || "/sign-in"
 }
 
 async function request<T>(
@@ -41,6 +68,8 @@ async function request<T>(
   init: RequestInit = {},
   opts: ApiOptions = {}
 ): Promise<T> {
+  if (!opts.skipBootstrap) await awaitAuthBootstrap()
+
   const url = `${BASE_URL}${path}`
 
   const res = await fetch(url, {
@@ -52,10 +81,12 @@ async function request<T>(
     },
   })
 
-  // Centralized auth handling: a 401 redirects to sign-in by default. Returning a
-  // never-resolving promise stops the caller's success/catch paths from running
-  // while the browser navigates away.
-  if (res.status === 401 && (opts.on401 ?? "redirect") === "redirect") {
+  // Centralized auth handling: required (default true) → write return_to cookie
+  // and redirect to sign-in. Returning a never-resolving promise stops the
+  // caller's success/catch paths from running while the browser navigates away.
+  // required:false → fall through to throw ApiError so callers treat it as anon.
+  if (res.status === 401 && (opts.required ?? true)) {
+    writeReturnToCookie()
     redirectToSignInPage(res.headers.get("X-Sign-In-URL"))
     return new Promise<never>(() => {})
   }
