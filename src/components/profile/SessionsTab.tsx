@@ -30,49 +30,36 @@ function osFromUA(ua: string): string {
   return t("profile.sessions.unknownDevice")
 }
 
-interface Geo {
-  city: string
-  country: string
+// browserFromUA derives a human browser label from a user-agent string.
+function browserFromUA(ua: string): string {
+  if (!ua) return t("profile.sessions.unknownBrowser")
+  if (/cybericebox/i.test(ua)) return "CyberICEBox CLI"
+  const edge = ua.match(/Edg\/(\d+)/)
+  if (edge) return `Edge ${edge[1]}`
+  const opera = ua.match(/OPR\/(\d+)/)
+  if (opera) return `Opera ${opera[1]}`
+  const firefox = ua.match(/Firefox\/(\d+)/)
+  if (firefox) return `Firefox ${firefox[1]}`
+  const chrome = ua.match(/Chrome\/(\d+)/)
+  if (chrome) return `Chrome ${chrome[1]}`
+  const safari = ua.match(/Version\/(\d+).*Safari/)
+  if (safari) return `Safari ${safari[1]}`
+  return t("profile.sessions.unknownBrowser")
 }
 
-// isPrivateIP skips loopback/LAN/empty addresses — geo lookup is pointless for them.
-function isPrivateIP(ip: string): boolean {
-  if (!ip) return true
-  if (ip === "::1" || ip.startsWith("fe80") || ip.startsWith("fc") || ip.startsWith("fd")) return true
-  if (/^127\./.test(ip) || /^10\./.test(ip) || /^192\.168\./.test(ip)) return true
-  if (/^172\.(1[6-9]|2\d|3[01])\./.test(ip)) return true
-  return false
+function formatDate(dateStr: string): string {
+  if (!dateStr) return "—"
+  return new Date(dateStr).toLocaleString(locale, {
+    dateStyle: "short",
+    timeStyle: "short",
+  })
 }
-
-// fetchGeo resolves a public IP to city/country via a free, key-less endpoint.
-// Best-effort: returns null on any failure (the row then shows just the IP).
-async function fetchGeo(ip: string): Promise<Geo | null> {
-  try {
-    const res = await fetch(`https://ipwho.is/${encodeURIComponent(ip)}`)
-    if (!res.ok) return null
-    const d = await res.json()
-    if (!d?.success || !d?.country) return null
-    return { city: d.city ?? "", country: d.country }
-  } catch {
-    return null
-  }
-}
-
-function geoLabel(g: Geo | undefined): string {
-  if (!g) return ""
-  return g.city ? `${g.city}, ${g.country}` : g.country
-}
-
-// Cap external geo lookups per render to avoid hammering the API for accounts
-// with many sessions across many IPs.
-const MAX_GEO_LOOKUPS = 20
 
 export function SessionsTab() {
   const [sessions, setSessions] = useState<SessionInfo[]>([])
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [busyId, setBusyId] = useState<string | null>(null)
-  const [geo, setGeo] = useState<Record<string, Geo>>({})
 
   const load = useCallback(async () => {
     setErrorMsg(null)
@@ -90,33 +77,6 @@ export function SessionsTab() {
   useEffect(() => {
     void load()
   }, [load])
-
-  // Resolve geo for the sessions' public IPs on the client (no server storage),
-  // looking up each unique IP once and caching the result.
-  useEffect(() => {
-    const ips = Array.from(
-      new Set(sessions.map((s) => s.IP).filter((ip) => !isPrivateIP(ip) && !(ip in geo)))
-    ).slice(0, MAX_GEO_LOOKUPS)
-    if (ips.length === 0) return
-
-    let cancelled = false
-    void (async () => {
-      const entries = await Promise.all(
-        ips.map(async (ip) => [ip, await fetchGeo(ip)] as const)
-      )
-      if (cancelled) return
-      setGeo((prev) => {
-        const next = { ...prev }
-        for (const [ip, g] of entries) if (g) next[ip] = g
-        return next
-      })
-    })()
-    return () => {
-      cancelled = true
-    }
-    // geo is intentionally omitted: it's updated here and guarded by the `in geo` filter.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessions])
 
   const revokeOne = async (id: string) => {
     setBusyId(id)
@@ -168,37 +128,33 @@ export function SessionsTab() {
             {t("profile.sessions.empty")}
           </p>
         ) : (
-          <ul className="space-y-3">
+          <ul className="max-h-96 space-y-3 overflow-y-auto pr-1">
             {sessions.map((s) => (
-              <li key={s.ID} className="space-y-1 rounded-md border p-3">
-                {/* Row 1: OS + current badge ↔ last-activity time */}
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
-                    <span>{osFromUA(s.UserAgent)}</span>
+              <li key={s.ID} className="flex items-start justify-between gap-3 rounded-md border p-3">
+                {/* Left: browser · OS, IP · last-activity, created */}
+                <div className="min-w-0">
+                  {/* Line 1: browser · OS + current badge */}
+                  <div className="flex flex-wrap items-center gap-2 text-sm font-semibold">
+                    <span>{browserFromUA(s.UserAgent)} · {osFromUA(s.UserAgent)}</span>
                     {s.IsCurrent && (
-                      <span className="rounded bg-primary/10 px-2 py-0.5 text-xs text-primary">
+                      <span className="rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                         {t("profile.sessions.current")}
                       </span>
                     )}
                   </div>
-                  <span className="whitespace-nowrap text-xs text-muted-foreground">
-                    {s.LastSeen
-                      ? new Date(s.LastSeen).toLocaleString(locale, {
-                          dateStyle: "short",
-                          timeStyle: "short",
-                        })
-                      : "—"}
-                  </span>
+                  {/* Line 2: IP · last activity */}
+                  <div className="mt-0.5 text-xs text-muted-foreground">
+                    {s.IP} · {t("profile.sessions.lastActivity")}: {formatDate(s.LastSeen)}
+                  </div>
+                  {/* Line 3: created */}
+                  <div className="text-xs text-muted-foreground">
+                    {t("profile.sessions.createdAt")}: {formatDate(s.CreatedAt)}
+                  </div>
                 </div>
 
-                {/* Body: full-width location · IP (no reserved time column) */}
-                <div className="break-words text-sm text-muted-foreground">
-                  {geoLabel(geo[s.IP]) && `${geoLabel(geo[s.IP])} · `}
-                  {s.IP}
-                </div>
-
+                {/* Right: revoke button — only for non-current sessions */}
                 {!s.IsCurrent && (
-                  <div className="flex justify-end">
+                  <div className="shrink-0">
                     <Button
                       variant="outline"
                       size="sm"

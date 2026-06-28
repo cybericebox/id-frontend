@@ -181,5 +181,8 @@
   "profile.connections.googleNotConnected": "Google не підключено",
   "profile.connections.unlink": "Відключити",
   "profile.connections.connect": "Підключити Google",
-  "profile.connections.linkFailed": "Не вдалося підключити обліковий запис Google. Спробуйте ще раз."
+  "profile.connections.linkFailed": "Не вдалося підключити обліковий запис Google. Спробуйте ще раз.",
+  "profile.sessions.lastActivity": "Остання активність",
+  "profile.sessions.createdAt": "Створено",
+  "profile.sessions.unknownBrowser": "Невідомий браузер"
 }

@@ -181,5 +181,8 @@
   "profile.connections.googleNotConnected": "Google not connected",
   "profile.connections.unlink": "Unlink",
   "profile.connections.connect": "Connect Google",
-  "profile.connections.linkFailed": "Failed to link Google account. Please try again."
+  "profile.connections.linkFailed": "Failed to link Google account. Please try again.",
+  "profile.sessions.lastActivity": "Last activity",
+  "profile.sessions.createdAt": "Created",
+  "profile.sessions.unknownBrowser": "Unknown"
 }

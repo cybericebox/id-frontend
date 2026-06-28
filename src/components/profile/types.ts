@@ -17,5 +17,6 @@ export interface SessionInfo {
   UserAgent: string
   IP: string
   LastSeen: string
+  CreatedAt: string
   IsCurrent: boolean
 }
