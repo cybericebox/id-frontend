@@ -390,7 +390,7 @@ function SetupForm() {
           </div>
           <Card className="frost-panel frost-in w-full">
             <CardContent className="flex justify-center py-8">
-              <Spinner className="h-8 w-8 text-primary" />
+              <Spinner size="md" className="text-primary" />
             </CardContent>
           </Card>
         </div>

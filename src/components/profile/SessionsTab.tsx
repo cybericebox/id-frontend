@@ -121,7 +121,7 @@ export function SessionsTab() {
 
         {isLoading ? (
           <div className="flex justify-center py-6">
-            <Spinner className="h-6 w-6 text-primary" />
+            <Spinner size="sm" className="text-primary" />
           </div>
         ) : sessions.length === 0 ? (
           <p className="text-sm text-muted-foreground">
