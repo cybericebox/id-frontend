@@ -32,6 +32,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { AuthLayout } from "./AuthLayout"
 import { t } from "@/i18n/t"
 import { apiPost, apiUrl } from "@/api/client"
+import { localizedError } from "@/i18n/apiError"
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -365,7 +366,7 @@ function SetupForm() {
         window.location.assign("/profile")
       }
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : t("error.generic"))
+      setSubmitError(localizedError(err))
     } finally {
       setIsSubmitting(false)
     }

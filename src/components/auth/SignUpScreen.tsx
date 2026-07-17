@@ -32,7 +32,8 @@ import { AuthLayout } from "./AuthLayout"
 import { t } from "@/i18n/t"
 import { PageLoader } from "@/components/ui/spinner"
 import { redirectIfAuthed, rememberReturnTo } from "@/lib/auth"
-import { apiPost, apiUrl, ApiError } from "@/api/client"
+import { apiPost, apiUrl } from "@/api/client"
+import { localizedError } from "@/i18n/apiError"
 
 // ---------------------------------------------------------------------------
 // Zod schema — mirrors the daemon's JSON body (Email only for registration)
@@ -111,12 +112,8 @@ function RegisterForm() {
       setSubmittedEmail(data.Email)
       return
     } catch (err) {
-      if (err instanceof ApiError) {
-        // Surface the daemon's envelope message; fall back to the generic title.
-        setErrorMsg(err.message || t("register.errorTitle"))
-      } else {
-        setErrorMsg(err instanceof Error ? err.message : t("error.generic"))
-      }
+      // Localized by the error's stable code; falls back to a generic message.
+      setErrorMsg(localizedError(err))
     } finally {
       setIsSubmitting(false)
     }

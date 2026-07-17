@@ -33,6 +33,7 @@ import { t } from "@/i18n/t"
 import { PageLoader } from "@/components/ui/spinner"
 import { redirectIfAuthed, rememberReturnTo, safeReturnTo } from "@/lib/auth"
 import { apiPost, apiUrl } from "@/api/client"
+import { localizedError } from "@/i18n/apiError"
 
 // ---------------------------------------------------------------------------
 // Zod schema — mirrors the daemon's JSON body (Email, Password)
@@ -124,8 +125,8 @@ function SignInForm() {
         window.location.assign(safeReturnTo(returnTo || undefined))
       }
     } catch (err) {
-      // ApiError.message is already the envelope Status.Message (unwrapped in client.ts)
-      setErrorMsg(err instanceof Error ? err.message : t("error.generic"))
+      // Localized by the error's stable code (Status.Code), not the English message.
+      setErrorMsg(localizedError(err))
     } finally {
       setIsSubmitting(false)
     }
