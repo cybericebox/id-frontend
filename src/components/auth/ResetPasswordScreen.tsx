@@ -31,7 +31,8 @@ import { AuthLayout } from "./AuthLayout"
 import { t } from "@/i18n/t"
 import { PageLoader } from "@/components/ui/spinner"
 import { redirectIfAuthed, rememberReturnTo } from "@/lib/auth"
-import { apiUrl } from "@/api/client"
+import { apiPost } from "@/api/client"
+import { localizedError } from "@/i18n/apiError"
 
 // ---------------------------------------------------------------------------
 // Zod schema — NewPassword + ConfirmPassword (refine: must match).
@@ -131,39 +132,19 @@ function ResetPasswordForm() {
     try {
       // The reset code is sent in the request body alongside the new password.
       // This endpoint is NOT reCAPTCHA-protected.
-      const res = await fetch(
-        apiUrl("/api/auth/reset-password"),
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ Code: code, Password: data.NewPassword }),
-        }
+      // required:false — a 4xx (invalid/expired code, password complexity) must
+      // surface inline. The endpoint returns success JSON (not a session); the
+      // user signs in afterward.
+      await apiPost(
+        "/api/auth/reset-password",
+        { Code: code, Password: data.NewPassword },
+        undefined,
+        { required: false }
       )
-
-      // The reset endpoint returns success JSON (not a session); the user signs
-      // in afterward.
-      if (res.ok) {
-        setSucceeded(true)
-        return
-      }
-
-      // Parse 4xx error body from daemon (invalid/expired code, complexity).
-      let message: string = t("resetPassword.errorTitle")
-      try {
-        const payload = await res.json()
-        if (typeof payload === "object" && payload !== null) {
-          message =
-            (payload as { message?: string; error?: string }).message ??
-            (payload as { message?: string; error?: string }).error ??
-            message
-        }
-      } catch {
-        // non-JSON error body — keep the generic message
-      }
-      setErrorMsg(message)
+      setSucceeded(true)
+      return
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : t("error.generic"))
+      setErrorMsg(localizedError(err))
     } finally {
       setIsSubmitting(false)
     }

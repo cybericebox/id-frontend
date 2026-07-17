@@ -32,7 +32,8 @@ import { AuthLayout } from "./AuthLayout"
 import { t } from "@/i18n/t"
 import { PageLoader } from "@/components/ui/spinner"
 import { redirectIfAuthed, rememberReturnTo } from "@/lib/auth"
-import { apiUrl } from "@/api/client"
+import { apiPost } from "@/api/client"
+import { localizedError } from "@/i18n/apiError"
 
 // ---------------------------------------------------------------------------
 // Zod schema — mirrors the daemon's JSON body (Email)
@@ -100,37 +101,14 @@ function ForgotPasswordForm() {
         body.RecaptchaToken = recaptchaToken
       }
 
-      const res = await fetch(apiUrl("/api/auth/forgot-password"), {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      })
-
-      // The daemon ALWAYS returns success on a well-formed request — it does not
-      // reveal whether the account exists. On 2xx we show a neutral confirmation
-      // that does NOT confirm the email is registered.
-      if (res.ok) {
-        setSubmitted(true)
-        return
-      }
-
-      // Parse the 4xx JSON error from the daemon (rare, e.g. reCAPTCHA failure).
-      let message: string = t("forgotPassword.errorTitle")
-      try {
-        const payload = await res.json()
-        if (typeof payload === "object" && payload !== null) {
-          message =
-            (payload as { message?: string; error?: string }).message ??
-            (payload as { message?: string; error?: string }).error ??
-            message
-        }
-      } catch {
-        // non-JSON error body — keep the generic message
-      }
-      setErrorMsg(message)
+      // required:false — surface a 4xx (e.g. reCAPTCHA failure) inline. The daemon
+      // otherwise ALWAYS returns success without revealing whether the account
+      // exists, so a 2xx is a neutral confirmation, NOT proof the email is registered.
+      await apiPost("/api/auth/forgot-password", body, undefined, { required: false })
+      setSubmitted(true)
+      return
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : t("error.generic"))
+      setErrorMsg(localizedError(err))
     } finally {
       setIsSubmitting(false)
     }
