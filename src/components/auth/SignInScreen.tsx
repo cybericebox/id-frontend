@@ -108,9 +108,14 @@ function SignInForm() {
       // We perform a top-level navigation to RedirectURL — this is NOT CORS-restricted
       // and allows the callback to plant the per-subdomain local token before
       // redirecting to the final page.
+      // required:false — a 401 here means "credentials rejected", which must be
+      // shown inline. Without it the client would treat the 401 as "not signed
+      // in" and redirect to this very page, swallowing the error.
       const { RedirectURL } = await apiPost<{ RedirectURL: string }>(
         "/api/auth/sign-in",
-        body
+        body,
+        undefined,
+        { required: false }
       )
 
       if (RedirectURL) {

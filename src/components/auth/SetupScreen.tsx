@@ -348,9 +348,14 @@ function SetupForm() {
       // (with ApiError.message = envelope Status.Message, handled in the catch below).
       // Top-level navigation to RedirectURL is NOT CORS-restricted; the callback
       // plants the per-subdomain local token and redirects to the final page.
+      // required:false — a 401 here (invalid/expired setup token) must surface
+      // inline. Without it the client treats the 401 as "not signed in" and
+      // redirects to sign-in, swallowing the error mid-registration.
       const { RedirectURL } = await apiPost<{ RedirectURL: string }>(
         "/api/auth/setup",
-        body
+        body,
+        undefined,
+        { required: false }
       )
 
       clearDraft(draftKey) // registration complete — drop the saved draft
