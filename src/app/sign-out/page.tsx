@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation"
 
 import { Wordmark } from "@/components/brand/Wordmark"
 import { safeReturnTo } from "@/lib/auth"
+import { apiUrl } from "@/api/client"
 import { t } from "@/i18n/t"
 
 // ---------------------------------------------------------------------------
@@ -30,8 +31,9 @@ function SignOut() {
     let cancelled = false
     const run = async () => {
       try {
-        // Same-origin on id; clears master + local cookies via DeAuthenticate.
-        await fetch("/api/auth/sign-out", {
+        // Hits api.<domain> (apiUrl); clears master + local cookies via
+        // DeAuthenticate. A bare relative path would 404 on the id origin.
+        await fetch(apiUrl("/api/auth/sign-out"), {
           method: "POST",
           credentials: "include",
         })

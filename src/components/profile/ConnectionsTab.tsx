@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { apiDelete } from "@/api/client"
+import { apiDelete, apiUrl } from "@/api/client"
 import { t } from "@/i18n/t"
 import type { Account } from "./types"
 import { extractError } from "./ProfileTab"
@@ -48,7 +48,7 @@ export function ConnectionsTab({
 
   const connect = () => {
     // GET endpoint sets the intent cookie, runs OAuth, and returns to /profile.
-    window.location.href = "/api/auth/google/link"
+    window.location.href = apiUrl("/api/auth/google/link")
   }
 
   return (

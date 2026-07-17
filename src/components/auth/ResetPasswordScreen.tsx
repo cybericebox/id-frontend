@@ -31,6 +31,7 @@ import { AuthLayout } from "./AuthLayout"
 import { t } from "@/i18n/t"
 import { PageLoader } from "@/components/ui/spinner"
 import { redirectIfAuthed, rememberReturnTo } from "@/lib/auth"
+import { apiUrl } from "@/api/client"
 
 // ---------------------------------------------------------------------------
 // Zod schema — NewPassword + ConfirmPassword (refine: must match).
@@ -131,7 +132,7 @@ function ResetPasswordForm() {
       // The reset code is sent in the request body alongside the new password.
       // This endpoint is NOT reCAPTCHA-protected.
       const res = await fetch(
-        "/api/auth/reset-password",
+        apiUrl("/api/auth/reset-password"),
         {
           method: "POST",
           credentials: "include",

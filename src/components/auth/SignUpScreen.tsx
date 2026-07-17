@@ -32,6 +32,7 @@ import { AuthLayout } from "./AuthLayout"
 import { t } from "@/i18n/t"
 import { PageLoader } from "@/components/ui/spinner"
 import { redirectIfAuthed, rememberReturnTo } from "@/lib/auth"
+import { apiPost, apiUrl, ApiError } from "@/api/client"
 
 // ---------------------------------------------------------------------------
 // Zod schema — mirrors the daemon's JSON body (Email only for registration)
@@ -100,35 +101,22 @@ function RegisterForm() {
         body.RecaptchaToken = recaptchaToken
       }
 
-      const res = await fetch("/api/auth/sign-up", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      })
+      // Route through the API client so the request hits api.<domain> (absolute
+      // BASE_URL) with credentials — NOT a relative "/api/..." that would resolve
+      // against the id.<domain> frontend origin and 404. required:false keeps a
+      // 401 as a thrown ApiError instead of a sign-in redirect (sign-up is anon).
+      await apiPost("/api/auth/sign-up", body, undefined, { required: false })
 
-      if (res.ok) {
-        // Show "check your email" confirmation — no redirect.
-        setSubmittedEmail(data.Email)
-        return
-      }
-
-      // Parse the 4xx JSON error from the daemon and surface it inline.
-      let message: string = t("register.errorTitle")
-      try {
-        const payload = await res.json()
-        if (typeof payload === "object" && payload !== null) {
-          message =
-            (payload as { message?: string; error?: string }).message ??
-            (payload as { message?: string; error?: string }).error ??
-            message
-        }
-      } catch {
-        // non-JSON error body — keep the generic message
-      }
-      setErrorMsg(message)
+      // Show "check your email" confirmation — no redirect.
+      setSubmittedEmail(data.Email)
+      return
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : t("error.generic"))
+      if (err instanceof ApiError) {
+        // Surface the daemon's envelope message; fall back to the generic title.
+        setErrorMsg(err.message || t("register.errorTitle"))
+      } else {
+        setErrorMsg(err instanceof Error ? err.message : t("error.generic"))
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -189,7 +177,7 @@ function RegisterForm() {
             className="w-full"
             type="button"
             onClick={() => {
-              window.location.href = "/api/auth/google/register"
+              window.location.href = apiUrl("/api/auth/google/register")
             }}
           >
             {t("register.continueWithGoogle")}

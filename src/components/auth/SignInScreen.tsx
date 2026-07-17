@@ -32,7 +32,7 @@ import { AuthLayout } from "./AuthLayout"
 import { t } from "@/i18n/t"
 import { PageLoader } from "@/components/ui/spinner"
 import { redirectIfAuthed, rememberReturnTo, safeReturnTo } from "@/lib/auth"
-import { apiPost } from "@/api/client"
+import { apiPost, apiUrl } from "@/api/client"
 
 // ---------------------------------------------------------------------------
 // Zod schema — mirrors the daemon's JSON body (Email, Password)
@@ -153,7 +153,7 @@ function SignInForm() {
             className="w-full"
             type="button"
             onClick={() => {
-              window.location.href = "/api/auth/google"
+              window.location.href = apiUrl("/api/auth/google")
             }}
           >
             {t("signIn.continueWithGoogle")}

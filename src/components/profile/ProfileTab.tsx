@@ -23,7 +23,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { apiPatch, ApiError } from "@/api/client"
+import { apiPatch, ApiError, apiUrl } from "@/api/client"
 import { t } from "@/i18n/t"
 import type { Account } from "./types"
 
@@ -114,7 +114,9 @@ export function ProfileTab({
       const fd = new FormData()
       fd.append("file", blob, "avatar.jpg")
       // Raw fetch: multipart body, let the browser set the Content-Type boundary.
-      const res = await fetch("/api/auth/account/avatar", {
+      // apiUrl keeps it on the API origin (api.<domain>) — a bare relative path
+      // would hit the id.<domain> frontend origin and 404.
+      const res = await fetch(apiUrl("/api/auth/account/avatar"), {
         method: "POST",
         credentials: "include",
         body: fd,
@@ -144,7 +146,7 @@ export function ProfileTab({
     setOkMsg(null)
     setIsPhotoBusy(true)
     try {
-      const res = await fetch("/api/auth/account/avatar", {
+      const res = await fetch(apiUrl("/api/auth/account/avatar"), {
         method: "DELETE",
         credentials: "include",
       })

@@ -32,6 +32,7 @@ import { AuthLayout } from "./AuthLayout"
 import { t } from "@/i18n/t"
 import { PageLoader } from "@/components/ui/spinner"
 import { redirectIfAuthed, rememberReturnTo } from "@/lib/auth"
+import { apiUrl } from "@/api/client"
 
 // ---------------------------------------------------------------------------
 // Zod schema — mirrors the daemon's JSON body (Email)
@@ -99,7 +100,7 @@ function ForgotPasswordForm() {
         body.RecaptchaToken = recaptchaToken
       }
 
-      const res = await fetch("/api/auth/forgot-password", {
+      const res = await fetch(apiUrl("/api/auth/forgot-password"), {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

@@ -31,7 +31,7 @@ import { Logo } from "@/components/brand/Logo"
 import { Spinner } from "@/components/ui/spinner"
 import { AuthLayout } from "./AuthLayout"
 import { t } from "@/i18n/t"
-import { apiPost } from "@/api/client"
+import { apiPost, apiUrl } from "@/api/client"
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -263,7 +263,7 @@ function SetupForm() {
     async function fetchSetupInfo() {
       try {
         const res = await fetch(
-          `/api/auth/setup?token=${encodeURIComponent(token)}`,
+          apiUrl(`/api/auth/setup?token=${encodeURIComponent(token)}`),
           {
             method: "GET",
             credentials: "include",

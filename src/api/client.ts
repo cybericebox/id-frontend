@@ -124,6 +124,15 @@ async function request<T>(
   return (envelope ? envelope.Data : parsed) as T
 }
 
+// apiUrl builds an absolute URL against the API origin (api.<domain>) for cases
+// that CANNOT go through fetch() — full-page navigations such as OAuth redirects
+// (window.location.href = ...). Without it a relative "/api/..." resolves against
+// the CURRENT frontend origin (id.<domain>) and 404s. Same BASE_URL the fetch
+// helpers use, so both stay on the one API host.
+export function apiUrl(path: string): string {
+  return `${BASE_URL}${path}`
+}
+
 export function apiGet<T>(path: string, init?: RequestInit, opts?: ApiOptions): Promise<T> {
   return request<T>(path, { ...init, method: "GET" }, opts)
 }
