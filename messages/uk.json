@@ -21,6 +21,7 @@
   "signIn.emailPlaceholder": "Електронна пошта",
   "signIn.passwordPlaceholder": "Пароль",
   "signIn.submit": "Увійти",
+  "signIn.inProgress": "Входимо…",
   "signIn.errorTitle": "Не вдалося увійти",
   "signOut.title": "Вихід",
   "signOut.inProgress": "Виходимо…",

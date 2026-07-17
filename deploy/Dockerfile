@@ -18,7 +18,7 @@ RUN npm run build
 
 FROM nginx:alpine AS runner
 COPY --from=build /app/out /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY docker-entrypoint.sh /docker-entrypoint.d/40-next-public-env.sh
+COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
+COPY deploy/docker-entrypoint.sh /docker-entrypoint.d/40-next-public-env.sh
 RUN chmod +x /docker-entrypoint.d/40-next-public-env.sh
-EXPOSE 3001
+EXPOSE 3000

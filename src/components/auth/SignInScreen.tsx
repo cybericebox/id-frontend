@@ -254,7 +254,7 @@ function SignInForm() {
                 className="w-full"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? t("common.loading") : t("signIn.submit")}
+                {isSubmitting ? t("signIn.inProgress") : t("signIn.submit")}
               </Button>
             </form>
           </Form>

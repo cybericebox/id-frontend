@@ -41,9 +41,8 @@ export interface Me {
  */
 export async function fetchMe(): Promise<Me | null> {
   try {
-    // required:false → 401 is "anonymous" (not a redirect); skipBootstrap → this
-    // probe IS the bootstrap, so it must not await itself (deadlock prevention).
-    return await apiGet<Me>("/api/auth/me", undefined, { required: false, skipBootstrap: true })
+    // required:false → 401 is "anonymous" (not a redirect).
+    return await apiGet<Me>("/api/auth/me", undefined, { required: false })
   } catch (err) {
     if (err instanceof ApiError && err.status === 401) {
       return null

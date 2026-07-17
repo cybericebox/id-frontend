@@ -21,6 +21,7 @@
   "signIn.emailPlaceholder": "Email address",
   "signIn.passwordPlaceholder": "Password",
   "signIn.submit": "Sign in",
+  "signIn.inProgress": "Signing in…",
   "signIn.errorTitle": "Sign-in failed",
   "signOut.title": "Signing out",
   "signOut.inProgress": "Signing out…",
