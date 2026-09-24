@@ -12,6 +12,8 @@ const alertVariants = cva(
         default: "bg-hero text-ink [&>svg]:text-dim",
         destructive: "bg-danger-bg text-danger [&>svg]:text-danger",
         success: "bg-ok-bg text-ok [&>svg]:text-ok",
+        // notice that needs the user's action (not an error): amber tint, readable in both themes
+        warn: "bg-warn-bg text-warn [&>svg]:text-warn",
       },
     },
     defaultVariants: {

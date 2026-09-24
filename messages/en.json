@@ -133,7 +133,6 @@
   "validation.required": "This field is required",
   "validation.invalidEmail": "Please enter a valid email address",
   "validation.passwordMin": "Password must be at least 8 characters",
-
   "profile.heading": "Account",
   "profile.memberSince": "On the platform since",
   "role.user": "User",
@@ -152,7 +151,6 @@
   "profile.tab.connections.desc": "Google and other providers",
   "profile.loading": "Loading your account…",
   "profile.loadError": "Could not load your account",
-
   "profile.profile.title": "Personal information",
   "profile.profile.description": "Update your name.",
   "profile.profile.firstName": "First name",
@@ -173,7 +171,6 @@
   "profile.profile.photoInvalidType": "Only images are supported",
   "profile.profile.save": "Save changes",
   "profile.profile.saved": "Profile updated",
-
   "profile.account.title": "Email",
   "profile.account.description": "Manage your email address.",
   "profile.account.currentEmail": "Current email",
@@ -189,7 +186,6 @@
   "profile.account.deleteConfirmTitle": "Delete your account?",
   "profile.account.deleteConfirmBody": "This permanently deletes your account, sessions, and linked providers. This action cannot be undone.",
   "profile.account.deleteConfirmButton": "Yes, delete my account",
-
   "profile.security.title": "Password",
   "profile.security.description": "Change your password.",
   "profile.security.setFirstDescription": "Set a password for your account.",
@@ -199,7 +195,6 @@
   "profile.security.confirmPassword": "Confirm new password",
   "profile.security.save": "Save password",
   "profile.security.saved": "Password updated",
-
   "profile.sessions.title": "Active sessions",
   "profile.sessions.description": "Devices currently signed in to your account.",
   "profile.sessions.current": "This device",
@@ -211,7 +206,6 @@
   "profile.sessions.lastActivity": "Last activity",
   "profile.sessions.createdAt": "Created",
   "profile.sessions.unknownBrowser": "Unknown browser",
-
   "profile.connections.title": "Connected accounts",
   "profile.connections.description": "Link external accounts you can sign in with.",
   "profile.connections.googleConnected": "Google connected",
@@ -219,11 +213,11 @@
   "profile.connections.unlink": "Unlink",
   "profile.connections.connect": "Connect Google",
   "profile.connections.linkFailed": "Failed to link Google account. Please try again.",
-
-  "signUp.googleNotRegistered": "This Google account is not registered yet. Complete registration below (you can use Google) or sign in to an existing account.",
+  "signUp.googleNotRegistered": "You tried to sign in with Google, but there is no such account. Sign up below or",
   "signUp.googleFailed": "Failed to sign up with Google. Please try again.",
   "signIn.googleFailed": "Failed to sign in with Google.",
   "signIn.googleBlocked": "This account is blocked.",
   "signIn.googleAlreadyRegistered": "An account with this email already exists. Sign in and connect Google in your profile.",
-  "signIn.googleNotRegistered": "This Google account is not registered. Please sign up."
+  "signIn.googleNotRegistered": "This Google account is not registered. Please sign up.",
+  "signUp.googleNotRegisteredTitle": "Account not registered yet"
 }

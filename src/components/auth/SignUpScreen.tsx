@@ -18,8 +18,8 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { MailCheck } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { CircleAlert, MailCheck } from "lucide-react"
 import { AuthLayout } from "./AuthLayout"
 import { useOneShotParam } from "@/lib/useOneShotParam"
 import { AuthDivider, AuthHeading, AuthPane, AuthSwitch, GoogleIcon } from "./parts"
@@ -159,6 +159,20 @@ function RegisterForm() {
       <AuthPane>
         <AuthHeading title={t("register.title")} subtitle={t("register.subtitle")} />
 
+          {/* Google sign-in bounced here because the account doesn't exist yet — say why, up top. */}
+          {googleError === "not_registered" && (
+            <Alert variant="warn">
+              <CircleAlert />
+              <AlertTitle>{t("signUp.googleNotRegisteredTitle")}</AlertTitle>
+              <AlertDescription>
+                {t("signUp.googleNotRegistered")}{" "}
+                <Link href={signInHref} className="font-medium underline underline-offset-3">
+                  {t("register.signIn")}
+                </Link>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Google registration — plain navigation; distinct from sign-in's /api/auth/google.
               return_to is carried through Google and /setup. An already-linked
               Google account is signed in directly by the backend. */}
@@ -183,16 +197,6 @@ function RegisterForm() {
             </Alert>
           )}
 
-          {googleError === "not_registered" && (
-            <Alert>
-              <AlertDescription>
-                {t("signUp.googleNotRegistered")}{" "}
-                <Link href={signInHref} className="font-medium underline underline-offset-3">
-                  {t("register.signIn")}
-                </Link>
-              </AlertDescription>
-            </Alert>
-          )}
 
           {googleError === "failed" && (
             <Alert variant="destructive">

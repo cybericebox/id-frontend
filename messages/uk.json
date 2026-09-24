@@ -133,7 +133,6 @@
   "validation.required": "Це поле обов'язкове",
   "validation.invalidEmail": "Введіть дійсну електронну адресу",
   "validation.passwordMin": "Пароль має містити щонайменше 8 символів",
-
   "profile.heading": "Обліковий запис",
   "profile.memberSince": "На платформі з",
   "role.user": "Користувач",
@@ -152,7 +151,6 @@
   "profile.tab.connections.desc": "Google та інші провайдери",
   "profile.loading": "Завантаження облікового запису…",
   "profile.loadError": "Не вдалося завантажити обліковий запис",
-
   "profile.profile.title": "Особиста інформація",
   "profile.profile.description": "Оновіть своє ім'я.",
   "profile.profile.firstName": "Ім'я",
@@ -173,7 +171,6 @@
   "profile.profile.photoInvalidType": "Підтримуються лише зображення",
   "profile.profile.save": "Зберегти зміни",
   "profile.profile.saved": "Профіль оновлено",
-
   "profile.account.title": "Електронна пошта",
   "profile.account.description": "Керуйте своєю електронною адресою.",
   "profile.account.currentEmail": "Поточна електронна пошта",
@@ -189,7 +186,6 @@
   "profile.account.deleteConfirmTitle": "Видалити обліковий запис?",
   "profile.account.deleteConfirmBody": "Це назавжди видалить ваш обліковий запис, сесії та підключені провайдери. Цю дію не можна скасувати.",
   "profile.account.deleteConfirmButton": "Так, видалити мій обліковий запис",
-
   "profile.security.title": "Пароль",
   "profile.security.description": "Змініть свій пароль.",
   "profile.security.setFirstDescription": "Встановіть пароль для свого облікового запису.",
@@ -199,7 +195,6 @@
   "profile.security.confirmPassword": "Підтвердьте новий пароль",
   "profile.security.save": "Зберегти пароль",
   "profile.security.saved": "Пароль оновлено",
-
   "profile.sessions.title": "Активні сесії",
   "profile.sessions.description": "Пристрої, на яких зараз виконано вхід до вашого облікового запису.",
   "profile.sessions.current": "Цей пристрій",
@@ -211,7 +206,6 @@
   "profile.sessions.lastActivity": "Остання активність",
   "profile.sessions.createdAt": "Створено",
   "profile.sessions.unknownBrowser": "Невідомий браузер",
-
   "profile.connections.title": "Підключені облікові записи",
   "profile.connections.description": "Підключіть зовнішні облікові записи для входу.",
   "profile.connections.googleConnected": "Google підключено",
@@ -219,11 +213,11 @@
   "profile.connections.unlink": "Відключити",
   "profile.connections.connect": "Підключити Google",
   "profile.connections.linkFailed": "Не вдалося підключити обліковий запис Google. Спробуйте ще раз.",
-
-  "signUp.googleNotRegistered": "Цей Google-акаунт ще не зареєстровано. Завершіть реєстрацію нижче (можна через Google) або увійдіть у наявний акаунт.",
+  "signUp.googleNotRegistered": "Ви намагалися увійти через Google, але такого акаунта немає. Зареєструйтеся нижче або",
   "signUp.googleFailed": "Не вдалося зареєструватися через Google. Спробуйте ще раз.",
   "signIn.googleFailed": "Не вдалося увійти через Google.",
   "signIn.googleBlocked": "Обліковий запис заблоковано.",
   "signIn.googleAlreadyRegistered": "Акаунт з цією поштою вже існує. Увійдіть і підключіть Google у профілі.",
-  "signIn.googleNotRegistered": "Цей Google-акаунт не зареєстровано. Зареєструйтеся."
+  "signIn.googleNotRegistered": "Цей Google-акаунт не зареєстровано. Зареєструйтеся.",
+  "signUp.googleNotRegisteredTitle": "Акаунт ще не зареєстровано"
 }
