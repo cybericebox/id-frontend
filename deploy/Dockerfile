@@ -4,7 +4,7 @@
 # rebuild per env change), we build with placeholders equal to the variable
 # names, and an entrypoint substitutes the real values at container start
 # (nginx:alpine runs /docker-entrypoint.d/*.sh before launching).
-FROM node:25-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
