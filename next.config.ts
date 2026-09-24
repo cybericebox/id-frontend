@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
+  // No 308 slash-normalising redirects. They are "permanent", so browsers cache
+  // them forever; an old cached /x → /x/ (from when trailingSlash was on) plus a
+  // live /x/ → /x makes ERR_TOO_MANY_REDIRECTS. Static hosting never redirects.
+  skipTrailingSlashRedirect: true,
   allowedDevOrigins: DOMAIN ? [DOMAIN, `*.${DOMAIN}`] : [],
 }
 
