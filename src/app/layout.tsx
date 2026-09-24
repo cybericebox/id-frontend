@@ -1,8 +1,10 @@
 import type { Metadata } from "next"
 import "./globals.css"
 import { QueryProvider } from "@/components/QueryProvider"
+import { ServiceStatusGate } from "@/components/ServiceStatusGate"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
+import { THEME_BOOT_SCRIPT } from "@/lib/theme"
 
 export const metadata: Metadata = {
   title: "Cyber ICE Box Platform ID",
@@ -15,9 +17,16 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="uk" className={`${GeistSans.variable} ${GeistMono.variable}`}>
-      <body className="grid-bg">
+    // data-theme is set by the boot script before hydration — hence suppressHydrationWarning.
+    <html lang="uk" className={`${GeistSans.variable} ${GeistMono.variable}`} suppressHydrationWarning>
+      <head>
+        {/* static constant, no user input — runs before paint to avoid a light flash */}
+        {/* eslint-disable-next-line @eslint-react/dom-no-dangerously-set-innerhtml */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+      </head>
+      <body>
         <QueryProvider>{children}</QueryProvider>
+        <ServiceStatusGate />
       </body>
     </html>
   )

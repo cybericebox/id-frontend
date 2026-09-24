@@ -23,7 +23,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { apiPatch, ApiError, apiUrl } from "@/api/client"
+import { apiPatch, apiUrl, mediaUrl } from "@/api/client"
+import { localizedError, localizedResponseError } from "@/i18n/apiError"
 import { t } from "@/i18n/t"
 import type { Account } from "./types"
 
@@ -75,7 +76,7 @@ export function ProfileTab({
       }
     })
     return () => sub.unsubscribe()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, [])
 
   const MAX_PHOTO_BYTES = 5 * 1024 * 1024
@@ -122,14 +123,7 @@ export function ProfileTab({
         body: fd,
       })
       if (!res.ok) {
-        let msg = t("error.generic")
-        try {
-          const p = await res.json()
-          msg = p?.Status?.Message ?? msg
-        } catch {
-          /* non-JSON */
-        }
-        setErrorMsg(msg)
+        setErrorMsg(await localizedResponseError(res))
         return
       }
       setOkMsg(t("profile.profile.photoUpdated"))
@@ -151,14 +145,7 @@ export function ProfileTab({
         credentials: "include",
       })
       if (!res.ok) {
-        let msg = t("error.generic")
-        try {
-          const p = await res.json()
-          msg = p?.Status?.Message ?? msg
-        } catch {
-          /* non-JSON */
-        }
-        setErrorMsg(msg)
+        setErrorMsg(await localizedResponseError(res))
         return
       }
       setOkMsg(t("profile.profile.photoRemoved"))
@@ -191,18 +178,18 @@ export function ProfileTab({
   }
 
   return (
-    <Card className="frost-panel">
+    <Card>
       <CardHeader>
         <CardTitle>{t("profile.profile.title")}</CardTitle>
         <CardDescription>{t("profile.profile.description")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center gap-4 border-b border-border pb-4">
-          <span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary to-[#0091EA] text-2xl font-semibold text-primary-foreground ring-2 ring-card">
+        <div className="flex items-center gap-4 border-b border-line pb-4">
+          <span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand text-2xl font-semibold text-on-brand">
             {account.Picture ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={account.Picture}
+                src={mediaUrl(account.Picture)}
                 alt=""
                 className="h-full w-full object-cover"
                 referrerPolicy="no-referrer"
@@ -263,7 +250,7 @@ export function ProfileTab({
           </Alert>
         )}
         {okMsg && (
-          <Alert>
+          <Alert variant="success">
             <AlertDescription>{okMsg}</AlertDescription>
           </Alert>
         )}
@@ -326,19 +313,8 @@ export function ProfileTab({
   )
 }
 
-// Shared helper: surface a daemon error message from an ApiError body.
+// Shared helper: localize an API error by its stable code (Status.Code), never
+// the backend's English message.
 export function extractError(err: unknown): string {
-  if (err instanceof ApiError) {
-    // Backend error envelope: { Status: { Code, Message } }. The client also
-    // copies Status.Message onto ApiError.message, so prefer that.
-    const body = err.body as { Status?: { Message?: string } } | string | null
-    if (body && typeof body === "object" && body.Status?.Message) {
-      return body.Status.Message
-    }
-    if (err.message && err.message !== `API error ${err.status}`) {
-      return err.message
-    }
-    return t("error.generic")
-  }
-  return err instanceof Error ? err.message : t("error.generic")
+  return localizedError(err)
 }

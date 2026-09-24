@@ -15,7 +15,8 @@ export interface CheckboxProps
  */
 const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
   ({ className, label, id, ...props }, ref) => {
-    const inputId = id ?? React.useId()
+    const generatedId = React.useId()
+    const inputId = id ?? generatedId
     return (
       <div className="flex items-start gap-2">
         <input
@@ -23,8 +24,8 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
           id={inputId}
           ref={ref}
           className={cn(
-            "mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border border-input accent-primary",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            "mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded-sm border border-control accent-action",
+            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action",
             "disabled:cursor-not-allowed disabled:opacity-50",
             className
           )}
@@ -33,7 +34,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="text-sm leading-snug cursor-pointer select-none"
+            className="cursor-pointer select-none text-sm leading-snug text-body"
           >
             {label}
           </label>

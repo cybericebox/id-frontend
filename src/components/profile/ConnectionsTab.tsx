@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { apiDelete, apiUrl } from "@/api/client"
+import { GoogleIcon } from "@/components/auth/parts"
 import { t } from "@/i18n/t"
 import type { Account } from "./types"
 import { extractError } from "./ProfileTab"
@@ -52,7 +53,7 @@ export function ConnectionsTab({
   }
 
   return (
-    <Card className="frost-panel">
+    <Card>
       <CardHeader>
         <CardTitle>{t("profile.connections.title")}</CardTitle>
         <CardDescription>
@@ -67,7 +68,8 @@ export function ConnectionsTab({
         )}
 
         <div className="flex items-center justify-between gap-4 rounded-md border p-3">
-          <span className="text-sm font-medium">
+          <span className="flex items-center gap-2 text-sm font-medium text-ink">
+            <GoogleIcon />
             {hasGoogle
               ? t("profile.connections.googleConnected")
               : t("profile.connections.googleNotConnected")}

@@ -2,19 +2,10 @@
 
 import React, { Suspense, useState, useEffect, useRef, useMemo } from "react"
 import { useSearchParams } from "next/navigation"
-import Link from "next/link"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card"
 import {
   Form,
   FormField,
@@ -27,9 +18,14 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Logo } from "@/components/brand/Logo"
+import { Check, LinkIcon } from "lucide-react"
+import { PasswordInput } from "@/components/ui/password-input"
+import { PasswordStrength, passwordError } from "@/components/ui/password-strength"
+import { usePasswordPolicy, type PasswordPolicy } from "@/lib/passwordPolicy"
 import { Spinner } from "@/components/ui/spinner"
 import { AuthLayout } from "./AuthLayout"
+import { useOneShotParam } from "@/lib/useOneShotParam"
+import { AuthHeading, AuthPane, AuthSwitch, GoogleIcon } from "./parts"
 import { t } from "@/i18n/t"
 import { apiPost, apiUrl } from "@/api/client"
 import { localizedError } from "@/i18n/apiError"
@@ -116,8 +112,17 @@ type SetupValues = z.infer<typeof BaseSetupSchema>
  * Call this ONCE (e.g. with React.useMemo / outside re-renders) and update
  * the ref whenever hasGoogle changes.
  */
-function buildSchema(hasGoogleRef: React.MutableRefObject<boolean>) {
+function buildSchema(
+  hasGoogleRef: React.RefObject<boolean>,
+  policyRef: React.RefObject<PasswordPolicy>
+) {
   return BaseSetupSchema.superRefine((data, ctx) => {
+    // An entered password must pass the backend policy (empty = no password).
+    if (data.Password) {
+      const msg = passwordError(data.Password, policyRef.current)
+      if (msg) ctx.addIssue({ code: "custom", message: msg, path: ["Password"] })
+    }
+
     // Password confirmation must match if a password is entered
     if (data.Password && data.Password !== data.ConfirmPassword) {
       ctx.addIssue({
@@ -160,26 +165,12 @@ function ErrorCard({
 }) {
   return (
     <AuthLayout reversed={true} variant="setup">
-      <div className="flex w-full max-w-md flex-col">
-        <div className="mb-6 flex justify-center">
-          <Logo size={88} />
-        </div>
-        <Card className="frost-panel frost-in w-full">
-          <CardHeader>
-            <span className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">CyberICEBox</span>
-            <CardTitle>{title}</CardTitle>
-            <CardDescription>{description}</CardDescription>
-          </CardHeader>
-          <CardFooter className="flex-col gap-2 text-sm text-muted-foreground">
-            <Link href="/sign-in" className="text-primary hover:underline">
-              {t("common.signIn")}
-            </Link>
-            <Link href="/sign-up" className="text-primary hover:underline">
-              {t("register.title")}
-            </Link>
-          </CardFooter>
-        </Card>
-      </div>
+      <AuthPane>
+        <LinkIcon size={32} className="text-danger" aria-hidden />
+        <AuthHeading title={title} subtitle={description} />
+        <AuthSwitch text={t("register.haveAccount")} href="/sign-in" action={t("common.signIn")} />
+        <AuthSwitch href="/sign-up" action={t("setup.startOver")} />
+      </AuthPane>
     </AuthLayout>
   )
 }
@@ -190,7 +181,9 @@ function ErrorCard({
 function SetupForm() {
   const searchParams = useSearchParams()
   const token = searchParams.get("token") ?? ""
-  const linkError = searchParams.get("error") ?? ""
+  const [linkError] = useOneShotParam("error", searchParams.get("error"))
+  // Post-registration landing, carried from sign-up / Google (validated by the backend).
+  const returnTo = searchParams.get("return_to") ?? ""
 
   // Terms of Service live on the apex (main) frontend, not the id subdomain.
   const domain = process.env.NEXT_PUBLIC_DOMAIN ?? ""
@@ -222,12 +215,18 @@ function SetupForm() {
   }, [hasGoogle])
 
   // Build schema once; its superRefine reads hasGoogleRef at validation time.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const schema = useMemo(() => buildSchema(hasGoogleRef), [])
+  const policy = usePasswordPolicy()
+  const policyRef = useRef(policy)
+  useEffect(() => {
+    policyRef.current = policy
+  }, [policy])
+
+  // eslint-disable-next-line @eslint-react/exhaustive-deps
+  const schema = useMemo(() => buildSchema(hasGoogleRef, policyRef), [])
 
   const form = useForm<SetupValues>({
     resolver: zodResolver(schema),
-    mode: "onBlur",
+    mode: "onTouched",
     defaultValues: {
       FirstName: "",
       LastName: "",
@@ -275,7 +274,11 @@ function SetupForm() {
         if (cancelled) return
 
         if (!res.ok) {
-          setFetchError(t("setup.invalidToken"))
+          // 20406 = registration already completed → say so; anything else is an
+          // invalid/expired link (generic, anti-enumeration).
+          const env = await res.json().catch(() => null)
+          const code = env?.Status?.Code
+          setFetchError(code === 20406 ? t("setup.alreadyCompleteDescription") : t("setup.invalidTokenDescription"))
           setIsFetching(false)
           return
         }
@@ -310,7 +313,7 @@ function SetupForm() {
     return () => {
       cancelled = true
     }
-  }, [token]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [token]) // eslint-disable-line @eslint-react/exhaustive-deps
 
   // ---------------------------------------------------------------------------
   // Persist non-secret fields to sessionStorage as they change, so the form
@@ -336,13 +339,14 @@ function SetupForm() {
     setIsSubmitting(true)
 
     try {
-      const body = {
+      const body: Record<string, unknown> = {
         Token: token,
         FirstName: data.FirstName,
         LastName: data.LastName,
         Password: data.Password,
         TosVersion: data.AcceptTos ? TOS_VERSION : 0,
       }
+      if (returnTo) body.Redirect = returnTo
 
       // The backend now returns 200 JSON { Status, Data: { RedirectURL } } instead
       // of a 307 redirect. apiPost unwraps the envelope and throws ApiError on 4xx
@@ -390,16 +394,11 @@ function SetupForm() {
   if (isFetching) {
     return (
       <AuthLayout reversed={true} variant="setup">
-        <div className="flex w-full max-w-md flex-col">
-          <div className="mb-6 flex justify-center">
-            <Logo size={88} />
+        <AuthPane>
+          <div className="flex justify-center py-8">
+            <Spinner size="md" />
           </div>
-          <Card className="frost-panel frost-in w-full">
-            <CardContent className="flex justify-center py-8">
-              <Spinner size="md" className="text-primary" />
-            </CardContent>
-          </Card>
-        </div>
+        </AuthPane>
       </AuthLayout>
     )
   }
@@ -421,18 +420,9 @@ function SetupForm() {
   // ---------------------------------------------------------------------------
   return (
     <AuthLayout reversed={true} variant="setup">
-      <div className="flex w-full max-w-md flex-col">
-        <div className="mb-6 flex justify-center">
-          <Logo size={88} />
-        </div>
-        <Card className="frost-panel frost-in w-full">
-          <CardHeader>
-            <span className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">CyberICEBox</span>
-            <CardTitle>{t("setup.title")}</CardTitle>
-            <CardDescription>{t("setup.subtitle")}</CardDescription>
-          </CardHeader>
+      <AuthPane>
+        <AuthHeading title={t("setup.title")} subtitle={t("setup.subtitle")} />
 
-        <CardContent className="space-y-4">
           {/* Link-Google error banner (returned after failed OAuth link attempt) */}
           {linkError === "link_failed" && (
             <Alert variant="destructive">
@@ -454,16 +444,15 @@ function SetupForm() {
               noValidate
             >
               {/* Email — read-only / locked */}
-              <div className="space-y-1">
-                <label className="text-sm font-medium leading-none">
+              <div className="space-y-2">
+                <label htmlFor="setup-email" className="text-[13px] font-medium leading-[1.35] text-ink">
                   {t("setup.email")}
                 </label>
                 <Input
+                  id="setup-email"
                   type="email"
                   value={setupInfo.Email}
                   readOnly
-                  disabled
-                  className="cursor-not-allowed opacity-60"
                   autoComplete="email"
                 />
               </div>
@@ -509,19 +498,22 @@ function SetupForm() {
               />
 
               {/* Divider: Login methods */}
-              <div className="space-y-2 pt-2">
-                <p className="text-sm font-medium">
-                  {t("setup.loginMethodsTitle")}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {t("setup.loginMethodsSubtitle")}
-                </p>
+              <div className="space-y-3 border-t border-line pt-4">
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-ink">
+                    {t("setup.loginMethodsTitle")}
+                  </p>
+                  <p className="text-[13px] text-dim">
+                    {t("setup.loginMethodsSubtitle")}
+                  </p>
+                </div>
 
                 {/* Google section */}
                 {hasGoogle ? (
-                  <div className="flex items-center gap-2 rounded-md border border-input px-3 py-2 text-sm text-muted-foreground">
+                  <div className="flex h-10 items-center gap-2 rounded-md border border-line bg-surface px-3 text-sm text-ink">
+                    <GoogleIcon />
                     <span className="flex-1">{t("setup.googleConnected")}</span>
-                    <span aria-hidden="true">&#10003;</span>
+                    <Check size={16} className="text-ok" aria-hidden />
                   </div>
                 ) : (
                   <Button
@@ -529,9 +521,11 @@ function SetupForm() {
                     type="button"
                     className="w-full"
                     onClick={() => {
-                      window.location.href = `/api/auth/google/setup?token=${encodeURIComponent(token)}`
+                      // Must hit api.<domain> (the id origin has no /api routes).
+                      window.location.href = apiUrl(`/api/auth/google/setup?token=${encodeURIComponent(token)}${returnTo ? `&return_to=${encodeURIComponent(returnTo)}` : ""}`)
                     }}
                   >
+                    <GoogleIcon />
                     {t("setup.linkGoogle")}
                   </Button>
                 )}
@@ -544,14 +538,15 @@ function SetupForm() {
                     <FormItem>
                       <FormLabel>{t("setup.setPassword")}</FormLabel>
                       <FormControl>
-                        <Input
-                          type="password"
+                        <PasswordInput
                           placeholder={t("setup.passwordPlaceholder")}
                           autoComplete="new-password"
                           {...field}
                         />
                       </FormControl>
-                      <FormMessage />
+                      {/* with text typed, the strength line names what is missing */}
+                  <PasswordStrength value={field.value} policy={policy} />
+                  <FormMessage className={field.value ? "hidden" : undefined} />
                     </FormItem>
                   )}
                 />
@@ -565,8 +560,7 @@ function SetupForm() {
                       <FormItem>
                         <FormLabel>{t("setup.confirmPassword")}</FormLabel>
                         <FormControl>
-                          <Input
-                            type="password"
+                          <PasswordInput
                             placeholder={t("setup.confirmPasswordPlaceholder")}
                             autoComplete="new-password"
                             {...field}
@@ -599,7 +593,7 @@ function SetupForm() {
                               href={termsUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-primary hover:underline"
+                              className="font-medium text-action underline-offset-3 hover:underline"
                             >
                               {t("setup.tosLink")}
                             </a>
@@ -621,16 +615,9 @@ function SetupForm() {
               </Button>
             </form>
           </Form>
-        </CardContent>
 
-        <CardFooter className="justify-center text-sm text-muted-foreground">
-          {t("register.haveAccount")}&nbsp;
-          <Link href="/sign-in" className="text-primary hover:underline">
-            {t("common.signIn")}
-          </Link>
-        </CardFooter>
-        </Card>
-      </div>
+        <AuthSwitch text={t("register.haveAccount")} href="/sign-in" action={t("common.signIn")} />
+      </AuthPane>
     </AuthLayout>
   )
 }

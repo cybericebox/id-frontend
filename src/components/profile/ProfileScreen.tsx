@@ -14,11 +14,14 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Wordmark } from "@/components/brand/Wordmark"
-import { apiGet } from "@/api/client"
+import { apiGet, mediaUrl } from "@/api/client"
+import { ThemeSwitch } from "@/components/ThemeToggle"
 import { safeReturnTo } from "@/lib/auth"
+import { isServiceUnavailable } from "@/i18n/apiError"
+import { PageError } from "@/components/PageError"
+import { onServiceRestored } from "@/lib/serviceStatus"
 import { PageLoader } from "@/components/ui/spinner"
 import { t, locale } from "@/i18n/t"
 import type { Account } from "@/components/profile/types"
@@ -78,19 +81,20 @@ function ProfileShell() {
     searchParams.get("tab") ? initialTab : null
   )
   const [account, setAccount] = useState<Account | null>(null)
-  const [loadError, setLoadError] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<{ unavailable: boolean } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   const load = useCallback(async () => {
     setIsLoading(true)
-    setLoadError(null)
     try {
       const data = await apiGet<Account>("/api/auth/account")
       setAccount(data)
-    } catch {
-      // A 401 is handled centrally by the api client (auto-redirect to sign-in);
+      setLoadError(null)
+    } catch (err) {
+      // A 401 is handled centrally by the api client (auto-redirect to sign-in).
+      // Backend down / gateway 5xx → "temporarily unavailable" with auto-retry;
       // anything else is a genuine load failure.
-      setLoadError(t("profile.loadError"))
+      setLoadError({ unavailable: isServiceUnavailable(err) })
     } finally {
       setIsLoading(false)
     }
@@ -99,6 +103,9 @@ function ProfileShell() {
   useEffect(() => {
     void load()
   }, [load])
+
+  // Backend came back after an outage (the app-wide overlay handled it) → refetch.
+  useEffect(() => onServiceRestored(() => void load()), [load])
 
   // If the user just linked Google, jump them to the Connections tab.
   useEffect(() => {
@@ -111,18 +118,16 @@ function ProfileShell() {
   // Only show the full-page loading state on the INITIAL load. A refetch (e.g.
   // after an avatar upload) keeps the rendered profile mounted, so the avatar
   // doesn't unmount/remount and flash the initials placeholder before the image.
-  if (isLoading && !account) {
+  // Keep the error page (not the loader) during its own background retries.
+  if (isLoading && !account && !loadError) {
     return <PageLoader />
   }
 
-  if (loadError || !account) {
-    return (
-      <main className="mx-auto max-w-4xl p-6">
-        <Alert variant="destructive">
-          <AlertDescription>{loadError ?? t("profile.loadError")}</AlertDescription>
-        </Alert>
-      </main>
-    )
+  if (!account) {
+    // Unreachable backend is shown by the app-wide overlay (ServiceStatusGate);
+    // keep the loader underneath until it refetches on restore.
+    if (!loadError || loadError.unavailable) return <PageLoader />
+    return <PageError onRetry={load} />
   }
 
   // Render the content for a given tab — shared by the desktop pane and the
@@ -151,7 +156,7 @@ function ProfileShell() {
         <div className="mb-4">
           <Link
             href={returnTo}
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground hover:underline"
+            className="inline-flex items-center gap-1 text-sm text-dim hover:text-ink hover:underline"
           >
             &#8592; {t("common.back")}
           </Link>
@@ -160,18 +165,21 @@ function ProfileShell() {
       <div className="mb-4"><Wordmark size="md" /></div>
       <div className="mb-6 flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">{t("profile.heading")}</h1>
-        <Button asChild variant="outline" size="sm">
-          <a href="/sign-out">{t("common.signOut")}</a>
-        </Button>
+        <div className="flex items-center gap-3">
+          <ThemeSwitch />
+          <Button asChild variant="outline" size="sm">
+            <a href="/sign-out">{t("common.signOut")}</a>
+          </Button>
+        </div>
       </div>
 
       {account && (
-        <div className="mb-6 flex items-start gap-4 rounded-xl border border-border bg-card p-4 shadow-[0_10px_30px_-18px_rgba(11,18,51,0.4)]">
-          <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary to-[#0091EA] text-xl font-semibold text-primary-foreground ring-2 ring-card">
+        <div className="mb-6 flex items-start gap-4 rounded-lg border border-line bg-surface p-4">
+          <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand text-xl font-semibold text-on-brand">
             {account.Picture ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={account.Picture}
+                src={mediaUrl(account.Picture)}
                 alt=""
                 className="h-full w-full object-cover"
                 referrerPolicy="no-referrer"
@@ -187,7 +195,7 @@ function ProfileShell() {
             {/* Role badge in the top-right corner; full name on the next line. */}
             {account.Role && (
               <div className="mb-1 flex justify-end">
-                <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                <span className="shrink-0 rounded-sm bg-soft px-2 py-0.5 text-xs font-medium text-ink">
                   {roleLabel(account.Role)}
                 </span>
               </div>
@@ -195,9 +203,9 @@ function ProfileShell() {
             <p className="text-lg font-semibold leading-tight break-words">
               {account.FirstName} {account.LastName}
             </p>
-            <p className="break-all text-sm text-muted-foreground">{account.Email}</p>
+            <p className="break-all text-sm text-dim">{account.Email}</p>
             {memberSince(account.CreatedAt) && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-faint">
                 {t("profile.memberSince")} {memberSince(account.CreatedAt)}
               </p>
             )}
@@ -218,16 +226,16 @@ function ProfileShell() {
                     setActive(tab.key)
                     setMobileDetail(tab.key)
                   }}
-                  className="frost-panel flex w-full items-center gap-3 rounded-xl p-4 text-left transition-colors hover:bg-accent/10"
+                  className="flex w-full items-center gap-3 rounded-lg border border-line bg-surface p-4 text-left transition-colors hover:bg-hover"
                 >
-                  <tab.icon className="h-5 w-5 shrink-0 text-primary" />
+                  <tab.icon className="h-5 w-5 shrink-0 text-dim" />
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-medium">{t(tab.label)}</span>
-                    <span className="block truncate text-xs text-muted-foreground">
+                    <span className="block truncate text-xs text-dim">
                       {t(tab.desc)}
                     </span>
                   </span>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <ChevronRight className="h-4 w-4 shrink-0 text-faint" />
                 </button>
               </li>
             ))}
@@ -237,7 +245,7 @@ function ProfileShell() {
             <button
               type="button"
               onClick={() => setMobileDetail(null)}
-              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+              className="inline-flex items-center gap-1 text-sm text-dim hover:text-ink"
             >
               <ChevronLeft className="h-4 w-4" />
               {t(TABS.find((x) => x.key === mobileDetail)?.label ?? "")}
@@ -255,11 +263,12 @@ function ProfileShell() {
               key={tab.key}
               type="button"
               onClick={() => setActive(tab.key)}
+              aria-current={active === tab.key ? "page" : undefined}
               className={
-                "relative rounded-md px-3 py-2 text-left text-sm transition-colors " +
+                "rounded-md px-3 py-2 text-left text-sm transition-colors " +
                 (active === tab.key
-                  ? "frost-panel text-foreground before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-0.5 before:rounded-full before:bg-primary before:shadow-[0_0_10px_var(--frost-glow)]"
-                  : "text-muted-foreground hover:bg-accent/10")
+                  ? "bg-hover font-medium text-ink"
+                  : "text-dim hover:bg-hover hover:text-ink")
               }
             >
               {t(tab.label)}

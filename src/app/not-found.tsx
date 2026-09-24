@@ -12,9 +12,9 @@ export default function NotFound() {
         <div className="mb-6 flex justify-center">
           <Wordmark size="lg" />
         </div>
-        <Card className="frost-panel frost-in w-full text-center">
+        <Card className="w-full text-center">
           <CardHeader>
-            <div className="mx-auto mb-4 text-6xl font-bold text-muted-foreground">
+            <div className="mx-auto mb-4 font-mono text-6xl font-semibold text-faint">
               404
             </div>
             <CardTitle>{t("error.notFound")}</CardTitle>

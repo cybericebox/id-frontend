@@ -4,6 +4,8 @@
 // and the browser stores/sends the host-scoped session cookie. No silent-auth
 // bootstrap — a plain credentialed fetch is authoritative.
 
+import { isUnavailableStatus, reportServiceAvailable, reportServiceUnavailable } from "@/lib/serviceStatus"
+
 const DOMAIN = process.env.NEXT_PUBLIC_DOMAIN ?? ""
 const BASE_URL = DOMAIN ? `https://api.${DOMAIN}` : ""
 
@@ -75,14 +77,25 @@ async function request<T>(
 ): Promise<T> {
   const url = `${BASE_URL}${path}`
 
-  const res = await fetch(url, {
-    ...init,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(init.headers ?? {}),
-    },
-  })
+  let res: Response
+  try {
+    res = await fetch(url, {
+      ...init,
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...(init.headers ?? {}),
+      },
+    })
+  } catch (err) {
+    // Network failure (backend down, DNS, offline) → app-wide overlay.
+    reportServiceUnavailable()
+    throw err
+  }
+  // Gateway errors mean the backend itself is unreachable; any other response
+  // proves it is up again.
+  if (isUnavailableStatus(res.status)) reportServiceUnavailable()
+  else reportServiceAvailable()
 
   // Centralized auth handling: required (default true) → write return_to cookie
   // and redirect to sign-in. Returning a never-resolving promise stops the
@@ -135,6 +148,16 @@ async function request<T>(
 // helpers use, so both stay on the one API host.
 export function apiUrl(path: string): string {
   return `${BASE_URL}${path}`
+}
+
+/**
+ * mediaUrl — the backend returns stored media (avatars) as API-relative paths
+ * like "/api/auth/avatar/<id>"; resolve them against api.<domain>. Absolute
+ * URLs pass through unchanged.
+ */
+export function mediaUrl(src: string | undefined | null): string | undefined {
+  if (!src) return undefined
+  return src.startsWith("/") ? apiUrl(src) : src
 }
 
 export function apiGet<T>(path: string, init?: RequestInit, opts?: ApiOptions): Promise<T> {

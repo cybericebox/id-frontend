@@ -7,7 +7,7 @@ const LANDING_HREF = process.env.NEXT_PUBLIC_DOMAIN
   ? `https://${process.env.NEXT_PUBLIC_DOMAIN}`
   : "/"
 
-// Brand lockup — the old crest logo plus the CyberICEBox wordmark. Links to the
+// Brand lockup — the old crest logo plus the «Cyber ICE Box» wordmark (ICE in crest ice blue). Links to the
 // landing by default; pass href={null} to render a non-linking lockup.
 export function Wordmark({
   className,
@@ -27,8 +27,8 @@ export function Wordmark({
   const lockup = (
     <span className={`inline-flex items-center gap-2 font-semibold tracking-tight ${text} ${className ?? ""}`}>
       {withMark && <Logo size={mark} href={null} />}
-      <span className="text-foreground">
-        Cyber<span className="text-primary">ICE</span>Box
+      <span className="text-ink">
+        Cyber <span className="text-ice">ICE</span> Box
       </span>
     </span>
   )

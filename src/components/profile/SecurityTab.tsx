@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -20,7 +20,9 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
+import { PasswordStrength, passwordError } from "@/components/ui/password-strength"
+import { usePasswordPolicy, type PasswordPolicy } from "@/lib/passwordPolicy"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { apiPost } from "@/api/client"
@@ -28,13 +30,15 @@ import { t } from "@/i18n/t"
 import type { Account } from "./types"
 import { extractError } from "./ProfileTab"
 
-function buildSchema(hasPassword: boolean) {
+// NewPassword is checked against the live backend policy (read from the ref).
+function buildSchema(hasPassword: boolean, policyRef: React.RefObject<PasswordPolicy>) {
   return z
     .object({
       OldPassword: z.string().optional(),
-      NewPassword: z
-        .string()
-        .min(8, { message: t("validation.passwordMin") }),
+      NewPassword: z.string().superRefine((value, ctx) => {
+        const msg = passwordError(value, policyRef.current)
+        if (msg) ctx.addIssue({ code: "custom", message: msg })
+      }),
       ConfirmPassword: z.string(),
     })
     .superRefine((val, ctx) => {
@@ -66,11 +70,17 @@ export function SecurityTab({ account }: { account: Account }) {
   const [okMsg, setOkMsg] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const schema = useMemo(() => buildSchema(account.HasPassword), [account.HasPassword])
+  const policy = usePasswordPolicy()
+  const policyRef = useRef(policy)
+  useEffect(() => {
+    policyRef.current = policy
+  }, [policy])
+
+  const schema = useMemo(() => buildSchema(account.HasPassword, policyRef), [account.HasPassword])
 
   const form = useForm<SecurityValues>({
     resolver: zodResolver(schema),
-    mode: "onBlur",
+    mode: "onTouched",
     defaultValues: { OldPassword: "", NewPassword: "", ConfirmPassword: "" },
   })
 
@@ -83,7 +93,7 @@ export function SecurityTab({ account }: { account: Account }) {
       if (account.HasPassword && data.OldPassword) {
         body.OldPassword = data.OldPassword
       }
-      await apiPost("/api/auth/change-password", body)
+      await apiPost("/api/auth/password/change", body)
       setOkMsg(t("profile.security.saved"))
       form.reset({ OldPassword: "", NewPassword: "", ConfirmPassword: "" })
     } catch (err) {
@@ -95,7 +105,7 @@ export function SecurityTab({ account }: { account: Account }) {
   }
 
   return (
-    <Card className="frost-panel">
+    <Card>
       <CardHeader>
         <CardTitle>{t("profile.security.title")}</CardTitle>
         <CardDescription>
@@ -111,7 +121,7 @@ export function SecurityTab({ account }: { account: Account }) {
           </Alert>
         )}
         {okMsg && (
-          <Alert>
+          <Alert variant="success">
             <AlertDescription>{okMsg}</AlertDescription>
           </Alert>
         )}
@@ -130,8 +140,7 @@ export function SecurityTab({ account }: { account: Account }) {
                   <FormItem>
                     <FormLabel>{t("profile.security.currentPassword")}</FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
+                      <PasswordInput
                         autoComplete="current-password"
                         {...field}
                       />
@@ -148,14 +157,14 @@ export function SecurityTab({ account }: { account: Account }) {
                 <FormItem>
                   <FormLabel>{t("profile.security.newPassword")}</FormLabel>
                   <FormControl>
-                    <Input
-                      type="password"
+                    <PasswordInput
                       placeholder={t("profile.security.newPasswordPlaceholder")}
                       autoComplete="new-password"
                       {...field}
                     />
                   </FormControl>
-                  <FormMessage />
+                  <PasswordStrength value={field.value} policy={policy} />
+                  <FormMessage className={field.value ? "hidden" : undefined} />
                 </FormItem>
               )}
             />
@@ -166,8 +175,7 @@ export function SecurityTab({ account }: { account: Account }) {
                 <FormItem>
                   <FormLabel>{t("profile.security.confirmPassword")}</FormLabel>
                   <FormControl>
-                    <Input
-                      type="password"
+                    <PasswordInput
                       autoComplete="new-password"
                       {...field}
                     />

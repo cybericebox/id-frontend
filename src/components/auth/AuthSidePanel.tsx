@@ -3,7 +3,6 @@ import {
   Boxes,
   Flag,
   Users,
-  ShieldCheck,
   Lock,
   Network,
   Server,
@@ -12,6 +11,7 @@ import {
   Gauge,
 } from "lucide-react"
 import { Logo } from "@/components/brand/Logo"
+import { ThemeSwitch } from "@/components/ThemeToggle"
 import { cn } from "@/utils/cn"
 
 export type AuthVariant =
@@ -22,12 +22,11 @@ export type AuthVariant =
   | "setup"
 
 type Item = { icon: React.ComponentType<{ size?: number; className?: string }>; text: string }
-type Panel = { eyebrow: string; title: React.ReactNode; items: Item[] }
+type Panel = { title: React.ReactNode; items: Item[] }
 
 // Each auth page gets its own copy — platform-specific, not generic.
 const PANELS: Record<AuthVariant, Panel> = {
   signin: {
-    eyebrow: "Вхід",
     title: (
       <>
         Продовжуйте навчання
@@ -37,12 +36,11 @@ const PANELS: Record<AuthVariant, Panel> = {
     ),
     items: [
       { icon: Activity, text: "Рейтинг команд оновлюється в реальному часі під час події" },
-      { icon: Lock, text: "Ізольовані лабораторії з доступом через VPN (WireGuard)" },
+      { icon: Lock, text: "Ізольовані лабораторії з доступом через VPN" },
       { icon: Flag, text: "Завдання будь-якого типу" },
     ],
   },
   signup: {
-    eyebrow: "Реєстрація",
     title: (
       <>
         Платформа практичної
@@ -58,7 +56,6 @@ const PANELS: Record<AuthVariant, Panel> = {
     ],
   },
   recover: {
-    eyebrow: "Відновлення доступу",
     title: (
       <>
         Відновіть доступ
@@ -73,7 +70,6 @@ const PANELS: Record<AuthVariant, Panel> = {
     ],
   },
   reset: {
-    eyebrow: "Безпека акаунта",
     title: (
       <>
         Встановіть
@@ -82,13 +78,12 @@ const PANELS: Record<AuthVariant, Panel> = {
       </>
     ),
     items: [
-      { icon: Lock, text: "Ізольовані лабораторії з доступом через VPN (WireGuard)" },
+      { icon: Lock, text: "Ізольовані лабораторії з доступом через VPN" },
       { icon: Activity, text: "Рейтинг у реальному часі під час подій" },
       { icon: Flag, text: "Завдання будь-якого типу" },
     ],
   },
   setup: {
-    eyebrow: "Завершення реєстрації",
     title: (
       <>
         Залишився
@@ -104,8 +99,34 @@ const PANELS: Record<AuthVariant, Panel> = {
   },
 }
 
-// The decorative half of the auth split layout — per-page copy, ice gradient,
-// grid texture and a large faded brand crest watermark.
+// Static export: the year is fixed at build time.
+const YEAR = new Date().getFullYear()
+
+// Faint isometric ice-cube lattice behind the panel copy, fading towards the text side.
+function PanelArt() {
+  return (
+    <svg
+      aria-hidden
+      className="pointer-events-none absolute inset-0 -z-10 h-full w-full text-on-brand opacity-[0.10]"
+      style={{ maskImage: "linear-gradient(100deg, transparent 15%, #000 75%)" }}
+    >
+      <defs>
+        <pattern id="ib-cubes" width="56" height="97" patternUnits="userSpaceOnUse">
+          <path
+            d="M28 0 L56 16 L28 32 L0 16 Z M0 16 V48 L28 64 V32 M56 16 V48 L28 64 M28 64 V97 M0 48 L0 81 L28 97 M56 48 V81 L28 97"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1"
+          />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#ib-cubes)" />
+    </svg>
+  )
+}
+
+// The decorative half of the auth split layout — per-page copy on the brand
+// mass (ds-v2 .ib-mass): crest, page copy, legal line. Hidden below lg.
 export function AuthSidePanel({
   className,
   variant = "signin",
@@ -115,52 +136,47 @@ export function AuthSidePanel({
 }) {
   const panel = PANELS[variant]
   return (
-    <div
-      className={cn(
-        "relative hidden overflow-hidden lg:flex lg:flex-col lg:justify-center",
-        "bg-gradient-to-br from-secondary via-accent to-secondary px-12 py-16 text-foreground",
-        className
-      )}
-    >
-      {/* grid texture */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage:
-            "linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px)",
-          backgroundSize: "32px 32px",
-          maskImage: "radial-gradient(ellipse at center, #000 35%, transparent 90%)",
-        }}
-      />
-      {/* faded crest watermark */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -right-16 -top-10 opacity-[0.06]"
-      >
-        <Logo size={420} />
-      </div>
-
-      <div className="relative mx-auto flex max-w-md flex-col gap-8">
-        <div>
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-            {panel.eyebrow}
+    <aside className={cn("ib-mass relative hidden overflow-hidden lg:block", className)}>
+      <PanelArt />
+      {/* wide screens only: crest, per-page copy, legal line */}
+      <div className="mx-auto flex h-full max-w-xl flex-col px-12 py-14">
+        <div className="flex flex-col items-start gap-4">
+          <Logo size={104} />
+          <span className="text-lg font-semibold tracking-tight text-on-brand">
+            Cyber <span className="text-ice-on-brand">ICE</span> Box
           </span>
-          <h2 className="mt-3 text-4xl font-bold leading-[1.1] tracking-tight">
+        </div>
+
+        <div className="my-auto flex flex-col gap-8 py-12">
+          <h2 className="text-[40px] font-semibold leading-[1.1] text-on-brand">
             {panel.title}
           </h2>
+          <ul className="flex flex-col gap-4">
+            {panel.items.map(({ icon: Icon, text }) => (
+              <li key={text} className="flex items-start gap-3">
+                <Icon size={20} className="mt-px shrink-0 text-on-brand-3" />
+                <span className="text-sm font-medium leading-snug text-on-brand-2">{text}</span>
+              </li>
+            ))}
+          </ul>
         </div>
-        <ul className="flex flex-col gap-4">
-          {panel.items.map(({ icon: Icon, text }, i) => (
-            <li key={i} className="flex items-start gap-3">
-              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-primary shadow-sm">
-                <Icon size={18} />
-              </span>
-              <span className="pt-1 text-sm font-medium leading-snug">{text}</span>
-            </li>
-          ))}
-        </ul>
+
+        <footer className="flex flex-col items-start gap-3 border-t border-brand-line pt-5 text-[13px] leading-relaxed text-on-brand-3">
+          <p>
+            © {YEAR} ХНУРЕ · За підтримки{" "}
+            <a
+              href="https://ice.nure.ua/ua/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-normal text-on-brand-2 underline underline-offset-3 hover:text-on-brand"
+            >
+              кафедри ІКІ ім. В. В. Поповського
+            </a>
+          </p>
+          {/* bottom-left: the reCAPTCHA badge occupies the bottom-right corner */}
+          <ThemeSwitch onMass className="-ml-1.5" />
+        </footer>
       </div>
-    </div>
+    </aside>
   )
 }

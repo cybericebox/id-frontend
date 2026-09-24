@@ -107,7 +107,7 @@ export function SessionsTab() {
   const hasOthers = sessions.some((s) => !s.IsCurrent)
 
   return (
-    <Card className="frost-panel">
+    <Card>
       <CardHeader>
         <CardTitle>{t("profile.sessions.title")}</CardTitle>
         <CardDescription>{t("profile.sessions.description")}</CardDescription>
@@ -121,7 +121,7 @@ export function SessionsTab() {
 
         {isLoading ? (
           <div className="flex justify-center py-6">
-            <Spinner size="sm" className="text-primary" />
+            <Spinner size="sm" />
           </div>
         ) : sessions.length === 0 ? (
           <p className="text-sm text-muted-foreground">
@@ -137,7 +137,7 @@ export function SessionsTab() {
                   <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm font-semibold">
                     <span>{browserFromUA(s.UserAgent)} · {osFromUA(s.UserAgent)}</span>
                     {s.IsCurrent && (
-                      <span className="rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                      <span className="rounded-sm bg-soft px-2 py-0.5 text-xs font-medium text-ink">
                         {t("profile.sessions.current")}
                       </span>
                     )}

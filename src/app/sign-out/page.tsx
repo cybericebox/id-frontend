@@ -4,6 +4,7 @@ import React, { Suspense, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 
 import { Wordmark } from "@/components/brand/Wordmark"
+import { Spinner } from "@/components/ui/spinner"
 import { safeReturnTo } from "@/lib/auth"
 import { apiUrl } from "@/api/client"
 import { t } from "@/i18n/t"
@@ -58,11 +59,10 @@ function SignOut() {
         <div className="mb-6 flex justify-center">
           <Wordmark size="lg" />
         </div>
-        <div className="frost-panel frost-in rounded-lg p-6 text-center">
-          <h1 className="text-lg font-medium">{t("signOut.title")}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("signOut.inProgress")}
-          </p>
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-line bg-surface p-8 text-center">
+          <Spinner size="md" />
+          <h1 className="text-lg font-semibold">{t("signOut.title")}</h1>
+          <p className="text-sm text-dim">{t("signOut.inProgress")}</p>
         </div>
       </div>
     </main>

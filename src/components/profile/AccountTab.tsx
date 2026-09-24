@@ -74,7 +74,7 @@ export function AccountTab({ account }: { account: Account }) {
       }
     })
     return () => sub.unsubscribe()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, [])
 
   const onSubmit: SubmitHandler<EmailValues> = async (data) => {
@@ -107,24 +107,18 @@ export function AccountTab({ account }: { account: Account }) {
 
   return (
     <div className="space-y-6">
-      <Card className="frost-panel">
+      <Card>
         <CardHeader>
           <CardTitle>{t("profile.account.title")}</CardTitle>
           <CardDescription>{t("profile.account.description")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-sm">
-            <span className="text-muted-foreground">
+            <span className="text-dim">
               {t("profile.account.currentEmail")}:{" "}
             </span>
-            <span className="font-medium">{account.Email}</span>{" "}
-            <span
-              className={
-                account.EmailConfirmed
-                  ? "text-green-600"
-                  : "text-muted-foreground"
-              }
-            >
+            <span className="font-medium text-ink">{account.Email}</span>{" "}
+            <span className={account.EmailConfirmed ? "text-ok" : "text-warn"}>
               (
               {account.EmailConfirmed
                 ? t("profile.account.confirmed")
@@ -139,7 +133,7 @@ export function AccountTab({ account }: { account: Account }) {
             </Alert>
           )}
           {okMsg && (
-            <Alert>
+            <Alert variant="success">
               <AlertDescription>{okMsg}</AlertDescription>
             </Alert>
           )}
@@ -197,9 +191,9 @@ export function AccountTab({ account }: { account: Account }) {
         </CardContent>
       </Card>
 
-      <Card className="frost-panel border-destructive/50">
+      <Card className="border-danger/40">
         <CardHeader>
-          <CardTitle className="text-destructive">
+          <CardTitle className="text-danger">
             {t("profile.account.dangerTitle")}
           </CardTitle>
           <CardDescription>

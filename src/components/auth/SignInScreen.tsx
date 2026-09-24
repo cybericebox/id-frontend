@@ -9,14 +9,6 @@ import * as z from "zod"
 import { useReCaptcha } from "next-recaptcha-v3"
 
 import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card"
-import {
   Form,
   FormField,
   FormItem,
@@ -25,10 +17,12 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Logo } from "@/components/brand/Logo"
 import { AuthLayout } from "./AuthLayout"
+import { useOneShotParam } from "@/lib/useOneShotParam"
+import { AuthDivider, AuthHeading, AuthPane, AuthSwitch, GoogleIcon, authLinkClass } from "./parts"
 import { t } from "@/i18n/t"
 import { PageLoader } from "@/components/ui/spinner"
 import { redirectIfAuthed, rememberReturnTo, safeReturnTo } from "@/lib/auth"
@@ -65,14 +59,14 @@ function SignInForm() {
       if (!cancelled) setChecking(false)
     })
     return () => { cancelled = true }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, [])
 
   const { executeRecaptcha } = useReCaptcha()
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const googleError = searchParams.get("google_error")
+  const [googleError, clearGoogleError] = useOneShotParam("google_error", searchParams.get("google_error"))
 
   const form = useForm<SignInValues>({
     resolver: zodResolver(SignInSchema),
@@ -84,6 +78,7 @@ function SignInForm() {
 
   const onSubmit: SubmitHandler<SignInValues> = async (data) => {
     setErrorMsg(null)
+    clearGoogleError()
     setIsSubmitting(true)
 
     try {
@@ -103,12 +98,15 @@ function SignInForm() {
       if (recaptchaToken) {
         body.RecaptchaToken = recaptchaToken
       }
+      // Post-login target. The backend validates it (IsTrustedRedirect) and
+      // falls back to id/profile when it is missing or untrusted.
+      if (returnTo) {
+        body.Redirect = returnTo
+      }
 
-      // The backend now returns 200 JSON { Status, Data: { RedirectURL } } instead
-      // of a 307 redirect. apiPost unwraps the envelope and throws ApiError on 4xx.
-      // We perform a top-level navigation to RedirectURL — this is NOT CORS-restricted
-      // and allows the callback to plant the per-subdomain local token before
-      // redirecting to the final page.
+      // The backend returns 200 JSON { Status, Data: { RedirectURL } }.
+      // apiPost unwraps the envelope and throws ApiError on 4xx.
+      // We perform a top-level navigation to RedirectURL.
       // required:false — a 401 here means "credentials rejected", which must be
       // shown inline. Without it the client would treat the 401 as "not signed
       // in" and redirect to this very page, swallowing the error.
@@ -139,37 +137,27 @@ function SignInForm() {
 
   return (
     <AuthLayout reversed={false} variant="signin">
-      <div className="flex w-full max-w-md flex-col">
-        <div className="mb-6 flex justify-center">
-          <Logo size={88} />
-        </div>
-        <Card className="frost-panel frost-in w-full">
-          <CardHeader>
-            <span className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">CyberICEBox</span>
-            <CardTitle>{t("signIn.title")}</CardTitle>
-            <CardDescription>{t("signIn.subtitle")}</CardDescription>
-          </CardHeader>
+      <AuthPane>
+        <AuthHeading title={t("signIn.title")} subtitle={t("signIn.subtitle")} />
 
-        <CardContent className="space-y-4">
           {/* Google sign-in — plain navigation; the daemon redirects the browser
-              to the Google consent page. Errors (inactive/unlinked account) surface
-              on the callback redirect, not here. */}
+              to the Google consent page and back to return_to (validated there).
+              Errors surface on the callback redirect (?google_error=failed or
+              already_registered here, not_registered goes to /sign-up). */}
           <Button
             variant="outline"
             className="w-full"
             type="button"
             onClick={() => {
-              window.location.href = apiUrl("/api/auth/google")
+              const q = returnTo ? `?return_to=${encodeURIComponent(returnTo)}` : ""
+              window.location.href = apiUrl(`/api/auth/google${q}`)
             }}
           >
+            <GoogleIcon />
             {t("signIn.continueWithGoogle")}
           </Button>
 
-          <div className="relative flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="flex-1 border-t" />
-            {t("signIn.orWithEmail")}
-            <span className="flex-1 border-t" />
-          </div>
+          <AuthDivider label={t("signIn.orWithEmail")} />
 
           {errorMsg && (
             <Alert variant="destructive">
@@ -183,23 +171,17 @@ function SignInForm() {
             </Alert>
           )}
 
-          {googleError === "already_registered" && (
-            <Alert>
-              <AlertDescription>{t("signIn.googleAlreadyRegistered")}</AlertDescription>
+          {/* register-with-Google for an email that already has an account
+              (Google not linked yet): sign in, then link Google in the profile */}
+          {googleError === "blocked" && (
+            <Alert variant="destructive">
+              <AlertDescription>{t("signIn.googleBlocked")}</AlertDescription>
             </Alert>
           )}
 
-          {googleError === "not_registered" && (
+          {googleError === "already_registered" && (
             <Alert>
-              <AlertDescription>
-                {t("signIn.googleNotRegistered")}{" "}
-                <Link
-                  href={returnTo ? `/sign-up?return_to=${encodeURIComponent(returnTo)}` : "/sign-up"}
-                  className="text-primary underline hover:no-underline"
-                >
-                  {t("signIn.createAccount")}
-                </Link>
-              </AlertDescription>
+              <AlertDescription>{t("signIn.googleAlreadyRegistered")}</AlertDescription>
             </Alert>
           )}
 
@@ -235,16 +217,12 @@ function SignInForm() {
                   <FormItem>
                     <div className="flex items-center justify-between">
                       <FormLabel>{t("common.password")}</FormLabel>
-                      <Link
-                        href="/forgot-password"
-                        className="text-sm text-muted-foreground hover:underline"
-                      >
+                      <Link href="/forgot-password" className={authLinkClass}>
                         {t("signIn.forgotPassword")}
                       </Link>
                     </div>
                     <FormControl>
-                      <Input
-                        type="password"
+                      <PasswordInput
                         placeholder={t("signIn.passwordPlaceholder")}
                         autoComplete="current-password"
                         {...field}
@@ -264,16 +242,9 @@ function SignInForm() {
               </Button>
             </form>
           </Form>
-        </CardContent>
 
-        <CardFooter className="justify-center text-sm text-muted-foreground">
-          {t("signIn.noAccount")}&nbsp;
-          <Link href={registerHref} className="text-primary hover:underline">
-            {t("signIn.createAccount")}
-          </Link>
-        </CardFooter>
-        </Card>
-      </div>
+        <AuthSwitch text={t("signIn.noAccount")} href={registerHref} action={t("signIn.createAccount")} />
+      </AuthPane>
     </AuthLayout>
   )
 }

@@ -1,20 +1,12 @@
 "use client"
 
-import React, { Suspense, useState, useEffect } from "react"
+import React, { Suspense, useState, useEffect, useMemo, useRef } from "react"
 import { useSearchParams } from "next/navigation"
-import Link from "next/link"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+import { CircleCheck, LinkIcon } from "lucide-react"
 
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card"
 import {
   Form,
   FormField,
@@ -23,11 +15,13 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
+import { PasswordStrength, passwordError } from "@/components/ui/password-strength"
+import { usePasswordPolicy, type PasswordPolicy } from "@/lib/passwordPolicy"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Logo } from "@/components/brand/Logo"
 import { AuthLayout } from "./AuthLayout"
+import { AuthHeading, AuthPane, AuthSwitch } from "./parts"
 import { t } from "@/i18n/t"
 import { PageLoader } from "@/components/ui/spinner"
 import { redirectIfAuthed, rememberReturnTo } from "@/lib/auth"
@@ -36,66 +30,35 @@ import { localizedError } from "@/i18n/apiError"
 
 // ---------------------------------------------------------------------------
 // Zod schema — NewPassword + ConfirmPassword (refine: must match).
-// The daemon's resetPassword handler binds a single `Password` field; only
-// NewPassword is sent to the backend.
+// The daemon's resetPassword handler binds { Code, Password }; only NewPassword
+// is sent to the backend.
 // ---------------------------------------------------------------------------
-const ResetPasswordSchema = z
-  .object({
-    NewPassword: z
-      .string()
-      .min(8, { message: t("validation.passwordMin") })
-      .max(255),
-    ConfirmPassword: z.string().max(255),
-  })
-  .refine((data) => data.NewPassword === data.ConfirmPassword, {
-    message: t("validation.passwordsNoMatch"),
-    path: ["ConfirmPassword"],
-  })
-
-type ResetPasswordValues = z.infer<typeof ResetPasswordSchema>
-
-// ---------------------------------------------------------------------------
-// Error state card — used when the reset code is missing/invalid.
-// ---------------------------------------------------------------------------
-function ErrorCard({
-  title,
-  description,
-}: {
-  title: string
-  description: string
-}) {
-  return (
-    <AuthLayout reversed={false} variant="reset">
-      <div className="flex w-full max-w-md flex-col">
-        <div className="mb-6 flex justify-center">
-          <Logo size={88} />
-        </div>
-        <Card className="frost-panel frost-in w-full">
-          <CardHeader>
-            <span className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">CyberICEBox</span>
-            <CardTitle>{title}</CardTitle>
-            <CardDescription>{description}</CardDescription>
-          </CardHeader>
-          <CardFooter className="justify-center text-sm text-muted-foreground">
-            <Link
-              href="/forgot-password"
-              className="text-primary hover:underline"
-            >
-              {t("resetPassword.requestNewLink")}
-            </Link>
-          </CardFooter>
-        </Card>
-      </div>
-    </AuthLayout>
-  )
+// Built once per form; reads the live backend policy from the ref at validation time.
+function buildResetSchema(policyRef: React.RefObject<PasswordPolicy>) {
+  return z
+    .object({
+      NewPassword: z.string().superRefine((value, ctx) => {
+        const msg = passwordError(value, policyRef.current)
+        if (msg) ctx.addIssue({ code: "custom", message: msg })
+      }),
+      ConfirmPassword: z.string().max(255),
+    })
+    .refine((data) => data.NewPassword === data.ConfirmPassword, {
+      message: t("validation.passwordsNoMatch"),
+      path: ["ConfirmPassword"],
+    })
 }
+
+type ResetPasswordValues = z.infer<ReturnType<typeof buildResetSchema>>
 
 // ---------------------------------------------------------------------------
 // Inner component (uses useSearchParams — must be inside <Suspense>).
 // ---------------------------------------------------------------------------
 function ResetPasswordForm() {
   const searchParams = useSearchParams()
-  const code = searchParams.get("code") ?? ""
+  // The reset email links to /reset-password?token=… (backend useCase/auth/password.go);
+  // ?code= is still accepted for links issued before that.
+  const code = searchParams.get("token") ?? searchParams.get("code") ?? ""
   const returnTo = searchParams.get("return_to") ?? undefined
 
   const [checking, setChecking] = useState(true)
@@ -110,20 +73,30 @@ function ResetPasswordForm() {
       if (!cancelled) setChecking(false)
     })
     return () => { cancelled = true }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, [])
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [succeeded, setSucceeded] = useState(false)
 
+  const policy = usePasswordPolicy()
+  const policyRef = useRef(policy)
+  useEffect(() => {
+    policyRef.current = policy
+  }, [policy])
+  // eslint-disable-next-line @eslint-react/exhaustive-deps
+  const schema = useMemo(() => buildResetSchema(policyRef), [])
+
   const form = useForm<ResetPasswordValues>({
-    resolver: zodResolver(ResetPasswordSchema),
-    mode: "onBlur",
+    resolver: zodResolver(schema),
+    mode: "onTouched",
     defaultValues: { NewPassword: "", ConfirmPassword: "" },
   })
 
   if (checking) return <PageLoader />
+
+  const signInHref = returnTo ? `/sign-in?return_to=${encodeURIComponent(returnTo)}` : "/sign-in"
 
   const onSubmit: SubmitHandler<ResetPasswordValues> = async (data) => {
     setErrorMsg(null)
@@ -136,7 +109,7 @@ function ResetPasswordForm() {
       // surface inline. The endpoint returns success JSON (not a session); the
       // user signs in afterward.
       await apiPost(
-        "/api/auth/reset-password",
+        "/api/auth/password/reset",
         { Code: code, Password: data.NewPassword },
         undefined,
         { required: false }
@@ -155,10 +128,16 @@ function ResetPasswordForm() {
   // ---------------------------------------------------------------------------
   if (!code) {
     return (
-      <ErrorCard
-        title={t("resetPassword.missingCodeTitle")}
-        description={t("resetPassword.missingCodeDescription")}
-      />
+      <AuthLayout reversed={false} variant="reset">
+        <AuthPane>
+          <LinkIcon size={32} className="text-danger" aria-hidden />
+          <AuthHeading
+            title={t("resetPassword.missingCodeTitle")}
+            subtitle={t("resetPassword.missingCodeDescription")}
+          />
+          <AuthSwitch href="/forgot-password" action={t("resetPassword.requestNewLink")} />
+        </AuthPane>
+      </AuthLayout>
     )
   }
 
@@ -168,111 +147,82 @@ function ResetPasswordForm() {
   if (succeeded) {
     return (
       <AuthLayout reversed={false} variant="reset">
-        <div className="flex w-full max-w-md flex-col">
-          <div className="mb-6 flex justify-center">
-            <Logo size={88} />
-          </div>
-          <Card className="frost-panel frost-in w-full">
-            <CardHeader>
-              <span className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">CyberICEBox</span>
-              <CardTitle>{t("resetPassword.successTitle")}</CardTitle>
-              <CardDescription>{t("resetPassword.successBody")}</CardDescription>
-            </CardHeader>
-            <CardFooter className="justify-center text-sm text-muted-foreground">
-              <Link href="/sign-in" className="text-primary hover:underline">
-                {t("resetPassword.goToSignIn")}
-              </Link>
-            </CardFooter>
-          </Card>
-        </div>
+        <AuthPane>
+          <CircleCheck size={32} className="text-ok" aria-hidden />
+          <AuthHeading title={t("resetPassword.successTitle")} subtitle={t("resetPassword.successBody")} />
+          <AuthSwitch href={signInHref} action={t("resetPassword.goToSignIn")} />
+        </AuthPane>
       </AuthLayout>
     )
   }
 
   return (
     <AuthLayout reversed={false} variant="reset">
-      <div className="flex w-full max-w-md flex-col">
-        <div className="mb-6 flex justify-center">
-          <Logo size={88} />
-        </div>
-        <Card className="frost-panel frost-in w-full">
-          <CardHeader>
-            <span className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">CyberICEBox</span>
-            <CardTitle>{t("resetPassword.title")}</CardTitle>
-            <CardDescription>{t("resetPassword.subtitle")}</CardDescription>
-          </CardHeader>
+      <AuthPane>
+        <AuthHeading title={t("resetPassword.title")} subtitle={t("resetPassword.subtitle")} />
 
-        <CardContent className="space-y-4">
-          {errorMsg && (
-            <Alert variant="destructive">
-              <AlertDescription>{errorMsg}</AlertDescription>
-            </Alert>
-          )}
+        {errorMsg && (
+          <Alert variant="destructive">
+            <AlertDescription>{errorMsg}</AlertDescription>
+          </Alert>
+        )}
 
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-4"
-              noValidate
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4"
+            noValidate
+          >
+            <FormField
+              control={form.control}
+              name="NewPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("resetPassword.newPassword")}</FormLabel>
+                  <FormControl>
+                    <PasswordInput
+                      placeholder={t("resetPassword.newPasswordPlaceholder")}
+                      autoComplete="new-password"
+                      {...field}
+                    />
+                  </FormControl>
+                  {/* with text typed, the strength line names what is missing */}
+                  <PasswordStrength value={field.value} policy={policy} />
+                  <FormMessage className={field.value ? "hidden" : undefined} />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="ConfirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("resetPassword.confirmPassword")}</FormLabel>
+                  <FormControl>
+                    <PasswordInput
+                      placeholder={t("resetPassword.confirmPasswordPlaceholder")}
+                      autoComplete="new-password"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isSubmitting}
             >
-              <FormField
-                control={form.control}
-                name="NewPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("resetPassword.newPassword")}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder={t("resetPassword.newPasswordPlaceholder")}
-                        autoComplete="new-password"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {isSubmitting ? t("common.loading") : t("resetPassword.submit")}
+            </Button>
+          </form>
+        </Form>
 
-              <FormField
-                control={form.control}
-                name="ConfirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("resetPassword.confirmPassword")}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder={t(
-                          "resetPassword.confirmPasswordPlaceholder"
-                        )}
-                        autoComplete="new-password"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? t("common.loading") : t("resetPassword.submit")}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-
-        <CardFooter className="justify-center text-sm text-muted-foreground">
-          <Link href="/sign-in" className="text-primary hover:underline">
-            {t("common.signIn")}
-          </Link>
-        </CardFooter>
-        </Card>
-      </div>
+        <AuthSwitch href={signInHref} action={t("forgotPassword.backToSignIn")} />
+      </AuthPane>
     </AuthLayout>
   )
 }

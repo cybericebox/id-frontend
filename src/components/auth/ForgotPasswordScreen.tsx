@@ -2,20 +2,11 @@
 
 import React, { Suspense, useState, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
-import Link from "next/link"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { useReCaptcha } from "next-recaptcha-v3"
 
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card"
 import {
   Form,
   FormField,
@@ -27,8 +18,9 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Logo } from "@/components/brand/Logo"
+import { MailCheck } from "lucide-react"
 import { AuthLayout } from "./AuthLayout"
+import { AuthHeading, AuthPane, AuthSwitch } from "./parts"
 import { t } from "@/i18n/t"
 import { PageLoader } from "@/components/ui/spinner"
 import { redirectIfAuthed, rememberReturnTo } from "@/lib/auth"
@@ -64,7 +56,7 @@ function ForgotPasswordForm() {
       if (!cancelled) setChecking(false)
     })
     return () => { cancelled = true }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, [])
 
   const { executeRecaptcha } = useReCaptcha()
@@ -77,6 +69,9 @@ function ForgotPasswordForm() {
     mode: "onSubmit",
     defaultValues: { Email: "" },
   })
+
+  // Keep return_to on the way back to sign-in.
+  const signInHref = returnTo ? `/sign-in?return_to=${encodeURIComponent(returnTo)}` : "/sign-in"
 
   if (checking) return <PageLoader />
 
@@ -104,7 +99,7 @@ function ForgotPasswordForm() {
       // required:false — surface a 4xx (e.g. reCAPTCHA failure) inline. The daemon
       // otherwise ALWAYS returns success without revealing whether the account
       // exists, so a 2xx is a neutral confirmation, NOT proof the email is registered.
-      await apiPost("/api/auth/forgot-password", body, undefined, { required: false })
+      await apiPost("/api/auth/password/reset-request", body, undefined, { required: false })
       setSubmitted(true)
       return
     } catch (err) {
@@ -119,44 +114,21 @@ function ForgotPasswordForm() {
   // ---------------------------------------------------------------------------
   if (submitted) {
     return (
-      <AuthLayout reversed={false} variant="recover">
-        <div className="flex w-full max-w-md flex-col">
-          <div className="mb-6 flex justify-center">
-            <Logo size={88} />
-          </div>
-          <Card className="frost-panel frost-in w-full">
-            <CardHeader>
-              <span className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">CyberICEBox</span>
-              <CardTitle>{t("forgotPassword.checkEmailTitle")}</CardTitle>
-              <CardDescription>
-                {t("forgotPassword.checkEmailBody")}
-              </CardDescription>
-            </CardHeader>
-            <CardFooter className="justify-center text-sm text-muted-foreground">
-              <Link href="/sign-in" className="text-primary hover:underline">
-                {t("forgotPassword.backToSignIn")}
-              </Link>
-            </CardFooter>
-          </Card>
-        </div>
+      <AuthLayout reversed={true} variant="recover">
+        <AuthPane>
+          <MailCheck size={32} className="text-action" aria-hidden />
+          <AuthHeading title={t("forgotPassword.checkEmailTitle")} subtitle={t("forgotPassword.checkEmailBody")} />
+          <AuthSwitch href={signInHref} action={t("forgotPassword.backToSignIn")} />
+        </AuthPane>
       </AuthLayout>
     )
   }
 
   return (
-    <AuthLayout reversed={false} variant="recover">
-      <div className="flex w-full max-w-md flex-col">
-        <div className="mb-6 flex justify-center">
-          <Logo size={88} />
-        </div>
-        <Card className="frost-panel frost-in w-full">
-          <CardHeader>
-            <span className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">CyberICEBox</span>
-            <CardTitle>{t("forgotPassword.title")}</CardTitle>
-            <CardDescription>{t("forgotPassword.subtitle")}</CardDescription>
-          </CardHeader>
+    <AuthLayout reversed={true} variant="recover">
+      <AuthPane>
+        <AuthHeading title={t("forgotPassword.title")} subtitle={t("forgotPassword.subtitle")} />
 
-        <CardContent className="space-y-4">
           {errorMsg && (
             <Alert variant="destructive">
               <AlertDescription>{errorMsg}</AlertDescription>
@@ -197,15 +169,9 @@ function ForgotPasswordForm() {
               </Button>
             </form>
           </Form>
-        </CardContent>
 
-        <CardFooter className="justify-center text-sm text-muted-foreground">
-          <Link href="/sign-in" className="text-primary hover:underline">
-            {t("forgotPassword.backToSignIn")}
-          </Link>
-        </CardFooter>
-        </Card>
-      </div>
+        <AuthSwitch href={signInHref} action={t("forgotPassword.backToSignIn")} />
+      </AuthPane>
     </AuthLayout>
   )
 }

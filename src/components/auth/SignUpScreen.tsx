@@ -9,14 +9,6 @@ import * as z from "zod"
 import { useReCaptcha } from "next-recaptcha-v3"
 
 import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card"
-import {
   Form,
   FormField,
   FormItem,
@@ -27,8 +19,10 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Logo } from "@/components/brand/Logo"
+import { MailCheck } from "lucide-react"
 import { AuthLayout } from "./AuthLayout"
+import { useOneShotParam } from "@/lib/useOneShotParam"
+import { AuthDivider, AuthHeading, AuthPane, AuthSwitch, GoogleIcon } from "./parts"
 import { t } from "@/i18n/t"
 import { PageLoader } from "@/components/ui/spinner"
 import { redirectIfAuthed, rememberReturnTo } from "@/lib/auth"
@@ -44,6 +38,18 @@ const RegisterSchema = z.object({
 
 type RegisterValues = z.infer<typeof RegisterSchema>
 
+// Puts the address into the copy as one unbreakable, emphasised token.
+function withEmail(template: string, email: string) {
+  const [before, after = ""] = template.split("{email}")
+  return (
+    <>
+      {before}
+      <b className="whitespace-nowrap font-medium text-ink">{email}</b>
+      {after}
+    </>
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Inner component — must be wrapped in <Suspense> because useSearchParams()
 // opts out of static prerendering (required for `output: 'export'`).
@@ -51,7 +57,7 @@ type RegisterValues = z.infer<typeof RegisterSchema>
 function RegisterForm() {
   const searchParams = useSearchParams()
   const returnTo = searchParams.get("return_to") ?? ""
-  const googleError = searchParams.get("google_error")
+  const [googleError, clearGoogleError] = useOneShotParam("google_error", searchParams.get("google_error"))
 
   const [checking, setChecking] = useState(true)
   useEffect(() => {
@@ -65,7 +71,7 @@ function RegisterForm() {
       if (!cancelled) setChecking(false)
     })
     return () => { cancelled = true }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, [])
 
   const { executeRecaptcha } = useReCaptcha()
@@ -83,6 +89,7 @@ function RegisterForm() {
 
   const onSubmit: SubmitHandler<RegisterValues> = async (data) => {
     setErrorMsg(null)
+    clearGoogleError()
     setIsSubmitting(true)
 
     try {
@@ -100,6 +107,11 @@ function RegisterForm() {
       }
       if (recaptchaToken) {
         body.RecaptchaToken = recaptchaToken
+      }
+      // Carried into the emailed setup link (backend validates it) so the user
+      // lands back where they came from after finishing registration.
+      if (returnTo) {
+        body.Redirect = returnTo
       }
 
       // Route through the API client so the request hits api.<domain> (absolute
@@ -130,61 +142,40 @@ function RegisterForm() {
   if (submittedEmail !== null) {
     return (
       <AuthLayout reversed={true} variant="signup">
-        <div className="flex w-full max-w-md flex-col">
-          <div className="mb-6 flex justify-center">
-            <Logo size={88} />
-          </div>
-          <Card className="frost-panel frost-in w-full">
-            <CardHeader>
-              <span className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">CyberICEBox</span>
-              <CardTitle>{t("register.checkEmailTitle")}</CardTitle>
-              <CardDescription>
-                {t("register.checkEmailBody").replace("{email}", submittedEmail)}
-              </CardDescription>
-            </CardHeader>
-            <CardFooter className="justify-center text-sm text-muted-foreground">
-              {t("register.haveAccount")}&nbsp;
-              <Link href={signInHref} className="text-primary hover:underline">
-                {t("register.signIn")}
-              </Link>
-            </CardFooter>
-          </Card>
-        </div>
+        <AuthPane>
+          <MailCheck size={32} className="text-action" aria-hidden />
+          <AuthHeading
+            title={t("register.checkEmailTitle")}
+            subtitle={withEmail(t("register.checkEmailBody"), submittedEmail)}
+          />
+          <AuthSwitch text={t("register.haveAccount")} href={signInHref} action={t("register.signIn")} />
+        </AuthPane>
       </AuthLayout>
     )
   }
 
   return (
     <AuthLayout reversed={true} variant="signup">
-      <div className="flex w-full max-w-md flex-col">
-        <div className="mb-6 flex justify-center">
-          <Logo size={88} />
-        </div>
-        <Card className="frost-panel frost-in w-full">
-          <CardHeader>
-            <span className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">CyberICEBox</span>
-            <CardTitle>{t("register.title")}</CardTitle>
-            <CardDescription>{t("register.subtitle")}</CardDescription>
-          </CardHeader>
+      <AuthPane>
+        <AuthHeading title={t("register.title")} subtitle={t("register.subtitle")} />
 
-        <CardContent className="space-y-4">
-          {/* Google registration — plain navigation; distinct from sign-in's /api/auth/google */}
+          {/* Google registration — plain navigation; distinct from sign-in's /api/auth/google.
+              return_to is carried through Google and /setup. An already-linked
+              Google account is signed in directly by the backend. */}
           <Button
             variant="outline"
             className="w-full"
             type="button"
             onClick={() => {
-              window.location.href = apiUrl("/api/auth/google/register")
+              const q = returnTo ? `?return_to=${encodeURIComponent(returnTo)}` : ""
+              window.location.href = apiUrl(`/api/auth/google/register${q}`)
             }}
           >
+            <GoogleIcon />
             {t("register.continueWithGoogle")}
           </Button>
 
-          <div className="relative flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="flex-1 border-t" />
-            {t("register.orWithEmail")}
-            <span className="flex-1 border-t" />
-          </div>
+          <AuthDivider label={t("register.orWithEmail")} />
 
           {errorMsg && (
             <Alert variant="destructive">
@@ -196,10 +187,7 @@ function RegisterForm() {
             <Alert>
               <AlertDescription>
                 {t("signUp.googleNotRegistered")}{" "}
-                <Link
-                  href={returnTo ? `/sign-in?return_to=${encodeURIComponent(returnTo)}` : "/sign-in"}
-                  className="text-primary underline hover:no-underline"
-                >
+                <Link href={signInHref} className="font-medium underline underline-offset-3">
                   {t("register.signIn")}
                 </Link>
               </AlertDescription>
@@ -246,16 +234,9 @@ function RegisterForm() {
               </Button>
             </form>
           </Form>
-        </CardContent>
 
-        <CardFooter className="justify-center text-sm text-muted-foreground">
-          {t("register.haveAccount")}&nbsp;
-          <Link href={signInHref} className="text-primary hover:underline">
-            {t("register.signIn")}
-          </Link>
-        </CardFooter>
-        </Card>
-      </div>
+        <AuthSwitch text={t("register.haveAccount")} href={signInHref} action={t("register.signIn")} />
+      </AuthPane>
     </AuthLayout>
   )
 }
