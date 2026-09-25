@@ -78,7 +78,9 @@ export function redirectToSignIn(signInUrl?: string, returnTo?: string): void {
  */
 export function safeReturnTo(returnTo?: string, fallback = "/profile"): string {
   if (!returnTo) return fallback
-  const root = window.location.hostname.replace(/^id\./, "")
+  const root = process.env.NEXT_PUBLIC_DOMAIN?.toLowerCase()
+    || (typeof window !== "undefined" ? window.location.hostname.replace(/^id\./, "").toLowerCase() : "")
+  if (!root) return fallback
   try {
     const u = new URL(returnTo)
     const h = u.hostname.toLowerCase()

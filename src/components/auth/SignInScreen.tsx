@@ -28,6 +28,7 @@ import { PageLoader } from "@/components/ui/spinner"
 import { redirectIfAuthed, rememberReturnTo, safeReturnTo } from "@/lib/auth"
 import { apiPost, apiUrl } from "@/api/client"
 import { localizedError } from "@/i18n/apiError"
+import { onServiceRestored } from "@/lib/serviceStatus"
 
 // ---------------------------------------------------------------------------
 // Zod schema — mirrors the daemon's JSON body (Email, Password)
@@ -51,14 +52,17 @@ function SignInForm() {
   useEffect(() => {
     rememberReturnTo(returnTo || undefined)
     let cancelled = false
-    redirectIfAuthed(returnTo || undefined).then((redirecting) => {
-      if (!cancelled && !redirecting) setChecking(false)
-    }).catch(() => {
-      // On any failure (e.g. the /me probe errored), never hang the loader —
-      // reveal the form so the user can sign in.
-      if (!cancelled) setChecking(false)
-    })
-    return () => { cancelled = true }
+    const checkSession = () => {
+      void redirectIfAuthed(returnTo || undefined).then((redirecting) => {
+        if (!cancelled && !redirecting) setChecking(false)
+      }).catch(() => {
+        // Keep the form available under the service notice while the API is down.
+        if (!cancelled) setChecking(false)
+      })
+    }
+    checkSession()
+    const unsubscribe = onServiceRestored(checkSession)
+    return () => { cancelled = true; unsubscribe() }
     // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, [])
 

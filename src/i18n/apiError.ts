@@ -9,6 +9,7 @@
 import errorsUk from "../../messages/errors.uk.json"
 import errorsEn from "../../messages/errors.en.json"
 import { ApiError } from "@/api/client"
+import { isUnavailableStatus } from "@/lib/serviceStatus"
 import { t } from "./t"
 
 const uk = errorsUk as Record<string, string>
@@ -16,12 +17,12 @@ const en = errorsEn as Record<string, string>
 
 /**
  * isServiceUnavailable — the backend could not be reached or its gateway failed
- * (502/503/504, or fetch() itself rejected: DNS, connection refused, offline).
+ * (5xx, or fetch() itself rejected: DNS, connection refused, offline).
  * Callers show a "temporarily unavailable, retrying" state instead of a generic
  * error for these.
  */
 export function isServiceUnavailable(err: unknown): boolean {
-  if (err instanceof ApiError) return err.status === 502 || err.status === 503 || err.status === 504
+  if (err instanceof ApiError) return isUnavailableStatus(err.status)
   return err instanceof TypeError // fetch() network failure
 }
 

@@ -28,6 +28,7 @@ import { PageLoader } from "@/components/ui/spinner"
 import { redirectIfAuthed, rememberReturnTo } from "@/lib/auth"
 import { apiPost, apiUrl } from "@/api/client"
 import { localizedError } from "@/i18n/apiError"
+import { onServiceRestored } from "@/lib/serviceStatus"
 
 // ---------------------------------------------------------------------------
 // Zod schema — mirrors the daemon's JSON body (Email only for registration)
@@ -63,14 +64,16 @@ function RegisterForm() {
   useEffect(() => {
     rememberReturnTo(returnTo || undefined)
     let cancelled = false
-    redirectIfAuthed(returnTo || undefined).then((redirecting) => {
-      if (!cancelled && !redirecting) setChecking(false)
-    }).catch(() => {
-      // On any failure (e.g. the /me probe errored), never hang the loader —
-      // reveal the form.
-      if (!cancelled) setChecking(false)
-    })
-    return () => { cancelled = true }
+    const checkSession = () => {
+      void redirectIfAuthed(returnTo || undefined).then((redirecting) => {
+        if (!cancelled && !redirecting) setChecking(false)
+      }).catch(() => {
+        if (!cancelled) setChecking(false)
+      })
+    }
+    checkSession()
+    const unsubscribe = onServiceRestored(checkSession)
+    return () => { cancelled = true; unsubscribe() }
     // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, [])
 

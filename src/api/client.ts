@@ -4,7 +4,7 @@
 // and the browser stores/sends the host-scoped session cookie. No silent-auth
 // bootstrap — a plain credentialed fetch is authoritative.
 
-import { isUnavailableStatus, reportServiceAvailable, reportServiceUnavailable } from "@/lib/serviceStatus"
+import { isUnavailableStatus, reportServiceUnavailable } from "@/lib/serviceStatus"
 
 const DOMAIN = process.env.NEXT_PUBLIC_DOMAIN ?? ""
 const BASE_URL = DOMAIN ? `https://api.${DOMAIN}` : ""
@@ -92,10 +92,8 @@ async function request<T>(
     reportServiceUnavailable()
     throw err
   }
-  // Gateway errors mean the backend itself is unreachable; any other response
-  // proves it is up again.
+  // Keep the overlay until its session-aware recovery probe succeeds.
   if (isUnavailableStatus(res.status)) reportServiceUnavailable()
-  else reportServiceAvailable()
 
   // Centralized auth handling: required (default true) → write return_to cookie
   // and redirect to sign-in. Returning a never-resolving promise stops the

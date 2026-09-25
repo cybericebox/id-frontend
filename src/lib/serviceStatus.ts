@@ -3,33 +3,44 @@
  *
  * COPY-TO-RP-APPS: framework-free, static-export-safe.
  *
- * The api client reports every request: a network failure or a 502/503/504
- * marks the service unavailable, any response from the backend marks it
- * available again. <ServiceStatusGate/> (root layout) renders the overlay and
- * polls /api/health; when the backend is back it announces "restored" so
+ * The api client reports every request: a network failure or a 5xx response
+ * starts a short confirmation period. <ServiceStatusGate/> (root layout)
+ * probes /api/auth/me before showing the overlay; when session validation
+ * works again it announces "restored" so
  * screens whose data failed to load can refetch (onServiceRestored).
  */
 
-type Listener = (unavailable: boolean) => void
+export type ServiceStatus = "up" | "suspect" | "down"
+type Listener = (status: ServiceStatus) => void
 
-let unavailable = false
+let status: ServiceStatus = "up"
 const listeners = new Set<Listener>()
 const restoredListeners = new Set<() => void>()
 
 export function isServiceDown(): boolean {
-  return unavailable
+  return status !== "up"
+}
+
+export function getServiceStatus(): ServiceStatus {
+  return status
 }
 
 export function reportServiceUnavailable(): void {
-  if (unavailable) return
-  unavailable = true
-  listeners.forEach((l) => l(true))
+  if (status !== "up") return
+  status = "suspect"
+  listeners.forEach((l) => l(status))
+}
+
+export function confirmServiceUnavailable(): void {
+  if (status !== "suspect") return
+  status = "down"
+  listeners.forEach((l) => l(status))
 }
 
 export function reportServiceAvailable(): void {
-  if (!unavailable) return
-  unavailable = false
-  listeners.forEach((l) => l(false))
+  if (status === "up") return
+  status = "up"
+  listeners.forEach((l) => l(status))
   restoredListeners.forEach((l) => l())
 }
 
@@ -44,7 +55,7 @@ export function onServiceRestored(fn: () => void): () => void {
   return () => restoredListeners.delete(fn)
 }
 
-/** True for failures that mean "backend unreachable", not an API error. */
+/** True for server failures that should keep the user on the current frontend. */
 export function isUnavailableStatus(status: number): boolean {
-  return status === 502 || status === 503 || status === 504
+  return status >= 500 && status <= 599
 }

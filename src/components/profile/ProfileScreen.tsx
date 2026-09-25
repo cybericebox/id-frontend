@@ -6,6 +6,7 @@ import Link from "next/link"
 import {
   ChevronLeft,
   ChevronRight,
+  ArrowLeft,
   AtSign,
   ShieldCheck,
   MonitorSmartphone,
@@ -30,6 +31,7 @@ import { AccountTab } from "@/components/profile/AccountTab"
 import { SecurityTab } from "@/components/profile/SecurityTab"
 import { SessionsTab } from "@/components/profile/SessionsTab"
 import { ConnectionsTab } from "@/components/profile/ConnectionsTab"
+import { InboxButton } from "@/components/profile/InboxButton"
 
 type TabKey = "profile" | "account" | "security" | "sessions" | "connections"
 
@@ -150,28 +152,24 @@ function ProfileShell() {
   }
 
   return (
-    <main className="mx-auto max-w-4xl p-6">
-      {/* Back affordance: shown when the caller (e.g. an RP app) passes return_to */}
-      {returnTo && (
-        <div className="mb-4">
-          <Link
-            href={returnTo}
-            className="inline-flex items-center gap-1 text-sm text-dim hover:text-ink hover:underline"
-          >
-            &#8592; {t("common.back")}
-          </Link>
+    <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6">
+      <header className="mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b border-line pb-4">
+          <Wordmark size="md" />
+          <div className="ml-auto flex items-center gap-2">
+            <ThemeSwitch />
+            <span className="mx-1 h-5 w-px bg-line" aria-hidden="true" />
+            <InboxButton />
+            <Button asChild variant="outline" size="sm">
+              <a href="/sign-out">{t("common.signOut")}</a>
+            </Button>
+          </div>
         </div>
-      )}
-      <div className="mb-4"><Wordmark size="md" /></div>
-      <div className="mb-6 flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">{t("profile.heading")}</h1>
-        <div className="flex items-center gap-3">
-          <ThemeSwitch />
-          <Button asChild variant="outline" size="sm">
-            <a href="/sign-out">{t("common.signOut")}</a>
-          </Button>
+        <div className="mt-5 flex items-center gap-3">
+          {returnTo && <Link href={returnTo} aria-label={t("common.back")} title={t("common.back")} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-dim hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-action"><ArrowLeft size={18} aria-hidden="true" /></Link>}
+          <h1 className="text-2xl font-semibold">{t("profile.heading")}</h1>
         </div>
-      </div>
+      </header>
 
       {account && (
         <div className="mb-6 flex items-start gap-4 rounded-lg border border-line bg-surface p-4">

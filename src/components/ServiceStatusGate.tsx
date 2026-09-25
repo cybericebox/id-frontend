@@ -1,22 +1,24 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useSyncExternalStore } from "react"
 import { CloudOff } from "lucide-react"
 
 import { Wordmark } from "@/components/brand/Wordmark"
 import { Button } from "@/components/ui/button"
 import { apiUrl } from "@/api/client"
 import { t } from "@/i18n/t"
-import { reportServiceAvailable, subscribeServiceStatus } from "@/lib/serviceStatus"
+import { confirmServiceUnavailable, getServiceStatus, reportServiceAvailable, subscribeServiceStatus } from "@/lib/serviceStatus"
 
 const POLL_MS = 5000
+const CONFIRM_MS = 3000
 
-// Probe the public liveness route directly (not via the api client, so a probe
+// Probe session validation directly (not via the api client, so a probe
 // failure does not re-trigger the overlay logic).
 async function probe(): Promise<boolean> {
   try {
-    const res = await fetch(apiUrl("/api/health"), { cache: "no-store" })
-    return res.ok
+    // /api/health can be 200 while session storage is still unavailable.
+    const res = await fetch(apiUrl("/api/auth/me"), { cache: "no-store", credentials: "include", signal: AbortSignal.timeout(4000) })
+    return res.ok || res.status === 401
   } catch {
     return false
   }
@@ -24,26 +26,33 @@ async function probe(): Promise<boolean> {
 
 /**
  * App-wide interceptor for "backend unreachable" (network failure or
- * 502/503/504 on any API call). Mounted once in the root layout: shows a
- * full-screen notice over the current page, polls /api/health every 5 s and
+ * 5xx on any API call). Mounted once in the root layout: shows a
+ * full-screen notice over the current page, probes /api/auth/me every 5 s and
  * disappears by itself when the API is back (screens refetch via
  * onServiceRestored). The page underneath stays mounted, so form input survives.
  */
 export function ServiceStatusGate() {
-  const [down, setDown] = useState(false)
+  const status = useSyncExternalStore(subscribeServiceStatus, getServiceStatus, () => "up" as const)
   const [checking, setChecking] = useState(false)
 
-  useEffect(() => subscribeServiceStatus(setDown), [])
+  useEffect(() => {
+    if (status !== "suspect") return
+    const id = window.setTimeout(async () => {
+      if (await probe()) reportServiceAvailable()
+      else confirmServiceUnavailable()
+    }, CONFIRM_MS)
+    return () => window.clearTimeout(id)
+  }, [status])
 
   useEffect(() => {
-    if (!down) return
+    if (status !== "down") return
     const id = window.setInterval(async () => {
       if (await probe()) reportServiceAvailable()
     }, POLL_MS)
     return () => window.clearInterval(id)
-  }, [down])
+  }, [status])
 
-  if (!down) return null
+  if (status !== "down") return null
 
   const retry = async () => {
     setChecking(true)
