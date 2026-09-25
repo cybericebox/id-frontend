@@ -180,3 +180,7 @@
 		stroke-dashoffset: var(--draw-len, 600);
 	}
 }
+
+@keyframes notification-countdown {
+  to { transform: scaleX(0); }
+}

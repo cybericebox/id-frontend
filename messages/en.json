@@ -2,6 +2,8 @@
   "common.signIn": "Sign in",
   "common.signOut": "Sign out",
   "inbox.title": "Inbox",
+  "inbox.new": "New notification",
+  "inbox.dismiss": "Dismiss notification",
   "inbox.unread": "unread",
   "inbox.unreadItem": "Unread",
   "inbox.back": "Back to inbox",

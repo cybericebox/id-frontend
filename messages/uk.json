@@ -2,6 +2,8 @@
   "common.signIn": "Увійти",
   "common.signOut": "Вийти",
   "inbox.title": "Вхідні",
+  "inbox.new": "Нове повідомлення",
+  "inbox.dismiss": "Закрити сповіщення",
   "inbox.unread": "непрочитаних",
   "inbox.unreadItem": "Непрочитане",
   "inbox.back": "До списку повідомлень",
