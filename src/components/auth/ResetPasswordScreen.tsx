@@ -19,7 +19,7 @@ import { PasswordInput } from "@/components/ui/password-input"
 import { PasswordStrength, passwordError } from "@/components/ui/password-strength"
 import { usePasswordPolicy, type PasswordPolicy } from "@/lib/passwordPolicy"
 import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { toast } from "@/components/ui/toast"
 import { AuthLayout } from "./AuthLayout"
 import { AuthHeading, AuthPane, AuthSwitch } from "./parts"
 import { t } from "@/i18n/t"
@@ -76,7 +76,6 @@ function ResetPasswordForm() {
     // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, [])
 
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [succeeded, setSucceeded] = useState(false)
 
@@ -99,7 +98,6 @@ function ResetPasswordForm() {
   const signInHref = returnTo ? `/sign-in?return_to=${encodeURIComponent(returnTo)}` : "/sign-in"
 
   const onSubmit: SubmitHandler<ResetPasswordValues> = async (data) => {
-    setErrorMsg(null)
     setIsSubmitting(true)
 
     try {
@@ -115,9 +113,10 @@ function ResetPasswordForm() {
         { required: false }
       )
       setSucceeded(true)
+      toast.success(t("resetPassword.successTitle"))
       return
     } catch (err) {
-      setErrorMsg(localizedError(err))
+      toast.error(localizedError(err))
     } finally {
       setIsSubmitting(false)
     }
@@ -161,11 +160,6 @@ function ResetPasswordForm() {
       <AuthPane>
         <AuthHeading title={t("resetPassword.title")} subtitle={t("resetPassword.subtitle")} />
 
-        {errorMsg && (
-          <Alert variant="destructive">
-            <AlertDescription>{errorMsg}</AlertDescription>
-          </Alert>
-        )}
 
         <Form {...form}>
           <form

@@ -10,6 +10,7 @@ import {
   CardContent,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { apiDelete, apiUrl } from "@/api/client"
 import { GoogleIcon } from "@/components/auth/parts"
@@ -39,9 +40,10 @@ export function ConnectionsTab({
     try {
       await apiDelete("/api/auth/google/link")
       onUpdated()
+      toast.success("Google-акаунт від’єднано.")
     } catch (err) {
       // 4xx lockout-guard (last login method) surfaces here — show, don't crash.
-      setErrorMsg(extractError(err))
+      toast.error(extractError(err))
     } finally {
       setIsBusy(false)
     }

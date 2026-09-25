@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { toast } from "@/components/ui/toast"
 import { apiPost, apiDelete } from "@/api/client"
 import { t } from "@/i18n/t"
 import type { Account } from "./types"
@@ -44,12 +44,9 @@ const EmailSchema = z.object({
 type EmailValues = z.infer<typeof EmailSchema>
 
 export function AccountTab({ account }: { account: Account }) {
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const [okMsg, setOkMsg] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const form = useForm<EmailValues>({
     resolver: zodResolver(EmailSchema),
@@ -78,30 +75,28 @@ export function AccountTab({ account }: { account: Account }) {
   }, [])
 
   const onSubmit: SubmitHandler<EmailValues> = async (data) => {
-    setErrorMsg(null)
-    setOkMsg(null)
     setIsSubmitting(true)
     try {
       await apiPost("/api/auth/account/email", { Email: data.Email })
       sessionStorage.removeItem(EMAIL_DRAFT_KEY) // sent — drop the draft
-      setOkMsg(t("profile.account.emailSent"))
+      toast.success(t("profile.account.emailSent"))
       form.reset({ Email: "" })
     } catch (err) {
-      setErrorMsg(extractError(err))
+      toast.error(extractError(err))
     } finally {
       setIsSubmitting(false)
     }
   }
 
   const onDelete = async () => {
-    setDeleteError(null)
     setIsDeleting(true)
     try {
       await apiDelete("/api/auth/account")
+      toast.success("Обліковий запис видалено.")
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Reload after account deletion to discard authenticated client state.
       window.location.href = "/sign-in"
     } catch (err) {
-      setDeleteError(extractError(err))
+      toast.error(extractError(err))
       setIsDeleting(false)
     }
   }
@@ -128,16 +123,6 @@ export function AccountTab({ account }: { account: Account }) {
             </span>
           </div>
 
-          {errorMsg && (
-            <Alert variant="destructive">
-              <AlertDescription>{errorMsg}</AlertDescription>
-            </Alert>
-          )}
-          {okMsg && (
-            <Alert variant="success">
-              <AlertDescription>{okMsg}</AlertDescription>
-            </Alert>
-          )}
 
           <Form {...form}>
             <form
@@ -218,11 +203,6 @@ export function AccountTab({ account }: { account: Account }) {
               {t("profile.account.deleteConfirmBody")}
             </DialogDescription>
           </DialogHeader>
-          {deleteError && (
-            <Alert variant="destructive">
-              <AlertDescription>{deleteError}</AlertDescription>
-            </Alert>
-          )}
           <DialogFooter>
             <Button
               variant="outline"

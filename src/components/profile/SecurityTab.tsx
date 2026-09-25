@@ -24,7 +24,7 @@ import { PasswordInput } from "@/components/ui/password-input"
 import { PasswordStrength, passwordError } from "@/components/ui/password-strength"
 import { usePasswordPolicy, type PasswordPolicy } from "@/lib/passwordPolicy"
 import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { toast } from "@/components/ui/toast"
 import { apiPost } from "@/api/client"
 import { t } from "@/i18n/t"
 import type { Account } from "./types"
@@ -66,8 +66,6 @@ type SecurityValues = {
 }
 
 export function SecurityTab({ account }: { account: Account }) {
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const [okMsg, setOkMsg] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const policy = usePasswordPolicy()
@@ -85,8 +83,6 @@ export function SecurityTab({ account }: { account: Account }) {
   })
 
   const onSubmit: SubmitHandler<SecurityValues> = async (data) => {
-    setErrorMsg(null)
-    setOkMsg(null)
     setIsSubmitting(true)
     try {
       const body: Record<string, string> = { NewPassword: data.NewPassword }
@@ -94,11 +90,11 @@ export function SecurityTab({ account }: { account: Account }) {
         body.OldPassword = data.OldPassword
       }
       await apiPost("/api/auth/password/change", body)
-      setOkMsg(t("profile.security.saved"))
+      toast.success(t("profile.security.saved"))
       form.reset({ OldPassword: "", NewPassword: "", ConfirmPassword: "" })
     } catch (err) {
       // A 401 is auto-redirected by the api client (passwords are never persisted).
-      setErrorMsg(extractError(err))
+      toast.error(extractError(err))
     } finally {
       setIsSubmitting(false)
     }
@@ -115,16 +111,6 @@ export function SecurityTab({ account }: { account: Account }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {errorMsg && (
-          <Alert variant="destructive">
-            <AlertDescription>{errorMsg}</AlertDescription>
-          </Alert>
-        )}
-        {okMsg && (
-          <Alert variant="success">
-            <AlertDescription>{okMsg}</AlertDescription>
-          </Alert>
-        )}
 
         <Form {...form}>
           <form

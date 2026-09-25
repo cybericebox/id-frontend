@@ -11,6 +11,7 @@
   "inbox.message": "Message",
   "inbox.open": "Open",
   "inbox.readAll": "Mark all as read",
+  "inbox.allRead": "All messages marked as read.",
   "inbox.empty": "No notifications yet.",
   "inbox.loadError": "Could not load notifications.",
   "inbox.readError": "Could not mark notifications as read.",

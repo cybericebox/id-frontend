@@ -5,6 +5,7 @@ import { ServiceStatusGate } from "@/components/ServiceStatusGate"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { THEME_BOOT_SCRIPT } from "@/lib/theme"
+import { ToastProvider } from "@/components/ui/toast"
 
 export const metadata: Metadata = {
   title: "Cyber ICE Box Platform ID",
@@ -25,7 +26,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       </head>
       <body>
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider><ToastProvider>{children}</ToastProvider></QueryProvider>
         <ServiceStatusGate />
       </body>
     </html>

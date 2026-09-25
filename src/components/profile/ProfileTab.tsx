@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { apiPatch, apiUrl, mediaUrl } from "@/api/client"
 import { localizedError, localizedResponseError } from "@/i18n/apiError"
@@ -46,7 +47,6 @@ export function ProfileTab({
   onUpdated: () => void
 }) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const [okMsg, setOkMsg] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isPhotoBusy, setIsPhotoBusy] = useState(false)
   const [cropSrc, setCropSrc] = useState<string | null>(null)
@@ -91,7 +91,6 @@ export function ProfileTab({
     if (!file) return
 
     setErrorMsg(null)
-    setOkMsg(null)
     if (!file.type.startsWith("image/")) {
       setErrorMsg(t("profile.profile.photoInvalidType"))
       return
@@ -123,13 +122,13 @@ export function ProfileTab({
         body: fd,
       })
       if (!res.ok) {
-        setErrorMsg(await localizedResponseError(res))
+        toast.error(await localizedResponseError(res))
         return
       }
-      setOkMsg(t("profile.profile.photoUpdated"))
+      toast.success(t("profile.profile.photoUpdated"))
       onUpdated()
     } catch (err) {
-      setErrorMsg(extractError(err))
+      toast.error(extractError(err))
     } finally {
       setIsPhotoBusy(false)
     }
@@ -137,7 +136,6 @@ export function ProfileTab({
 
   const onRemovePhoto = async () => {
     setErrorMsg(null)
-    setOkMsg(null)
     setIsPhotoBusy(true)
     try {
       const res = await fetch(apiUrl("/api/auth/account/avatar"), {
@@ -145,13 +143,13 @@ export function ProfileTab({
         credentials: "include",
       })
       if (!res.ok) {
-        setErrorMsg(await localizedResponseError(res))
+        toast.error(await localizedResponseError(res))
         return
       }
-      setOkMsg(t("profile.profile.photoRemoved"))
+      toast.success(t("profile.profile.photoRemoved"))
       onUpdated()
     } catch (err) {
-      setErrorMsg(extractError(err))
+      toast.error(extractError(err))
     } finally {
       setIsPhotoBusy(false)
     }
@@ -159,7 +157,6 @@ export function ProfileTab({
 
   const onSubmit: SubmitHandler<ProfileValues> = async (data) => {
     setErrorMsg(null)
-    setOkMsg(null)
     setIsSubmitting(true)
     try {
       await apiPatch("/api/auth/account/profile", {
@@ -167,11 +164,12 @@ export function ProfileTab({
         LastName: data.LastName,
       })
       sessionStorage.removeItem(NAME_DRAFT_KEY) // saved — drop the draft
-      setOkMsg(t("profile.profile.saved"))
+      form.reset(data)
+      toast.success(t("profile.profile.saved"))
       onUpdated()
     } catch (err) {
       // A 401 is auto-redirected by the api client (the draft is already persisted).
-      setErrorMsg(extractError(err))
+      toast.error(extractError(err))
     } finally {
       setIsSubmitting(false)
     }
@@ -247,11 +245,6 @@ export function ProfileTab({
         {errorMsg && (
           <Alert variant="destructive">
             <AlertDescription>{errorMsg}</AlertDescription>
-          </Alert>
-        )}
-        {okMsg && (
-          <Alert variant="success">
-            <AlertDescription>{okMsg}</AlertDescription>
           </Alert>
         )}
 

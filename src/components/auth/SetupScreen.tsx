@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { toast } from "@/components/ui/toast"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Check, LinkIcon } from "lucide-react"
 import { PasswordInput } from "@/components/ui/password-input"
@@ -201,7 +202,6 @@ function SetupForm() {
   const [isFetching, setIsFetching] = useState(true)
 
   // Submit state
-  const [submitError, setSubmitError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Derived: whether Google is currently linked (may update after page reload post-link)
@@ -335,7 +335,6 @@ function SetupForm() {
   // Submit handler
   // ---------------------------------------------------------------------------
   const onSubmit: SubmitHandler<SetupValues> = async (data) => {
-    setSubmitError(null)
     setIsSubmitting(true)
 
     try {
@@ -371,7 +370,7 @@ function SetupForm() {
         window.location.assign("/profile")
       }
     } catch (err) {
-      setSubmitError(localizedError(err))
+      toast.error(localizedError(err))
     } finally {
       setIsSubmitting(false)
     }
@@ -432,11 +431,6 @@ function SetupForm() {
           )}
 
           {/* Submit error banner */}
-          {submitError && (
-            <Alert variant="destructive">
-              <AlertDescription>{submitError}</AlertDescription>
-            </Alert>
-          )}
 
           <Form {...form}>
             <form

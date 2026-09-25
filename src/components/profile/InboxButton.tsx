@@ -9,6 +9,7 @@ import DOMPurify from "isomorphic-dompurify"
 import { Bell, ChevronLeft, X } from "lucide-react"
 
 import { apiGet, apiPatch } from "@/api/client"
+import { toast } from "@/components/ui/toast"
 import { t, locale } from "@/i18n/t"
 import { onServiceRestored } from "@/lib/serviceStatus"
 import { NotificationPopIn, popInDuration } from "./NotificationPopIn"
@@ -238,8 +239,9 @@ export function InboxButton() {
       setItems((current) => current.map((item) => ({ ...item, ReadAt: item.ReadAt ?? now })))
       setPopIns([])
       announceRead()
+      toast.success(t("inbox.allRead"))
     } catch {
-      setError(t("inbox.readError"))
+      toast.error(t("inbox.readError"))
     }
   }
 

@@ -19,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { toast } from "@/components/ui/toast"
 import { CircleAlert, MailCheck } from "lucide-react"
 import { AuthLayout } from "./AuthLayout"
 import { useOneShotParam } from "@/lib/useOneShotParam"
@@ -78,7 +79,6 @@ function RegisterForm() {
   }, [])
 
   const { executeRecaptcha } = useReCaptcha()
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submittedEmail, setSubmittedEmail] = useState<string | null>(null)
 
@@ -91,7 +91,6 @@ function RegisterForm() {
   if (checking) return <PageLoader />
 
   const onSubmit: SubmitHandler<RegisterValues> = async (data) => {
-    setErrorMsg(null)
     clearGoogleError()
     setIsSubmitting(true)
 
@@ -125,10 +124,11 @@ function RegisterForm() {
 
       // Show "check your email" confirmation — no redirect.
       setSubmittedEmail(data.Email)
+      toast.success(t("register.checkEmailTitle"))
       return
     } catch (err) {
       // Localized by the error's stable code; falls back to a generic message.
-      setErrorMsg(localizedError(err))
+      toast.error(localizedError(err))
     } finally {
       setIsSubmitting(false)
     }
@@ -194,11 +194,6 @@ function RegisterForm() {
 
           <AuthDivider label={t("register.orWithEmail")} />
 
-          {errorMsg && (
-            <Alert variant="destructive">
-              <AlertDescription>{errorMsg}</AlertDescription>
-            </Alert>
-          )}
 
 
           {googleError === "failed" && (

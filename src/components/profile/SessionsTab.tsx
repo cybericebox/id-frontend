@@ -10,6 +10,7 @@ import {
   CardContent,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Spinner } from "@/components/ui/spinner"
 import { apiGet, apiDelete } from "@/api/client"
@@ -84,8 +85,9 @@ export function SessionsTab() {
     try {
       await apiDelete(`/api/auth/sessions/${encodeURIComponent(id)}`)
       await load()
+      toast.success("Сеанс завершено.")
     } catch (err) {
-      setErrorMsg(extractError(err))
+      toast.error(extractError(err))
     } finally {
       setBusyId(null)
     }
@@ -97,8 +99,9 @@ export function SessionsTab() {
     try {
       await apiDelete("/api/auth/sessions")
       await load()
+      toast.success("Інші сеанси завершено.")
     } catch (err) {
-      setErrorMsg(extractError(err))
+      toast.error(extractError(err))
     } finally {
       setBusyId(null)
     }

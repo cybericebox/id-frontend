@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { toast } from "@/components/ui/toast"
 import { MailCheck } from "lucide-react"
 import { AuthLayout } from "./AuthLayout"
 import { AuthHeading, AuthPane, AuthSwitch } from "./parts"
@@ -60,7 +60,6 @@ function ForgotPasswordForm() {
   }, [])
 
   const { executeRecaptcha } = useReCaptcha()
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
@@ -76,7 +75,6 @@ function ForgotPasswordForm() {
   if (checking) return <PageLoader />
 
   const onSubmit: SubmitHandler<ForgotPasswordValues> = async (data) => {
-    setErrorMsg(null)
     setIsSubmitting(true)
 
     try {
@@ -101,9 +99,10 @@ function ForgotPasswordForm() {
       // exists, so a 2xx is a neutral confirmation, NOT proof the email is registered.
       await apiPost("/api/auth/password/reset-request", body, undefined, { required: false })
       setSubmitted(true)
+      toast.success(t("forgotPassword.checkEmailTitle"))
       return
     } catch (err) {
-      setErrorMsg(localizedError(err))
+      toast.error(localizedError(err))
     } finally {
       setIsSubmitting(false)
     }
@@ -129,11 +128,6 @@ function ForgotPasswordForm() {
       <AuthPane>
         <AuthHeading title={t("forgotPassword.title")} subtitle={t("forgotPassword.subtitle")} />
 
-          {errorMsg && (
-            <Alert variant="destructive">
-              <AlertDescription>{errorMsg}</AlertDescription>
-            </Alert>
-          )}
 
           <Form {...form}>
             <form

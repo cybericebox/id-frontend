@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input"
 import { PasswordInput } from "@/components/ui/password-input"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { toast } from "@/components/ui/toast"
 import { AuthLayout } from "./AuthLayout"
 import { useOneShotParam } from "@/lib/useOneShotParam"
 import { AuthDivider, AuthHeading, AuthPane, AuthSwitch, GoogleIcon, authLinkClass } from "./parts"
@@ -67,7 +68,6 @@ function SignInForm() {
   }, [])
 
   const { executeRecaptcha } = useReCaptcha()
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [googleError, clearGoogleError] = useOneShotParam("google_error", searchParams.get("google_error"))
@@ -81,7 +81,6 @@ function SignInForm() {
   if (checking) return <PageLoader />
 
   const onSubmit: SubmitHandler<SignInValues> = async (data) => {
-    setErrorMsg(null)
     clearGoogleError()
     setIsSubmitting(true)
 
@@ -128,7 +127,7 @@ function SignInForm() {
       }
     } catch (err) {
       // Localized by the error's stable code (Status.Code), not the English message.
-      setErrorMsg(localizedError(err))
+      toast.error(localizedError(err))
     } finally {
       setIsSubmitting(false)
     }
@@ -163,11 +162,6 @@ function SignInForm() {
 
           <AuthDivider label={t("signIn.orWithEmail")} />
 
-          {errorMsg && (
-            <Alert variant="destructive">
-              <AlertDescription>{errorMsg}</AlertDescription>
-            </Alert>
-          )}
 
           {googleError === "failed" && (
             <Alert variant="destructive">
