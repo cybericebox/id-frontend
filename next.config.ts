@@ -9,8 +9,7 @@ import type { NextConfig } from "next"
 const DOMAIN = process.env.NEXT_PUBLIC_DOMAIN
 
 const nextConfig: NextConfig = {
-  // TEMP (local, not committed): static export off so `next start` runs.
-  // output: "export",
+  output: "export",
   images: {
     unoptimized: true,
   },
