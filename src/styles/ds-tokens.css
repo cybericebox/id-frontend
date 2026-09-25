@@ -35,6 +35,7 @@
   --ib-body:#2C2B42;
   --ib-dim:#5A5A70;
   --ib-faint:#66667A;
+  --ib-placeholder:color-mix(in srgb,var(--ib-dim) 88%,var(--ib-surface));
   /* action — from brand */
   --ib-action:var(--ev-brand);
   --ib-action-hover:color-mix(in srgb,var(--ev-brand),#FFFFFF 8%);
@@ -80,6 +81,7 @@
   --ib-body:#DAD9E5;
   --ib-dim:#BBB9CB;
   --ib-faint:#BBB9CB;
+  --ib-placeholder:color-mix(in srgb,var(--ib-dim) 88%,var(--ib-surface));
   --ib-action:#E6E6EE;
   --ib-action-hover:#F5F5F9;
   --ib-on-action:var(--ev-brand);

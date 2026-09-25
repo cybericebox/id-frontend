@@ -10,14 +10,14 @@ import { t } from "@/i18n/t"
 import { confirmServiceUnavailable, getServiceStatus, reportServiceAvailable, subscribeServiceStatus } from "@/lib/serviceStatus"
 
 const POLL_MS = 5000
-const CONFIRM_MS = 3000
+const CONFIRM_MS = 12000
 
 // Probe session validation directly (not via the api client, so a probe
 // failure does not re-trigger the overlay logic).
 async function probe(): Promise<boolean> {
   try {
     // /api/health can be 200 while session storage is still unavailable.
-    const res = await fetch(apiUrl("/api/auth/me"), { cache: "no-store", credentials: "include", signal: AbortSignal.timeout(4000) })
+    const res = await fetch(apiUrl("/api/auth/me"), { cache: "no-store", credentials: "include", signal: AbortSignal.timeout(3000) })
     return res.ok || res.status === 401
   } catch {
     return false

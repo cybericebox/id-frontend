@@ -1,5 +1,7 @@
 "use client"
 
+/* eslint-disable @eslint-react/dom-no-dangerously-set-innerhtml -- Notification HTML is sanitized with DOMPurify at each insertion point. */
+
 import { useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import * as Popover from "@radix-ui/react-popover"

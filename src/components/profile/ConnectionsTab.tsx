@@ -26,7 +26,7 @@ export function ConnectionsTab({
   linkError: boolean
   onUpdated: () => void
 }) {
-  const [errorMsg, setErrorMsg] = useState<string | null>(
+  const [errorMsg, setErrorMsg] = useState<string | null>(() =>
     linkError ? t("profile.connections.linkFailed") : null
   )
   const [isBusy, setIsBusy] = useState(false)

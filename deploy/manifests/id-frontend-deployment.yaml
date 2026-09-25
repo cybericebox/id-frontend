@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: id-frontend
+  namespace: cybericebox
+  labels:
+    app: id-frontend
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 3
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: id-frontend
+  template:
+    metadata:
+      labels:
+        app: id-frontend
+    spec:
+      containers:
+        - name: id-frontend
+          image: cybericebox/id-frontend:latest
+          env:
+            - name: NEXT_PUBLIC_DOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  name: id-frontend-config
+                  key: DOMAIN
+            - name: NEXT_PUBLIC_RECAPTCHA_SITE_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: id-frontend-config
+                  key: RECAPTCHA_SITE_KEY
+            - name: NEXT_PUBLIC_RECAPTCHA_ENTERPRISE
+              valueFrom:
+                configMapKeyRef:
+                  name: id-frontend-config
+                  key: RECAPTCHA_ENTERPRISE
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "25m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+          readinessProbe:
+            httpGet:
+              port: 3000
+              path: /healthz
+            initialDelaySeconds: 20
+          livenessProbe:
+            httpGet:
+              port: 3000
+              path: /healthz
+            initialDelaySeconds: 20
+            periodSeconds: 30

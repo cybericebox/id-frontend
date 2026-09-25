@@ -98,6 +98,7 @@ export function AccountTab({ account }: { account: Account }) {
     setIsDeleting(true)
     try {
       await apiDelete("/api/auth/account")
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Reload after account deletion to discard authenticated client state.
       window.location.href = "/sign-in"
     } catch (err) {
       setDeleteError(extractError(err))

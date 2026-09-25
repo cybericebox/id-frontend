@@ -43,6 +43,16 @@ const eslintConfig = tseslint.config(
       "@next/next/no-img-element": "off",
     },
   },
+  // These Radix/shadcn wrappers intentionally retain the ref and context APIs
+  // used throughout the app; React 19's alternatives are optional here.
+  {
+    files: ["src/components/ui/**/*.{ts,tsx}"],
+    rules: {
+      "@eslint-react/no-forward-ref": "off",
+      "@eslint-react/no-context-provider": "off",
+      "@eslint-react/no-use-context": "off",
+    },
+  },
 )
 
 export default eslintConfig

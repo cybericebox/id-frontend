@@ -1,5 +1,7 @@
 "use client"
 
+/* eslint-disable @eslint-react/dom-no-dangerously-set-innerhtml -- Notification HTML is sanitized with DOMPurify at each insertion point. */
+
 import { useEffect, useRef, useState } from "react"
 import DOMPurify from "isomorphic-dompurify"
 import { AlertTriangle, Bell, CalendarDays, CheckCircle2, CircleHelp, Info, Mail, ShieldCheck, Trophy, UserRound, X, XCircle } from "lucide-react"

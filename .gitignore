@@ -5,3 +5,14 @@ out
 .env
 .env*.local
 *.tsbuildinfo
+
+# Local-only documentation and agent state
+/README.md
+/docs/
+/AGENTS.md
+/CLAUDE.md
+/RTK.md
+/.claude/
+/.codex/
+/.agents/
+/.superpowers/

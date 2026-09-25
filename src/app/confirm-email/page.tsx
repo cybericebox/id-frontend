@@ -23,7 +23,7 @@ type State = { kind: "loading" } | { kind: "ok" } | { kind: "error"; message: st
 function ConfirmEmail() {
   const searchParams = useSearchParams()
   const code = searchParams.get("token") ?? searchParams.get("code") ?? ""
-  const [state, setState] = useState<State>(
+  const [state, setState] = useState<State>(() =>
     code ? { kind: "loading" } : { kind: "error", message: t("confirmEmail.missing") }
   )
 

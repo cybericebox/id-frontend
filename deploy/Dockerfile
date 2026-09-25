@@ -11,12 +11,11 @@ RUN npm ci
 COPY . .
 
 ENV NEXT_PUBLIC_DOMAIN="NEXT_PUBLIC_DOMAIN" \
-    NEXT_PUBLIC_API_BASE_URL="NEXT_PUBLIC_API_BASE_URL" \
     NEXT_PUBLIC_RECAPTCHA_SITE_KEY="NEXT_PUBLIC_RECAPTCHA_SITE_KEY" \
     NEXT_PUBLIC_RECAPTCHA_ENTERPRISE="NEXT_PUBLIC_RECAPTCHA_ENTERPRISE"
 RUN npm run build
 
-FROM nginx:alpine AS runner
+FROM nginx:1.30.5-alpine AS runner
 COPY --from=build /app/out /usr/share/nginx/html
 COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
 COPY deploy/docker-entrypoint.sh /docker-entrypoint.d/40-next-public-env.sh

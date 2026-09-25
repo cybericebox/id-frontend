@@ -42,6 +42,7 @@
 	--color-body: var(--ib-body);
 	--color-dim: var(--ib-dim);
 	--color-faint: var(--ib-faint);
+	--color-placeholder: var(--ib-placeholder);
 	--color-action: var(--ib-action);
 	--color-action-hover: var(--ib-action-hover);
 	--color-on-action: var(--ib-on-action);
@@ -117,6 +118,12 @@
 	::backdrop,
 	::file-selector-button {
 		border-color: var(--color-border);
+	}
+
+	input::placeholder,
+	textarea::placeholder {
+		color: var(--ib-placeholder);
+		opacity: 1;
 	}
 
 	body {
