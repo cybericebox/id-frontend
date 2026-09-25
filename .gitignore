@@ -15,4 +15,6 @@ out
 /.claude/
 /.codex/
 /.agents/
+/graphify-out/
+/.graphify/
 /.superpowers/
