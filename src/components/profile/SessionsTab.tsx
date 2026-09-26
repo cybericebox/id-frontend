@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Spinner } from "@/components/ui/spinner"
+import { LoadingArea } from "@/components/ui/spinner"
 import { apiGet, apiDelete } from "@/api/client"
 import { t, locale } from "@/i18n/t"
 import type { SessionInfo } from "./types"
@@ -123,9 +123,7 @@ export function SessionsTab() {
         )}
 
         {isLoading ? (
-          <div className="flex justify-center py-6">
-            <Spinner size="sm" />
-          </div>
+          <LoadingArea label={t("common.loading")} />
         ) : sessions.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             {t("profile.sessions.empty")}

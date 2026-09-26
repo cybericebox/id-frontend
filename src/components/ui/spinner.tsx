@@ -9,9 +9,7 @@ const SIZE_CLASS = {
   lg: "crest-loader-lg",
 } as const
 
-// Branded crest loader: the CyberICEBox crest with a light sweep across it
-// (sweep clipped to the crest silhouette). Size scales off font-size (1em tall).
-// `label` is announced to screen readers; without it a generic aria-label is used.
+// Small inline activity indicator. Page and area loaders can show progress text.
 export function Spinner({
   size = "sm",
   label,
@@ -30,7 +28,6 @@ export function Spinner({
       <span
         aria-hidden="true"
         className={cn("crest-loader", SIZE_CLASS[size])}
-        style={{ ["--crest-src" as string]: `url(${CREST_SRC})` }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={CREST_SRC} alt="" />
@@ -40,12 +37,16 @@ export function Spinner({
   )
 }
 
-// Full-screen centered loader for page-level loading states: solid paper
-// (no blur, no shadow), crest loader only. The label is for screen readers.
-export function PageLoader({ label }: { label?: string }) {
+export function LoadingArea({ label, message, className }: { label?: string; message?: string; className?: string }) {
+  return <div className={cn("loading-area", className)}><Spinner size="lg" label={label ?? message ?? t("common.loading")} />{message && <span className="loading-area-label" aria-hidden="true">{message}</span>}</div>
+}
+
+// Full-screen centered loader for page-level loading states.
+export function PageLoader({ label, message }: { label?: string; message?: string }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-paper">
-      <Spinner size="lg" label={label ?? t("common.loading")} />
+    <div className="loading-area loading-area-page fixed inset-0 z-50 bg-paper">
+      <Spinner size="lg" label={label ?? message ?? t("common.loading")} />
+      {message && <span className="loading-area-label" aria-hidden="true">{message}</span>}
     </div>
   )
 }

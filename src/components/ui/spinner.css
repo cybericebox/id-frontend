@@ -1,41 +1,27 @@
-/* Crest loader — the CyberICEBox crest with a light sweep across it.
-   Self-contained: keyframes travel with the component, no host globals needed.
-   The sweep is clipped to the crest silhouette by masking with the crest image
-   itself (--crest-src). Size = font-size; the crest is 1em tall. */
+/* Shared loading motion: a quiet pulse of the actual crest. Captions are only
+   shown when an explicit progress message is supplied. */
 
 .crest-loader {
-  position: relative;
   display: inline-block;
   height: 1em;
   aspect-ratio: 375 / 368;
   line-height: 0;
-  overflow: hidden;
-  -webkit-mask: var(--crest-src) center / contain no-repeat;
-  mask: var(--crest-src) center / contain no-repeat;
+  animation: crest-loading-pulse 1.8s ease-in-out infinite;
 }
 .crest-loader img {
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
-.crest-loader::after {
-  content: "";
-  position: absolute;
-  inset: -20%;
-  background: linear-gradient(100deg, transparent 35%, rgba(255, 255, 255, 0.75) 50%, transparent 65%);
-  transform: translateX(-100%);
-  animation: crest-sweep 1.8s ease-in-out infinite;
-}
-
 .crest-loader-sm { font-size: 20px; }
 .crest-loader-md { font-size: 32px; }
 .crest-loader-lg { font-size: 64px; }
+.loading-area { display:flex; min-height:10rem; flex-direction:column; align-items:center; justify-content:center; gap:.75rem; width:100%; padding:1rem; text-align:center; }
+.loading-area-page { min-height:100dvh; }
+.loading-area-label { color:var(--ib-dim); font-size:.8125rem; line-height:1.4; }
 
-@keyframes crest-sweep {
-  0% { transform: translateX(-100%); }
-  60%, 100% { transform: translateX(100%); }
-}
+@keyframes crest-loading-pulse { 50% { opacity:.45; transform:scale(.94); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .crest-loader::after { animation: none; opacity: 0; }
+  .crest-loader { animation:none; }
 }
