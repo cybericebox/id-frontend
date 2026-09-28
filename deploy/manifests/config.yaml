@@ -7,6 +7,8 @@ data:
   DOMAIN: "cybericebox.com"
   # Optional API host override (bare host, no scheme). Empty → api.<DOMAIN>.
   API_DOMAIN: ""
-  # reCAPTCHA site key (public). Empty → reCAPTCHA off; a wrong key breaks sign-in.
+  # REQUIRED: reCAPTCHA site key (public). The backend enforces reCAPTCHA, so an
+  # empty or wrong key breaks sign-in; the container refuses to start without it.
   RECAPTCHA_SITE_KEY: ""
+  # Must match the backend mode: "true" when RECAPTCHA_PROJECT (Enterprise) is set.
   RECAPTCHA_ENTERPRISE: "false"

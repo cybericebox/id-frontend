@@ -30,6 +30,9 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      - name: Check required variables
+        # the backend enforces reCAPTCHA: a build without the site key cannot sign anyone in
+        run: test -n "${{ vars.NEXT_PUBLIC_RECAPTCHA_SITE_KEY }}" || (echo "Set the NEXT_PUBLIC_RECAPTCHA_SITE_KEY repository variable." && exit 1)
       - name: Build static export
         run: npm run build
         env:
@@ -37,7 +40,7 @@ jobs:
           NEXT_PUBLIC_DOMAIN: ${{ vars.NEXT_PUBLIC_DOMAIN || 'cybericebox.com' }}
           # optional host overrides (bare host, no scheme); empty → <service>.<domain>
           NEXT_PUBLIC_API_DOMAIN: ${{ vars.NEXT_PUBLIC_API_DOMAIN }}
-          # reCAPTCHA (site key is public; empty → reCAPTCHA off)
+          # reCAPTCHA (site key is public, required; Enterprise must match the backend mode)
           NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ vars.NEXT_PUBLIC_RECAPTCHA_SITE_KEY }}
           NEXT_PUBLIC_RECAPTCHA_ENTERPRISE: ${{ vars.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE }}
       - name: Configure Pages
