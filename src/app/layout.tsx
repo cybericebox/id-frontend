@@ -10,6 +10,8 @@ import { ToastProvider } from "@/components/ui/toast"
 export const metadata: Metadata = {
   title: "Cyber ICE Box Platform ID",
   description: "Cyber ICE Box Platform ID — identity & authentication portal",
+  // noindex also as a meta tag: static hosts (GitHub Pages) cannot send X-Robots-Tag.
+  robots: { index: false, follow: false },
 }
 
 export default function RootLayout({

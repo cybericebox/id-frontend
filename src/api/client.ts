@@ -1,5 +1,5 @@
 // Minimal fetch-based API client.
-// The API origin is derived from NEXT_PUBLIC_DOMAIN as api.<domain>: every
+// The API origin is api.<NEXT_PUBLIC_DOMAIN> or NEXT_PUBLIC_API_DOMAIN (bare host): every
 // frontend calls the single api host cross-origin with credentials included,
 // and the browser stores/sends the host-scoped session cookie. No silent-auth
 // bootstrap — a plain credentialed fetch is authoritative.
@@ -7,7 +7,8 @@
 import { isUnavailableStatus, reportServiceUnavailable } from "@/lib/serviceStatus"
 
 const DOMAIN = process.env.NEXT_PUBLIC_DOMAIN ?? ""
-const BASE_URL = DOMAIN ? `https://api.${DOMAIN}` : ""
+const API_HOST = process.env.NEXT_PUBLIC_API_DOMAIN || (DOMAIN && `api.${DOMAIN}`)
+const BASE_URL = API_HOST ? `https://${API_HOST}` : ""
 
 export class ApiError extends Error {
   constructor(

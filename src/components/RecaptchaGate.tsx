@@ -15,7 +15,9 @@ import { ReCaptchaProvider } from "next-recaptcha-v3"
  */
 export function RecaptchaGate({ children }: { children: React.ReactNode }) {
   const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
-  const useEnterprise = process.env.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE === "true"
+  // includes(), not ===: the Docker build bakes a placeholder here, and a literal
+  // comparison would be folded to false before the entrypoint substitutes it.
+  const useEnterprise = ["true"].includes(process.env.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE ?? "")
 
   if (siteKey) {
     return (

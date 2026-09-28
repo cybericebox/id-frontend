@@ -44,9 +44,8 @@ export function setThemeChoice(choice: ThemeChoice): void {
     `max-age=${MAX_AGE}`,
     "SameSite=Lax",
   ]
-  // Placeholder builds (NEXT_PUBLIC_DOMAIN substituted at container start) and
-  // dev without a domain fall back to a host-only cookie.
-  if (domain && domain !== "NEXT_PUBLIC_DOMAIN") parts.push(`domain=.${domain}`)
+  // Dev without a domain falls back to a host-only cookie.
+  if (domain) parts.push(`domain=.${domain}`)
   if (location.protocol === "https:") parts.push("Secure")
   document.cookie = parts.join("; ")
   applyTheme(choice)
