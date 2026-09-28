@@ -29,6 +29,11 @@ spec:
                 configMapKeyRef:
                   name: id-frontend-config
                   key: DOMAIN
+            - name: NEXT_PUBLIC_API_DOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  name: id-frontend-config
+                  key: API_DOMAIN
             - name: NEXT_PUBLIC_RECAPTCHA_SITE_KEY
               valueFrom:
                 configMapKeyRef:

@@ -5,5 +5,8 @@ metadata:
   namespace: cybericebox
 data:
   DOMAIN: "cybericebox.com"
-  RECAPTCHA_SITE_KEY: "recaptcha-site-key"
+  # Optional API host override (bare host, no scheme). Empty → api.<DOMAIN>.
+  API_DOMAIN: ""
+  # reCAPTCHA site key (public). Empty → reCAPTCHA off; a wrong key breaks sign-in.
+  RECAPTCHA_SITE_KEY: ""
   RECAPTCHA_ENTERPRISE: "false"
