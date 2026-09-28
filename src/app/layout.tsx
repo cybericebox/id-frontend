@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import "./globals.css"
 import { QueryProvider } from "@/components/QueryProvider"
 import { ServiceStatusGate } from "@/components/ServiceStatusGate"
+import { GoogleAnalytics } from "@next/third-parties/google"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { THEME_BOOT_SCRIPT } from "@/lib/theme"
@@ -30,6 +31,7 @@ export default function RootLayout({
       <body>
         <QueryProvider><ToastProvider>{children}</ToastProvider></QueryProvider>
         <ServiceStatusGate />
+        {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID} />}
       </body>
     </html>
   )

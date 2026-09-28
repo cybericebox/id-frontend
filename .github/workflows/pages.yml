@@ -40,6 +40,7 @@ jobs:
           NEXT_PUBLIC_DOMAIN: ${{ vars.NEXT_PUBLIC_DOMAIN || 'cybericebox.com' }}
           # optional host overrides (bare host, no scheme); empty → <service>.<domain>
           NEXT_PUBLIC_API_DOMAIN: ${{ vars.NEXT_PUBLIC_API_DOMAIN }}
+          NEXT_PUBLIC_GOOGLE_ANALYTICS_ID: ${{ vars.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID }}
           # reCAPTCHA (site key is public, required; Enterprise must match the backend mode)
           NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ vars.NEXT_PUBLIC_RECAPTCHA_SITE_KEY }}
           NEXT_PUBLIC_RECAPTCHA_ENTERPRISE: ${{ vars.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE }}
