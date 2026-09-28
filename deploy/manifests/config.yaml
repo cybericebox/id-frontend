@@ -12,3 +12,5 @@ data:
   RECAPTCHA_SITE_KEY: ""
   # Must match the backend mode: "true" when RECAPTCHA_PROJECT (Enterprise) is set.
   RECAPTCHA_ENTERPRISE: "false"
+  # Optional Google Analytics 4 measurement id (G-…). Empty → analytics off.
+  GOOGLE_ANALYTICS_ID: ""
