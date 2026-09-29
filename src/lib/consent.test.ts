@@ -112,3 +112,30 @@ describe("consent", () => {
     expect(consent.shouldShowBanner("", null)).toBe(false)
   })
 })
+
+describe("cookie policy link", () => {
+  it("opens in a new tab, so the panel and its toggles stay", () => {
+    expect(consent.POLICY_LINK_ATTRS).toEqual({ target: "_blank", rel: "noopener noreferrer" })
+  })
+
+  it("every link in the banner spreads POLICY_LINK_ATTRS, says so in aria-label and stops the click", async () => {
+    const ts = (await import("typescript")).default
+    const { readFileSync } = await import("node:fs")
+    const { join } = await import("node:path")
+    const code = readFileSync(join(__dirname, "../components/ConsentBanner.tsx"), "utf8")
+    const sf = ts.createSourceFile("ConsentBanner.tsx", code, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
+    const anchors: import("typescript").JsxOpeningLikeElement[] = []
+    const visit = (n: import("typescript").Node) => {
+      if ((ts.isJsxOpeningElement(n) || ts.isJsxSelfClosingElement(n)) && n.tagName.getText(sf) === "a") anchors.push(n)
+      ts.forEachChild(n, visit)
+    }
+    visit(sf)
+    expect(anchors.length).toBeGreaterThan(0)
+    for (const a of anchors) {
+      const attrs = a.attributes.properties.map((p) => p.getText(sf))
+      expect(attrs).toContain("{...POLICY_LINK_ATTRS}")
+      expect(attrs.some((x) => x.startsWith('aria-label={t("consent.policyLinkNewTab")'))).toBe(true)
+      expect(attrs.some((x) => x.includes("stopPropagation"))).toBe(true)
+    }
+  })
+})

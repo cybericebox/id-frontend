@@ -7,6 +7,7 @@ import {
   ACCEPT_ALL,
   CONSENT_CHANGE_EVENT,
   CONSENT_OPEN_EVENT,
+  POLICY_LINK_ATTRS,
   REJECT_ALL,
   readConsent,
   saveConsent,
@@ -36,7 +37,10 @@ function WithPolicyLink({ k }: { k: string }) {
   return (
     <>
       {before}
-      <a href={POLICY_HREF}>{t("consent.policyLink")}</a>
+      {/* New tab; the click must not reach any outer handler, so the banner/panel and its toggles stay. */}
+      <a href={POLICY_HREF} {...POLICY_LINK_ATTRS} aria-label={t("consent.policyLinkNewTab")} onClick={(e) => e.stopPropagation()}>
+        {t("consent.policyLink")}
+      </a>
       {after}
     </>
   )
