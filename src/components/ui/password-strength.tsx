@@ -23,10 +23,10 @@ export function ruleMessage(rule: PasswordRule, min: number, value: string): str
   switch (rule) {
     case "length": {
       const n = min - value.length
-      return t(pluralKey("password.more", n)).replace("{n}", String(n))
+      return t(pluralKey("password.more", n), { n })
     }
     case "maxLength":
-      return t("password.tooLong").replace("{n}", String(min))
+      return t("password.tooLong", { n: min })
     case "upper":
       return t("password.needUpper")
     case "lower":

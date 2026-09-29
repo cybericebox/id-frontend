@@ -22,10 +22,10 @@ type MessageKey = keyof typeof en
 /**
  * Translate a message key to the active-language (Ukrainian) string.
  * Falls back to English, then to the key itself (safe for static export).
+ * `{name}` placeholders are filled from `vars`.
  */
-export function t(key: MessageKey | string): string {
-  const a = (active as Record<string, string>)[key]
-  if (a !== undefined) return a
-  const f = (fallback as Record<string, string>)[key]
-  return f ?? key
+export function t(key: MessageKey | string, vars?: Record<string, string | number>): string {
+  const msg = (active as Record<string, string>)[key] ?? (fallback as Record<string, string>)[key] ?? key
+  if (!vars) return msg
+  return msg.replace(/\{(\w+)\}/g, (m, name: string) => (name in vars ? String(vars[name]) : m))
 }
