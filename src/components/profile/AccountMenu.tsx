@@ -8,7 +8,7 @@ import {
 import { apiGet, mediaUrl } from "@/api/client"
 import { t } from "@/i18n/t"
 import { ACCOUNT_MENU_ICON_PROPS, ACCOUNT_MENU_ICONS, ACCOUNT_MENU_LABELS, accountMenu, catalogAllowed } from "@/lib/accountMenu"
-import { adminOrigin, exercisesOrigin, mainOrigin } from "@/lib/origins"
+import { adminOrigin, exercisesOrigin } from "@/lib/origins"
 import type { Account } from "@/components/profile/types"
 import { initials } from "@/lib/initials"
 import { openConsentSettings } from "@/lib/consent"
@@ -33,7 +33,7 @@ export function AccountMenu({ account }: { account: Account }) {
   const entries = accountMenu(
     "id",
     { adminTier, catalog: adminTier || staff, returnTo: "" },
-    { id: "", admin: adminOrigin, exercises: exercisesOrigin, main: mainOrigin },
+    { id: "", admin: adminOrigin, exercises: exercisesOrigin },
   )
   const fullName = `${account.FirstName} ${account.LastName}`.trim() || account.Email
   const avatarInitials = initials(account.FirstName, account.LastName, account.Email)
