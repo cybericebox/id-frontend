@@ -15,7 +15,6 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
 import { Wordmark } from "@/components/brand/Wordmark"
 import { apiGet, mediaUrl } from "@/api/client"
 import { ThemeSwitch } from "@/components/ThemeToggle"
@@ -32,6 +31,7 @@ import { SecurityTab } from "@/components/profile/SecurityTab"
 import { SessionsTab } from "@/components/profile/SessionsTab"
 import { ConnectionsTab } from "@/components/profile/ConnectionsTab"
 import { InboxButton } from "@/components/profile/InboxButton"
+import { AccountMenu } from "@/components/profile/AccountMenu"
 
 type TabKey = "profile" | "account" | "security" | "sessions" | "connections"
 
@@ -160,9 +160,7 @@ function ProfileShell() {
             <ThemeSwitch />
             <span className="mx-1 h-5 w-px bg-line" aria-hidden="true" />
             <InboxButton />
-            <Button asChild variant="outline" size="sm">
-              <a href="/sign-out">{t("common.signOut")}</a>
-            </Button>
+            <AccountMenu account={account} />
           </div>
         </div>
         <div className="mt-5 flex items-center gap-3">

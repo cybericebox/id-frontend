@@ -5,8 +5,10 @@ metadata:
   namespace: cybericebox
 data:
   DOMAIN: "cybericebox.com"
-  # Optional API host override (bare host, no scheme). Empty → api.<DOMAIN>.
+  # Optional host overrides (bare host, no scheme). Empty → <service>.<DOMAIN>.
   API_DOMAIN: ""
+  ADMIN_DOMAIN: ""
+  EXERCISES_DOMAIN: ""
   # REQUIRED: reCAPTCHA site key (public). The backend enforces reCAPTCHA, so an
   # empty or wrong key breaks sign-in; the container refuses to start without it.
   RECAPTCHA_SITE_KEY: ""

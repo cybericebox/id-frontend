@@ -18,6 +18,8 @@ Static builds (`npm run build`, GitHub Pages) read these at build time. The Dock
 | --- | --- | --- | --- |
 | `NEXT_PUBLIC_DOMAIN` | yes | — | Platform apex domain, e.g. `cybericebox.com`. |
 | `NEXT_PUBLIC_API_DOMAIN` | no | `api.<domain>` | API host (bare host, no scheme). |
+| `NEXT_PUBLIC_ADMIN_DOMAIN` | no | `admin.<domain>` | Admin app host. |
+| `NEXT_PUBLIC_EXERCISES_DOMAIN` | no | `exercises.<domain>` | Exercises app host. |
 | `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | yes | — | reCAPTCHA site key; the backend checks reCAPTCHA on sign-in, sign-up and password reset. |
 | `NEXT_PUBLIC_RECAPTCHA_ENTERPRISE` | no | `false` | `true` for reCAPTCHA Enterprise; must match the backend mode. |
 | `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` | no | analytics off | Google Analytics 4 measurement id (`G-…`). |
