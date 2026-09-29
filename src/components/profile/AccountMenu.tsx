@@ -13,6 +13,7 @@ import { adminOrigin, exercisesOrigin, mainOrigin } from "@/lib/origins"
 import type { Account } from "@/components/profile/types"
 import { initials } from "@/lib/initials"
 import { openConsentSettings } from "@/lib/consent"
+import { COOKIE_POLICY_HREF } from "@/components/CookieSettingsLink"
 
 // Unified account menu (lib/accountMenu): same labels and icons in every app.
 const ACCOUNT_ITEMS: Record<AccountLinkKey, { label: string; icon: LucideIcon }> = {
@@ -70,11 +71,18 @@ export function AccountMenu({ account }: { account: Account }) {
             </DropdownMenuItem>
           )
         })}
-        {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && (
-          <DropdownMenuItem className="gap-2" onSelect={openConsentSettings}>
+        {/* a link to the cookie policy; with JS it opens the consent panel once the menu has closed */}
+        <DropdownMenuItem asChild className="gap-2">
+          <a
+            href={COOKIE_POLICY_HREF}
+            onClick={(e) => {
+              e.preventDefault()
+              window.setTimeout(openConsentSettings, 0)
+            }}
+          >
             <Cookie className="h-4 w-4" aria-hidden="true" />{t("consent.settings")}
-          </DropdownMenuItem>
-        )}
+          </a>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild className="gap-2">
           <a href="/sign-out"><LogOut className="h-4 w-4" aria-hidden="true" />{t("common.signOut")}</a>

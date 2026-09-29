@@ -12,7 +12,7 @@ import {
 } from "lucide-react"
 import { Logo } from "@/components/brand/Logo"
 import { ThemeSwitch } from "@/components/ThemeToggle"
-import { CookieSettingsButton } from "@/components/CookieSettingsButton"
+import { CookieSettingsLink } from "@/components/CookieSettingsLink"
 import { Tooltip } from "@/components/ui/tooltip"
 import { cn } from "@/utils/cn"
 import { t, tSegments } from "@/i18n/t"
@@ -142,7 +142,7 @@ export function AuthSidePanel({
               ),
             }, { groupFrom: 1 })}
           </p>
-          {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && <CookieSettingsButton className="text-on-brand-2 hover:text-on-brand" />}
+          <CookieSettingsLink className="text-on-brand-2 hover:text-on-brand" />
           {/* bottom-left: the reCAPTCHA badge occupies the bottom-right corner */}
           <ThemeSwitch onMass className="-ml-1.5" />
         </footer>

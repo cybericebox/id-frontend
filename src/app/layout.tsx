@@ -32,7 +32,8 @@ export default function RootLayout({
       <body>
         <QueryProvider><ToastProvider>{children}</ToastProvider></QueryProvider>
         <ServiceStatusGate />
-        {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && <Analytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID} />}
+        {/* the consent panel is always mounted («Налаштування файлів cookie»); GA loads only when configured */}
+        <Analytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID} />
       </body>
     </html>
   )
