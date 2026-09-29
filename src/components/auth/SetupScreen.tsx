@@ -189,6 +189,20 @@ function SetupForm() {
 
   // Terms of Service live on the apex (main) frontend, not the id subdomain.
   const termsUrl = publicDomain ? `${mainOrigin}/terms` : "/terms"
+  const privacyUrl = publicDomain ? `${mainOrigin}/privacy` : "/privacy"
+  const legalLink = (href: string, label: string) => (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="font-medium text-action underline-offset-3 hover:underline">
+      {label}
+    </a>
+  )
+  // setup.tosAccept carries {terms} and {privacy}; each placeholder becomes a link.
+  const tosLabel = t("setup.tosAccept")
+    .split(/(\{terms\}|\{privacy\})/)
+    .map((part) =>
+      part === "{terms}" ? <React.Fragment key="terms">{legalLink(termsUrl, t("setup.tosLink"))}</React.Fragment>
+      : part === "{privacy}" ? <React.Fragment key="privacy">{legalLink(privacyUrl, t("setup.privacyLink"))}</React.Fragment>
+      : part,
+    )
 
   // Draft persistence: linking Google does a full-page redirect that wipes the
   // form. Persist the non-secret fields to sessionStorage (per-tab, cleared on
@@ -581,19 +595,7 @@ function SetupForm() {
                         onBlur={field.onBlur}
                         name={field.name}
                         ref={field.ref}
-                        label={
-                          <span>
-                            {t("setup.tosAccept")}{" "}
-                            <a
-                              href={termsUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="font-medium text-action underline-offset-3 hover:underline"
-                            >
-                              {t("setup.tosLink")}
-                            </a>
-                          </span>
-                        }
+                        label={<span>{tosLabel}</span>}
                       />
                     </FormControl>
                     <FormMessage />

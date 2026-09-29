@@ -96,8 +96,8 @@
   "setup.googleConnected": "Google connected",
   "setup.linkGoogle": "Connect Google",
   "setup.tosLabel": "I accept the Terms of Service",
-  "setup.tosAccept": "I accept the",
-  "setup.tosLink": "Terms of Service",
+  "setup.tosAccept": "I accept the {terms} and agree to the {privacy}",
+  "setup.tosLink": "Terms of Use",
   "setup.submit": "Finish sign-up",
   "setup.missingToken": "Invalid or missing setup link",
   "setup.missingTokenDescription": "The setup link is missing or invalid. Please request a new one.",
@@ -289,5 +289,6 @@
   "consent.analytics.text": "Google Analytics: shows how visitors use the site. Off until you turn it on.",
   "consent.acceptSelected": "Accept selected",
   "consent.rejectAll": "Reject all",
-  "consent.settings": "Cookie settings"
+  "consent.settings": "Cookie settings",
+  "setup.privacyLink": "Privacy Policy"
 }
