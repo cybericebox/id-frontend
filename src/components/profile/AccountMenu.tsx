@@ -1,0 +1,78 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { Flag, House, LogOut, Settings, UserRound, type LucideIcon } from "lucide-react"
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
+  DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { apiGet, mediaUrl } from "@/api/client"
+import { t } from "@/i18n/t"
+import { accountLinks, catalogAllowed, type AccountLinkKey } from "@/lib/accountMenu"
+import { adminOrigin, exercisesOrigin, mainOrigin } from "@/lib/origins"
+import type { Account } from "@/components/profile/types"
+
+// Unified account menu (lib/accountMenu): same labels and icons in every app.
+const ACCOUNT_ITEMS: Record<AccountLinkKey, { label: string; icon: LucideIcon }> = {
+  profile: { label: "nav.profile", icon: UserRound },
+  admin: { label: "nav.admin", icon: Settings },
+  exercises: { label: "nav.exercises", icon: Flag },
+  main: { label: "nav.home", icon: House },
+}
+
+export function AccountMenu({ account }: { account: Account }) {
+  const adminTier = Boolean(account.Role) && account.Role !== "user"
+  // Event staff open the catalog too (GET /exercises/access, the catalog's own rule).
+  const [staff, setStaff] = useState(false)
+  useEffect(() => {
+    if (adminTier) return
+    let cancelled = false
+    apiGet<Parameters<typeof catalogAllowed>[0]>("/api/exercises/access", undefined, { required: false })
+      .then((access) => { if (!cancelled) setStaff(catalogAllowed(access)) })
+      .catch(() => { if (!cancelled) setStaff(false) })
+    return () => { cancelled = true }
+  }, [adminTier])
+
+  const links = accountLinks(
+    "id",
+    { adminTier, catalog: adminTier || staff, returnTo: "" },
+    { id: "", admin: adminOrigin, exercises: exercisesOrigin, main: mainOrigin },
+  )
+  const fullName = `${account.FirstName} ${account.LastName}`.trim() || account.Email
+  const initials = `${account.FirstName?.[0] ?? ""}${account.LastName?.[0] ?? ""}`.toUpperCase() || "?"
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        aria-label={t("nav.accountMenu")}
+        className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-brand text-sm font-medium text-on-brand focus-visible:outline-2 focus-visible:outline-action"
+      >
+        {account.Picture ? (
+          // eslint-disable-next-line @next/next/no-img-element -- static export, unoptimized images
+          <img src={mediaUrl(account.Picture)} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
+        ) : (
+          initials
+        )}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel className="flex flex-col gap-0.5">
+          <span className="font-medium">{fullName}</span>
+          <span className="text-xs font-normal text-dim">{account.Email}</span>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {links.map(({ key, href }) => {
+          const { label, icon: Icon } = ACCOUNT_ITEMS[key]
+          return (
+            <DropdownMenuItem key={key} asChild className="gap-2">
+              <a href={href}><Icon className="h-4 w-4" aria-hidden="true" />{t(label)}</a>
+            </DropdownMenuItem>
+          )
+        })}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild className="gap-2">
+          <a href="/sign-out"><LogOut className="h-4 w-4" aria-hidden="true" />{t("common.signOut")}</a>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
