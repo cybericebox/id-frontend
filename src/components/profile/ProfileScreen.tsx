@@ -160,7 +160,7 @@ function ProfileShell() {
           <div className="ml-auto flex items-center gap-2">
             <ThemeSwitch />
             <span className="mx-1 h-5 w-px bg-line" aria-hidden="true" />
-            <InboxButton />
+            <InboxButton defaultTab="personal" />
             <AccountMenu account={account} />
           </div>
         </div>
