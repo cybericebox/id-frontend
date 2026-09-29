@@ -1,5 +1,5 @@
-// Cookie consent (Google Consent Mode v2): denied by default; accept all / accept selected /
-// reject all map to analytics_storage only; the choice is one cookie on the parent domain.
+// Cookie consent (Google Consent Mode v2): denied by default; accept all / save choice
+// map to analytics_storage only; the choice is one cookie on the parent domain.
 import { afterEach, describe, expect, it, vi } from "vitest"
 import * as consent from "./consent"
 
@@ -59,14 +59,14 @@ describe("consent", () => {
     expect(consent.readConsent()).toEqual({ analytics: true })
   })
 
-  it("customize: accept selected with analytics on grants it", () => {
+  it("customize: save choice with analytics on grants it", () => {
     const { gtag } = fakeBrowser()
     consent.saveConsent({ analytics: true })
     expect(gtag.mock.calls).toEqual([["consent", "update", { analytics_storage: "granted" }]])
     expect(consent.readConsent()).toEqual({ analytics: true })
   })
 
-  it("customize: accept selected with analytics off keeps everything denied", () => {
+  it("customize: save choice with analytics off keeps everything denied", () => {
     const { gtag, jar } = fakeBrowser()
     jar.set("_ga", "GA1.1.1")
     consent.saveConsent({ analytics: false })
@@ -75,11 +75,11 @@ describe("consent", () => {
     expect(jar.has("_ga")).toBe(false)
   })
 
-  it("reject all keeps everything denied and drops GA cookies", () => {
+  it("save choice with analytics off after accepting drops GA cookies", () => {
     const { gtag, jar } = fakeBrowser()
     jar.set("_ga", "GA1.1.1")
     jar.set("_ga_TEST", "GS1.1")
-    consent.saveConsent(consent.REJECT_ALL)
+    consent.saveConsent({ analytics: false })
     expect(gtag.mock.calls).toEqual([["consent", "update", { analytics_storage: "denied" }]])
     expect(consent.readConsent()).toEqual({ analytics: false })
     expect(jar.has("_ga") || jar.has("_ga_TEST")).toBe(false)
@@ -89,7 +89,7 @@ describe("consent", () => {
     expect(consent.consentCookie(consent.ACCEPT_ALL, { domain: "cybericebox.com", secure: true })).toBe(
       "cib_consent=analytics:granted; path=/; max-age=31536000; SameSite=Lax; domain=.cybericebox.com; Secure",
     )
-    expect(consent.consentCookie(consent.REJECT_ALL, { secure: false })).toBe("cib_consent=analytics:denied; path=/; max-age=31536000; SameSite=Lax")
+    expect(consent.consentCookie({ analytics: false }, { secure: false })).toBe("cib_consent=analytics:denied; path=/; max-age=31536000; SameSite=Lax")
     vi.stubEnv("NEXT_PUBLIC_DOMAIN", "cybericebox.com")
     const { writes } = fakeBrowser()
     consent.saveConsent(consent.ACCEPT_ALL)
@@ -137,5 +137,14 @@ describe("cookie policy link", () => {
       expect(attrs.some((x) => x.startsWith('aria-label={t("consent.policyLinkNewTab")'))).toBe(true)
       expect(attrs.some((x) => x.includes("stopPropagation"))).toBe(true)
     }
+  })
+
+  it("the panel has only «Зберегти вибір» and «Прийняти всі» (no «Відхилити всі»)", async () => {
+    const { readFileSync } = await import("node:fs")
+    const { join } = await import("node:path")
+    const code = readFileSync(join(__dirname, "../components/ConsentBanner.tsx"), "utf8")
+    expect(code).toContain('t("consent.saveChoice")')
+    expect(code).not.toContain("consent.rejectAll")
+    expect(code).not.toContain("consent.acceptSelected")
   })
 })
