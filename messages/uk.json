@@ -268,7 +268,7 @@
   "authPanel.item.dynScoring": "Динамічний скоринг завдань",
   "authPanel.item.l2l3": "Емуляція мережевих топологій рівнів L2/L3",
   "authPanel.item.l2l3Full": "Емуляція повноцінних мережевих топологій L2/L3",
-  "authPanel.legal": "© {year} {nure} · За підтримки",
+  "authPanel.legal": "© {year} Cyber ICE Box · За підтримки {department} · {nure}",
   "authPanel.nure": "ХНУРЕ",
   "authPanel.nureFull": "Харківський національний університет радіоелектроніки",
   "authPanel.departmentFull": "Кафедра інфокомунікаційної інженерії імені В. В. Поповського",

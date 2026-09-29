@@ -126,29 +126,21 @@ export function AuthSidePanel({
           <p className="auth-legal">
             {tRich("authPanel.legal", {
               year: YEAR,
+              department: (
+                <Tooltip content={t("authPanel.departmentFull")} align="start">
+                  <a href="https://ice.nure.ua/ua/" target="_blank" rel="noopener noreferrer" className="rounded-xs font-medium text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand">
+                    {t("authPanel.legalLink")}
+                  </a>
+                </Tooltip>
+              ),
               nure: (
                 <Tooltip content={t("authPanel.nureFull")} align="start">
-                  <a
-                    href="https://nure.ua"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-xs font-medium text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand"
-                  >
+                  <a href="https://nure.ua" target="_blank" rel="noopener noreferrer" className="rounded-xs font-medium text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand">
                     {t("authPanel.nure")}
                   </a>
                 </Tooltip>
               ),
-            })}{" "}
-            <Tooltip content={t("authPanel.departmentFull")} align="start">
-              <a
-                href="https://ice.nure.ua/ua/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-xs font-medium text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand"
-              >
-                {t("authPanel.legalLink")}
-              </a>
-            </Tooltip>
+            })}
           </p>
           {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && <CookieSettingsButton className="text-on-brand-2 hover:text-on-brand" />}
           {/* bottom-left: the reCAPTCHA badge occupies the bottom-right corner */}
