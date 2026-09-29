@@ -71,15 +71,10 @@ export function AccountMenu({ account }: { account: Account }) {
             </DropdownMenuItem>
           )
         })}
-        {/* a link to the cookie policy; with JS it opens the consent panel once the menu has closed */}
-        <DropdownMenuItem asChild className="gap-2">
-          <a
-            href={COOKIE_POLICY_HREF}
-            onClick={(e) => {
-              e.preventDefault()
-              window.setTimeout(openConsentSettings, 0)
-            }}
-          >
+        {/* A link to the cookie policy. With JS only the navigation is cancelled (on the native event,
+            so the menu still sees the select and closes); the panel opens once focus is back on the trigger. */}
+        <DropdownMenuItem asChild className="gap-2" onSelect={() => { window.setTimeout(openConsentSettings, 0) }}>
+          <a href={COOKIE_POLICY_HREF} onClick={(e) => e.nativeEvent.preventDefault()}>
             <Cookie className="h-4 w-4" aria-hidden="true" />{t("consent.settings")}
           </a>
         </DropdownMenuItem>
