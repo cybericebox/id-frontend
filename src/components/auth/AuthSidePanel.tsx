@@ -123,19 +123,19 @@ export function AuthSidePanel({
         </div>
 
         <footer className="flex flex-col items-start gap-3 border-t border-brand-line pt-5 text-[13px] leading-relaxed text-on-brand-3">
-          <p className="auth-legal">
+          <p className="auth-legal text-[12px] xl:text-[13px]">
             {tRich("authPanel.legal", {
               year: YEAR,
               department: (
                 <Tooltip content={t("authPanel.departmentFull")} align="start">
-                  <a href="https://ice.nure.ua/ua/" target="_blank" rel="noopener noreferrer" className="rounded-xs font-medium text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand">
+                  <a href="https://ice.nure.ua/ua/" target="_blank" rel="noopener noreferrer" className="rounded-xs font-medium whitespace-nowrap text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand">
                     {t("authPanel.legalLink")}
                   </a>
                 </Tooltip>
               ),
               nure: (
                 <Tooltip content={t("authPanel.nureFull")} align="start">
-                  <a href="https://nure.ua" target="_blank" rel="noopener noreferrer" className="rounded-xs font-medium text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand">
+                  <a href="https://nure.ua" target="_blank" rel="noopener noreferrer" className="rounded-xs font-medium whitespace-nowrap text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand">
                     {t("authPanel.nure")}
                   </a>
                 </Tooltip>
