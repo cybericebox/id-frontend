@@ -1,0 +1,5 @@
+/* Full-name tooltips on the legal line's links: anchored to the line's start (not the link),
+   so the bubble stays inside the panel even when a link wraps near its right edge. */
+.auth-legal{position:relative}
+.auth-legal .ib-tip{position:static;display:inline}
+.auth-legal .ib-tip>.ib-tip__bubble{max-width:min(320px,calc(100vw - 32px))}

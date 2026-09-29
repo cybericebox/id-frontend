@@ -13,8 +13,10 @@ import {
 import { Logo } from "@/components/brand/Logo"
 import { ThemeSwitch } from "@/components/ThemeToggle"
 import { CookieSettingsButton } from "@/components/CookieSettingsButton"
+import { Tooltip } from "@/components/ui/tooltip"
 import { cn } from "@/utils/cn"
 import { t, tRich } from "@/i18n/t"
+import "./auth-panel.css"
 
 export type AuthVariant =
   | "signin"
@@ -121,29 +123,32 @@ export function AuthSidePanel({
         </div>
 
         <footer className="flex flex-col items-start gap-3 border-t border-brand-line pt-5 text-[13px] leading-relaxed text-on-brand-3">
-          <p>
+          <p className="auth-legal">
             {tRich("authPanel.legal", {
               year: YEAR,
               nure: (
-                <a
-                  href="https://nure.ua"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={t("authPanel.nureFull")}
-                  className="rounded-xs font-medium text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand"
-                >
-                  {t("authPanel.nure")}
-                </a>
+                <Tooltip content={t("authPanel.nureFull")} align="start">
+                  <a
+                    href="https://nure.ua"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-xs font-medium text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand"
+                  >
+                    {t("authPanel.nure")}
+                  </a>
+                </Tooltip>
               ),
             })}{" "}
-            <a
-              href="https://ice.nure.ua/ua/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-xs font-medium text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand"
-            >
-              {t("authPanel.legalLink")}
-            </a>
+            <Tooltip content={t("authPanel.departmentFull")} align="start">
+              <a
+                href="https://ice.nure.ua/ua/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-xs font-medium text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand"
+              >
+                {t("authPanel.legalLink")}
+              </a>
+            </Tooltip>
           </p>
           {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && <CookieSettingsButton className="text-on-brand-2 hover:text-on-brand" />}
           {/* bottom-left: the reCAPTCHA badge occupies the bottom-right corner */}

@@ -271,6 +271,7 @@
   "authPanel.legal": "© {year} {nure} · Supported by",
   "authPanel.nure": "KhNURE",
   "authPanel.nureFull": "Kharkiv National University of Radio Electronics",
+  "authPanel.departmentFull": "V. V. Popovskyi Department of Infocommunication Engineering",
   "authPanel.legalLink": "the V. V. Popovskyi ICE Department",
   "toast.region": "Action notifications",
   "toast.dismiss": "Dismiss notification {message}",

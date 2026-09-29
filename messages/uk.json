@@ -271,6 +271,7 @@
   "authPanel.legal": "© {year} {nure} · За підтримки",
   "authPanel.nure": "ХНУРЕ",
   "authPanel.nureFull": "Харківський національний університет радіоелектроніки",
+  "authPanel.departmentFull": "Кафедра інфокомунікаційної інженерії імені В. В. Поповського",
   "authPanel.legalLink": "кафедри ІКІ ім. В. В. Поповського",
   "toast.region": "Повідомлення про дії",
   "toast.dismiss": "Закрити сповіщення {message}",
