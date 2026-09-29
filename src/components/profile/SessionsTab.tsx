@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { LoadingArea } from "@/components/ui/spinner"
+import { EmptyState } from "@/components/ui/empty-state"
 import { apiGet, apiDelete } from "@/api/client"
 import { t, locale } from "@/i18n/t"
 import type { SessionInfo } from "./types"
@@ -122,14 +123,13 @@ export function SessionsTab() {
           </Alert>
         )}
 
+        {/* One block for loading / empty / list: same min height, states centered. */}
         {isLoading ? (
           <LoadingArea label={t("common.loading")} />
         ) : sessions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            {t("profile.sessions.empty")}
-          </p>
+          <EmptyState message={t("profile.sessions.empty")} />
         ) : (
-          <ul className="max-h-96 space-y-3 overflow-y-auto pr-1">
+          <ul className="max-h-96 min-h-40 space-y-3 overflow-y-auto pr-1">
             {sessions.map((s) => (
               <li key={s.ID} className="rounded-md border p-3">
                 {/* Line 1: browser · OS (+ current badge) on the left, revoke
