@@ -2,15 +2,16 @@ import type { Metadata } from "next"
 import "./globals.css"
 import { QueryProvider } from "@/components/QueryProvider"
 import { ServiceStatusGate } from "@/components/ServiceStatusGate"
-import { GoogleAnalytics } from "@next/third-parties/google"
+import { Analytics } from "@/components/Analytics"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { THEME_BOOT_SCRIPT } from "@/lib/theme"
 import { ToastProvider } from "@/components/ui/toast"
+import { t } from "@/i18n/t"
 
 export const metadata: Metadata = {
-  title: "Cyber ICE Box Platform ID",
-  description: "Cyber ICE Box Platform ID — identity & authentication portal",
+  title: { default: t("meta.defaultTitle"), template: t("meta.titleTemplate") },
+  description: t("meta.description"),
   // noindex also as a meta tag: static hosts (GitHub Pages) cannot send X-Robots-Tag.
   robots: { index: false, follow: false },
 }
@@ -31,7 +32,8 @@ export default function RootLayout({
       <body>
         <QueryProvider><ToastProvider>{children}</ToastProvider></QueryProvider>
         <ServiceStatusGate />
-        {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID} />}
+        {/* the consent panel is always mounted («Налаштування файлів cookie»); GA loads only when configured */}
+        <Analytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID} />
       </body>
     </html>
   )

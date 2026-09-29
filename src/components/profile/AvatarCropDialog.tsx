@@ -126,8 +126,8 @@ export function AvatarCropDialog({
           <Button type="button" variant="ghost" onClick={onCancel} disabled={busy}>
             {t("profile.profile.cropCancel")}
           </Button>
-          <Button type="button" onClick={handleSave} disabled={busy || !areaPixels}>
-            {busy ? t("common.loading") : t("profile.profile.cropSave")}
+          <Button type="button" onClick={handleSave} disabled={busy || !areaPixels} busy={busy}>
+            {t("profile.profile.cropSave")}
           </Button>
         </DialogFooter>
       </DialogContent>

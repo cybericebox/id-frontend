@@ -5,7 +5,7 @@
 // bootstrap — a plain credentialed fetch is authoritative.
 
 import { apiOrigin } from "@/lib/origins"
-import { isUnavailableStatus, reportServiceUnavailable } from "@/lib/serviceStatus"
+import { isNetworkOutage, isUnavailableStatus, reportServiceUnavailable } from "@/lib/serviceStatus"
 
 const BASE_URL = apiOrigin
 
@@ -88,11 +88,12 @@ async function request<T>(
       },
     })
   } catch (err) {
-    // Network failure (backend down, DNS, offline) → app-wide overlay.
-    reportServiceUnavailable()
+    // Network failure (backend down, DNS, offline) → app-wide outage modal; a
+    // caller abort or timeout is not an outage.
+    if (isNetworkOutage(err, init.signal)) reportServiceUnavailable()
     throw err
   }
-  // Keep the overlay until its session-aware recovery probe succeeds.
+  // Keep the modal until its session-aware recovery probe succeeds.
   if (isUnavailableStatus(res.status)) reportServiceUnavailable()
 
   // Centralized auth handling: required (default true) → write return_to cookie

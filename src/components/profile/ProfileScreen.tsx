@@ -15,13 +15,15 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
 import { Wordmark } from "@/components/brand/Wordmark"
 import { apiGet, mediaUrl } from "@/api/client"
 import { ThemeSwitch } from "@/components/ThemeToggle"
 import { safeReturnTo } from "@/lib/auth"
+import { backLabel } from "@/lib/backLink"
+import { useBackLink } from "@/lib/useBackLink"
+import { Tooltip } from "@/components/ui/tooltip"
 import { isServiceUnavailable } from "@/i18n/apiError"
-import { PageError } from "@/components/PageError"
+import { ErrorScreen } from "@/components/ErrorScreen"
 import { onServiceRestored } from "@/lib/serviceStatus"
 import { PageLoader } from "@/components/ui/spinner"
 import { t, locale } from "@/i18n/t"
@@ -32,6 +34,11 @@ import { SecurityTab } from "@/components/profile/SecurityTab"
 import { SessionsTab } from "@/components/profile/SessionsTab"
 import { ConnectionsTab } from "@/components/profile/ConnectionsTab"
 import { InboxButton } from "@/components/profile/InboxButton"
+import { AccountMenu } from "@/components/profile/AccountMenu"
+import { initials } from "@/lib/initials"
+import { roleLabel } from "@/lib/roles"
+
+const BACK_ARROW_CLASS = "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-dim hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-action"
 
 type TabKey = "profile" | "account" | "security" | "sessions" | "connections"
 
@@ -42,14 +49,6 @@ const TABS: { key: TabKey; label: string; desc: string; icon: LucideIcon }[] = [
   { key: "sessions", label: "profile.tab.sessions", desc: "profile.tab.sessions.desc", icon: MonitorSmartphone },
   { key: "connections", label: "profile.tab.connections", desc: "profile.tab.connections.desc", icon: Link2 },
 ]
-
-// Humanize a backend role string via i18n, falling back to the raw value when
-// no label key exists (t() returns the key itself on a miss).
-function roleLabel(role: string): string {
-  const key = `role.${role}`
-  const label = t(key)
-  return label === key ? role : label
-}
 
 // Format the join date for "Member since"; returns "" for missing/invalid input.
 function memberSince(createdAt: string): string {
@@ -73,6 +72,10 @@ function ProfileShell() {
   // safeReturnTo (same-platform https only) to prevent open-redirect / javascript:
   // URL injection; an invalid value falls back to "" so the Back link is hidden.
   const returnTo = safeReturnTo(searchParams.get("return_to") ?? "", "")
+  // Coming from admin, an event site or the catalog (return_to, else the referrer; kept for the
+  // tab): the arrow leads there with a destination tooltip. Otherwise it stays the plain Back.
+  const back = useBackLink(searchParams.get("return_to"))
+  const backKey = backLabel(back)
 
   const [active, setActive] = useState<TabKey>(
     TABS.some((x) => x.key === initialTab) ? initialTab : "profile"
@@ -83,7 +86,7 @@ function ProfileShell() {
     searchParams.get("tab") ? initialTab : null
   )
   const [account, setAccount] = useState<Account | null>(null)
-  const [loadError, setLoadError] = useState<{ unavailable: boolean } | null>(null)
+  const [loadError, setLoadError] = useState<{ unavailable: boolean; error: unknown } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   const load = useCallback(async () => {
@@ -96,7 +99,7 @@ function ProfileShell() {
       // A 401 is handled centrally by the api client (auto-redirect to sign-in).
       // Backend down / gateway 5xx → "temporarily unavailable" with auto-retry;
       // anything else is a genuine load failure.
-      setLoadError({ unavailable: isServiceUnavailable(err) })
+      setLoadError({ unavailable: isServiceUnavailable(err), error: err })
     } finally {
       setIsLoading(false)
     }
@@ -129,7 +132,7 @@ function ProfileShell() {
     // Unreachable backend is shown by the app-wide overlay (ServiceStatusGate);
     // keep the loader underneath until it refetches on restore.
     if (!loadError || loadError.unavailable) return <PageLoader />
-    return <PageError onRetry={load} />
+    return <ErrorScreen onRetry={load} error={loadError.error} title={t("profile.loadError")} />
   }
 
   // Render the content for a given tab — shared by the desktop pane and the
@@ -159,14 +162,20 @@ function ProfileShell() {
           <div className="ml-auto flex items-center gap-2">
             <ThemeSwitch />
             <span className="mx-1 h-5 w-px bg-line" aria-hidden="true" />
-            <InboxButton />
-            <Button asChild variant="outline" size="sm">
-              <a href="/sign-out">{t("common.signOut")}</a>
-            </Button>
+            <InboxButton defaultTab="personal" />
+            <AccountMenu account={account} />
           </div>
         </div>
         <div className="mt-5 flex items-center gap-3">
-          {returnTo && <Link href={returnTo} aria-label={t("common.back")} title={t("common.back")} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-dim hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-action"><ArrowLeft size={18} aria-hidden="true" /></Link>}
+          {back && backKey ? (
+            <Tooltip content={t(backKey)} align="start">
+              <a href={back.href} aria-label={t(backKey)} className={BACK_ARROW_CLASS}><ArrowLeft size={18} aria-hidden="true" /></a>
+            </Tooltip>
+          ) : returnTo && (
+            <Tooltip content={t("common.back")} align="start">
+              <Link href={returnTo} aria-label={t("common.back")} className={BACK_ARROW_CLASS}><ArrowLeft size={18} aria-hidden="true" /></Link>
+            </Tooltip>
+          )}
           <h1 className="text-2xl font-semibold">{t("profile.heading")}</h1>
         </div>
       </header>
@@ -185,8 +194,7 @@ function ProfileShell() {
                 decoding="async"
               />
             ) : (
-              `${account.FirstName?.[0] ?? ""}${account.LastName?.[0] ?? ""}`.toUpperCase() ||
-              "?"
+              initials(account.FirstName, account.LastName, account.Email)
             )}
           </span>
           <div className="min-w-0 flex-1">

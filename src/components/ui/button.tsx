@@ -3,6 +3,7 @@ import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/utils/cn"
+import { Spinner } from "@/components/ui/spinner"
 
 const buttonVariants = cva(
   // ds-v2 .ib-btn: 40 px default, radius 6, medium 14, no shadows.
@@ -13,7 +14,7 @@ const buttonVariants = cva(
         default:
           "border-action bg-action text-on-action hover:border-action-hover hover:bg-action-hover",
         destructive:
-          "border-danger bg-danger text-white hover:bg-danger/90",
+          "border-danger bg-danger text-on-action hover:bg-[color-mix(in_srgb,var(--ib-danger)_88%,var(--ib-ink))] active:bg-[color-mix(in_srgb,var(--ib-danger)_80%,var(--ib-ink))]",
         outline:
           "border-control bg-transparent text-ink hover:bg-hover",
         secondary:
@@ -39,17 +40,23 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean
+  /** Busy state: disables the button and shows the crest loader before the label. */
+  busy?: boolean
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, busy = false, disabled, children, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        disabled={disabled || busy}
+        aria-busy={busy || undefined}
         {...props}
-      />
+      >
+        {busy && !asChild ? <><Spinner size="sm" />{children}</> : children}
+      </Comp>
     )
   }
 )

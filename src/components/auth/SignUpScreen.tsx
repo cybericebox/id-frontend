@@ -231,8 +231,9 @@ function RegisterForm() {
                 type="submit"
                 className="w-full"
                 disabled={isSubmitting}
+                busy={isSubmitting}
               >
-                {isSubmitting ? t("common.loading") : t("register.submit")}
+                {t("register.submit")}
               </Button>
             </form>
           </Form>

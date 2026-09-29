@@ -10,6 +10,7 @@ import {
   CardContent,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { toast } from "@/components/ui/toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { apiDelete, apiUrl } from "@/api/client"
@@ -31,19 +32,25 @@ export function ConnectionsTab({
     linkError ? t("profile.connections.linkFailed") : null
   )
   const [isBusy, setIsBusy] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmError, setConfirmError] = useState("")
 
   const hasGoogle = account.Providers.includes("google")
+  // Without a password Google is the only way in: the backend refuses too.
+  const onlyMethod = !account.HasPassword && account.Providers.length <= 1
 
   const unlink = async () => {
     setErrorMsg(null)
+    setConfirmError("")
     setIsBusy(true)
     try {
       await apiDelete("/api/auth/google/link")
+      setConfirmOpen(false)
       onUpdated()
-      toast.success("Google-акаунт від’єднано.")
+      toast.success(t("profile.connections.unlinked"))
     } catch (err) {
       // 4xx lockout-guard (last login method) surfaces here — show, don't crash.
-      toast.error(extractError(err))
+      setConfirmError(extractError(err))
     } finally {
       setIsBusy(false)
     }
@@ -80,7 +87,7 @@ export function ConnectionsTab({
             <Button
               variant="outline"
               size="sm"
-              onClick={unlink}
+              onClick={() => { setConfirmError(""); setConfirmOpen(true) }}
               disabled={isBusy}
             >
               {t("profile.connections.unlink")}
@@ -91,6 +98,18 @@ export function ConnectionsTab({
             </Button>
           )}
         </div>
+        <ConfirmDialog
+          open={confirmOpen}
+          onCancel={() => setConfirmOpen(false)}
+          tone="danger"
+          busy={isBusy}
+          disabled={onlyMethod}
+          error={onlyMethod ? t("profile.connections.unlinkOnlyMethod") : confirmError}
+          title={t("profile.connections.unlinkTitle")}
+          description={t("profile.connections.unlinkBody")}
+          confirmLabel={t("profile.connections.unlink")}
+          onConfirm={() => void unlink()}
+        />
       </CardContent>
     </Card>
   )

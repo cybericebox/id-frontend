@@ -209,8 +209,9 @@ function ResetPasswordForm() {
               type="submit"
               className="w-full"
               disabled={isSubmitting}
+              busy={isSubmitting}
             >
-              {isSubmitting ? t("common.loading") : t("resetPassword.submit")}
+              {t("resetPassword.submit")}
             </Button>
           </form>
         </Form>

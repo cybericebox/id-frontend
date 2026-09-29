@@ -8,6 +8,7 @@
 // procedure (see README).
 import en from "../../messages/en.json"
 import uk from "../../messages/uk.json"
+import { createElement, Fragment, type ReactNode } from "react"
 
 // `en` defines the canonical key set; `uk` is what users see.
 const active = uk
@@ -22,10 +23,60 @@ type MessageKey = keyof typeof en
 /**
  * Translate a message key to the active-language (Ukrainian) string.
  * Falls back to English, then to the key itself (safe for static export).
+ * `{name}` placeholders are filled from `vars`.
  */
-export function t(key: MessageKey | string): string {
-  const a = (active as Record<string, string>)[key]
-  if (a !== undefined) return a
-  const f = (fallback as Record<string, string>)[key]
-  return f ?? key
+export function t(key: MessageKey | string, vars?: Record<string, string | number>): string {
+  const msg = (active as Record<string, string>)[key] ?? (fallback as Record<string, string>)[key] ?? key
+  if (!vars) return msg
+  return msg.replace(/\{(\w+)\}/g, (m, name: string) => (name in vars ? String(vars[name]) : m))
+}
+
+/**
+ * Like t(), but placeholders may be elements (a link): returns the text split
+ * around them (keyed fragments), ready to render as children.
+ */
+export function tRich(key: MessageKey | string, vars: Record<string, ReactNode>): ReactNode[] {
+  return richParts(t(key), vars)
+}
+
+function richParts(text: string, vars: Record<string, ReactNode>): ReactNode[] {
+  return text
+    .split(/(\{\w+\})/)
+    .map((part, i) => {
+      const name = /^\{(\w+)\}$/.exec(part)?.[1]
+      // the split of a fixed message never reorders, so the position is a stable key
+      // eslint-disable-next-line @eslint-react/no-array-index-key
+      return createElement(Fragment, { key: i }, name !== undefined && name in vars ? vars[name] : part)
+    })
+}
+
+/**
+ * tRich for a « · »-separated credit line: each segment becomes an unbreakable
+ * (nowrap) span and keeps its trailing dot, so lines break only after a separator.
+ * `groupFrom` glues the segments from that index on into one inline-block group:
+ * the group moves to the next line whole and splits (at its dots) only when it
+ * cannot fit a line by itself.
+ */
+export function tSegments(
+  key: MessageKey | string,
+  vars: Record<string, ReactNode>,
+  { groupFrom }: { groupFrom?: number } = {}
+): ReactNode[] {
+  const parts = t(key).split(" · ")
+  const last = parts.length - 1
+  const segment = (part: string, i: number): ReactNode[] => [
+    // segments of a fixed message never reorder, so the position is a stable key
+    // eslint-disable-next-line @eslint-react/no-array-index-key
+    createElement("span", { key: i, style: { whiteSpace: "nowrap" } }, ...richParts(part, vars), i < last ? " ·" : null),
+    i < last ? " " : null,
+  ]
+  if (groupFrom === undefined || groupFrom <= 0 || groupFrom > last) return parts.flatMap(segment)
+  return [
+    ...parts.slice(0, groupFrom).flatMap(segment),
+    createElement(
+      "span",
+      { key: "group", style: { display: "inline-block" } },
+      ...parts.slice(groupFrom).flatMap((part, j) => segment(part, groupFrom + j))
+    ),
+  ]
 }

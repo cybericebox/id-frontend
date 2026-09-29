@@ -22,7 +22,7 @@ export function Spinner({
   return (
     <span
       role="status"
-      aria-label={label ? undefined : "loading"}
+      aria-label={label ? undefined : t("common.loading")}
       className={cn("inline-flex items-center justify-center leading-none", className)}
     >
       <span

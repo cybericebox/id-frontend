@@ -10,9 +10,11 @@ import {
   CardContent,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { toast } from "@/components/ui/toast"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { LoadingArea } from "@/components/ui/spinner"
+import { EmptyState } from "@/components/ui/empty-state"
+import { LoadError } from "@/components/ui/load-error"
 import { apiGet, apiDelete } from "@/api/client"
 import { t, locale } from "@/i18n/t"
 import type { SessionInfo } from "./types"
@@ -34,7 +36,7 @@ function osFromUA(ua: string): string {
 // browserFromUA derives a human browser label from a user-agent string.
 function browserFromUA(ua: string): string {
   if (!ua) return t("profile.sessions.unknownBrowser")
-  if (/cybericebox/i.test(ua)) return "CyberICEBox CLI"
+  if (/cybericebox/i.test(ua)) return "Cyber ICE Box CLI"
   const edge = ua.match(/Edg\/(\d+)/)
   if (edge) return `Edge ${edge[1]}`
   const opera = ua.match(/OPR\/(\d+)/)
@@ -58,18 +60,20 @@ function formatDate(dateStr: string): string {
 
 export function SessionsTab() {
   const [sessions, setSessions] = useState<SessionInfo[]>([])
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<unknown>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmError, setConfirmError] = useState("")
 
   const load = useCallback(async () => {
-    setErrorMsg(null)
+    setLoadError(null)
     setIsLoading(true)
     try {
       const data = await apiGet<SessionInfo[]>("/api/auth/sessions")
       setSessions(data ?? [])
     } catch (err) {
-      setErrorMsg(extractError(err))
+      setLoadError(err)
     } finally {
       setIsLoading(false)
     }
@@ -81,11 +85,10 @@ export function SessionsTab() {
 
   const revokeOne = async (id: string) => {
     setBusyId(id)
-    setErrorMsg(null)
     try {
       await apiDelete(`/api/auth/sessions/${encodeURIComponent(id)}`)
       await load()
-      toast.success("Сеанс завершено.")
+      toast.success(t("profile.sessions.revoked"))
     } catch (err) {
       toast.error(extractError(err))
     } finally {
@@ -95,13 +98,14 @@ export function SessionsTab() {
 
   const revokeAll = async () => {
     setBusyId("__all__")
-    setErrorMsg(null)
+    setConfirmError("")
     try {
       await apiDelete("/api/auth/sessions")
+      setConfirmOpen(false)
       await load()
-      toast.success("Інші сеанси завершено.")
+      toast.success(t("profile.sessions.revokedOthers"))
     } catch (err) {
-      toast.error(extractError(err))
+      setConfirmError(extractError(err))
     } finally {
       setBusyId(null)
     }
@@ -116,20 +120,15 @@ export function SessionsTab() {
         <CardDescription>{t("profile.sessions.description")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {errorMsg && (
-          <Alert variant="destructive">
-            <AlertDescription>{errorMsg}</AlertDescription>
-          </Alert>
-        )}
-
+        {/* One block for loading / error / empty / list: same min height, states centered. */}
         {isLoading ? (
           <LoadingArea label={t("common.loading")} />
+        ) : loadError ? (
+          <LoadError message={t("profile.sessions.loadError")} error={loadError} onRetry={() => { void load() }} />
         ) : sessions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            {t("profile.sessions.empty")}
-          </p>
+          <EmptyState message={t("profile.sessions.empty")} />
         ) : (
-          <ul className="max-h-96 space-y-3 overflow-y-auto pr-1">
+          <ul className="max-h-96 min-h-40 space-y-3 overflow-y-auto pr-1">
             {sessions.map((s) => (
               <li key={s.ID} className="rounded-md border p-3">
                 {/* Line 1: browser · OS (+ current badge) on the left, revoke
@@ -170,12 +169,23 @@ export function SessionsTab() {
         {hasOthers && (
           <Button
             variant="outline"
-            onClick={revokeAll}
+            onClick={() => { setConfirmError(""); setConfirmOpen(true) }}
             disabled={busyId === "__all__"}
           >
             {t("profile.sessions.revokeAll")}
           </Button>
         )}
+        <ConfirmDialog
+          open={confirmOpen}
+          onCancel={() => setConfirmOpen(false)}
+          tone="danger"
+          busy={busyId === "__all__"}
+          error={confirmError}
+          title={t("profile.sessions.revokeAllTitle")}
+          description={t("profile.sessions.revokeAllBody")}
+          confirmLabel={t("profile.sessions.revokeAllConfirm")}
+          onConfirm={() => void revokeAll()}
+        />
       </CardContent>
     </Card>
   )

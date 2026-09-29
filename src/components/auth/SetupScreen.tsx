@@ -24,6 +24,7 @@ import { PasswordInput } from "@/components/ui/password-input"
 import { PasswordStrength, passwordError } from "@/components/ui/password-strength"
 import { usePasswordPolicy, type PasswordPolicy } from "@/lib/passwordPolicy"
 import { Spinner } from "@/components/ui/spinner"
+import { ErrorScreen } from "@/components/ErrorScreen"
 import { AuthLayout } from "./AuthLayout"
 import { useOneShotParam } from "@/lib/useOneShotParam"
 import { mainOrigin, publicDomain } from "@/lib/origins"
@@ -189,6 +190,20 @@ function SetupForm() {
 
   // Terms of Service live on the apex (main) frontend, not the id subdomain.
   const termsUrl = publicDomain ? `${mainOrigin}/terms` : "/terms"
+  const privacyUrl = publicDomain ? `${mainOrigin}/privacy` : "/privacy"
+  const legalLink = (href: string, label: string) => (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="font-medium text-action underline-offset-3 hover:underline">
+      {label}
+    </a>
+  )
+  // setup.tosAccept carries {terms} and {privacy}; each placeholder becomes a link.
+  const tosLabel = t("setup.tosAccept")
+    .split(/(\{terms\}|\{privacy\})/)
+    .map((part) =>
+      part === "{terms}" ? <React.Fragment key="terms">{legalLink(termsUrl, t("setup.tosLink"))}</React.Fragment>
+      : part === "{privacy}" ? <React.Fragment key="privacy">{legalLink(privacyUrl, t("setup.privacyLink"))}</React.Fragment>
+      : part,
+    )
 
   // Draft persistence: linking Google does a full-page redirect that wipes the
   // form. Persist the non-secret fields to sessionStorage (per-tab, cleared on
@@ -200,6 +215,9 @@ function SetupForm() {
   const [setupInfo, setSetupInfo] = useState<SetupInfo | null>(null)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [isFetching, setIsFetching] = useState(true)
+  // Server/network failure while loading the invite (not an invalid link): full-page ErrorScreen with retry.
+  const [loadFailure, setLoadFailure] = useState<{ error: unknown } | null>(null)
+  const [attempt, setAttempt] = useState(0)
 
   // Submit state
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -273,6 +291,12 @@ function SetupForm() {
 
         if (cancelled) return
 
+        if (res.status >= 500) {
+          setLoadFailure({ error: { status: res.status } })
+          setIsFetching(false)
+          return
+        }
+
         if (!res.ok) {
           // 20406 = registration already completed → say so; anything else is an
           // invalid/expired link (generic, anti-enumeration).
@@ -301,9 +325,9 @@ function SetupForm() {
           })
           setIsFetching(false)
         }
-      } catch {
+      } catch (err) {
         if (!cancelled) {
-          setFetchError(t("error.generic"))
+          setLoadFailure({ error: err })
           setIsFetching(false)
         }
       }
@@ -313,7 +337,7 @@ function SetupForm() {
     return () => {
       cancelled = true
     }
-  }, [token]) // eslint-disable-line @eslint-react/exhaustive-deps
+  }, [token, attempt]) // eslint-disable-line @eslint-react/exhaustive-deps
 
   // ---------------------------------------------------------------------------
   // Persist non-secret fields to sessionStorage as they change, so the form
@@ -401,6 +425,10 @@ function SetupForm() {
         </AuthPane>
       </AuthLayout>
     )
+  }
+
+  if (loadFailure) {
+    return <ErrorScreen error={loadFailure.error} onRetry={() => { setLoadFailure(null); setIsFetching(true); setAttempt((n) => n + 1) }} />
   }
 
   // ---------------------------------------------------------------------------
@@ -581,19 +609,7 @@ function SetupForm() {
                         onBlur={field.onBlur}
                         name={field.name}
                         ref={field.ref}
-                        label={
-                          <span>
-                            {t("setup.tosAccept")}{" "}
-                            <a
-                              href={termsUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="font-medium text-action underline-offset-3 hover:underline"
-                            >
-                              {t("setup.tosLink")}
-                            </a>
-                          </span>
-                        }
+                        label={<span>{tosLabel}</span>}
                       />
                     </FormControl>
                     <FormMessage />
@@ -605,8 +621,9 @@ function SetupForm() {
                 type="submit"
                 className="w-full"
                 disabled={isSubmitting}
+                busy={isSubmitting}
               >
-                {isSubmitting ? t("common.loading") : t("setup.submit")}
+                {t("setup.submit")}
               </Button>
             </form>
           </Form>

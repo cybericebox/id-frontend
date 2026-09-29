@@ -20,14 +20,7 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/toast"
@@ -47,6 +40,7 @@ export function AccountTab({ account }: { account: Account }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState("")
 
   const form = useForm<EmailValues>({
     resolver: zodResolver(EmailSchema),
@@ -90,13 +84,14 @@ export function AccountTab({ account }: { account: Account }) {
 
   const onDelete = async () => {
     setIsDeleting(true)
+    setDeleteError("")
     try {
       await apiDelete("/api/auth/account")
-      toast.success("Обліковий запис видалено.")
+      toast.success(t("profile.account.deleted"))
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Reload after account deletion to discard authenticated client state.
       window.location.href = "/sign-in"
     } catch (err) {
-      toast.error(extractError(err))
+      setDeleteError(extractError(err))
       setIsDeleting(false)
     }
   }
@@ -187,42 +182,23 @@ export function AccountTab({ account }: { account: Account }) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
+          <Button variant="destructive" onClick={() => { setDeleteError(""); setDeleteOpen(true) }}>
             {t("profile.account.deleteButton")}
           </Button>
         </CardContent>
       </Card>
 
-      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {t("profile.account.deleteConfirmTitle")}
-            </DialogTitle>
-            <DialogDescription>
-              {t("profile.account.deleteConfirmBody")}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteOpen(false)}
-              disabled={isDeleting}
-            >
-              {t("common.cancel")}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={onDelete}
-              disabled={isDeleting}
-            >
-              {isDeleting
-                ? t("common.loading")
-                : t("profile.account.deleteConfirmButton")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        open={deleteOpen}
+        onCancel={() => setDeleteOpen(false)}
+        tone="danger"
+        busy={isDeleting}
+        error={deleteError}
+        title={t("profile.account.deleteConfirmTitle")}
+        description={t("profile.account.deleteConfirmBody")}
+        confirmLabel={t("profile.account.deleteConfirmButton")}
+        onConfirm={() => void onDelete()}
+      />
     </div>
   )
 }
