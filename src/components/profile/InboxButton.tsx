@@ -17,6 +17,9 @@ import { onServiceRestored } from "@/lib/serviceStatus"
 import { NotificationMessageCard } from "./NotificationMessageCard"
 import { NotificationPopIn, popInDuration } from "./NotificationPopIn"
 
+// Dropdown height cap, the same in every app: tune it here.
+const panelMaxHeight = "max-h-[min(28rem,calc(100vh-6rem))]"
+
 type Message = {
   ID: string
   Title: string
@@ -251,7 +254,7 @@ export function InboxButton() {
       </button>
     </Popover.Trigger>
     <Popover.Portal>
-      <Popover.Content align="end" sideOffset={20} collisionPadding={12} aria-label={t("inbox.title")} className="z-50 flex max-h-[min(38rem,calc(100vh-5rem))] w-[min(32rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-lg border border-line bg-surface text-ink shadow-[var(--ib-shadow-overlay)] outline-none">
+      <Popover.Content align="end" sideOffset={20} collisionPadding={12} aria-label={t("inbox.title")} className={`z-50 flex ${panelMaxHeight} w-[min(32rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-lg border border-line bg-surface text-ink outline-none`}>
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-line px-4 py-3">
           <h2><span className="sr-only">{t("inbox.title")}</span><Bell size={19} aria-hidden="true" className="text-dim" /></h2>
           <div className="flex shrink-0 items-center gap-2">
@@ -262,7 +265,7 @@ export function InboxButton() {
         {error && <p role="alert" className="mx-3 mt-3 rounded-md bg-[var(--ib-danger-bg)] p-2 text-xs text-[var(--ib-danger)]">{error}</p>}
         <div ref={scrollAreaRef} className="flex min-h-0 flex-col overflow-y-auto">
           {/* loading and empty share one centered box of the same height, so nothing jumps */}
-          {loading || items.length === 0 ? <div className="flex min-h-48 flex-1 items-center justify-center">{loading ? <LoadingArea label={t("common.loading")} /> : <EmptyState message={t("inbox.empty")} inbox />}</div> : <ul className="divide-y divide-line">{items.map((item, index) => {
+          {loading || items.length === 0 ? <div className="flex min-h-48 flex-1 items-center justify-center">{loading ? <LoadingArea label={t("common.loading")} /> : <EmptyState message={t("inbox.empty")} />}</div> : <ul className="divide-y divide-line">{items.map((item, index) => {
             const href = safeHref(item.Link ?? "")
             return <li key={item.ID} ref={index === items.length - 1 ? lastItemRef : undefined} className="px-4 py-3 hover:bg-hover">
               <NotificationMessageCard
