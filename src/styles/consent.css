@@ -28,16 +28,10 @@
 .cb-switch:disabled{opacity:.5;cursor:not-allowed}
 .cb-switch:focus-visible{outline:2px solid var(--ib-action);outline-offset:2px}
 
-/* the reCAPTCHA badge (sign-in / sign-up) sits bottom-right. A centred banner (max 880px)
-   clears it on wide screens, so it lifts above the badge only where the two overlap. */
-@media (max-width:1100px){
-  body:has(.grecaptcha-badge) .cb-consent{bottom:calc(var(--ib-4) + 76px)}
-  body:has(.grecaptcha-badge) .cb-consent--panel{max-height:calc(100dvh - var(--ib-8) - 76px)}
-}
+/* the reCAPTCHA badge (sign-in / sign-up) has no z-index: the banner covers it while it is shown */
 
 @media (max-width:640px){
   .cb-consent{flex-direction:column;align-items:stretch;gap:var(--ib-3);left:var(--ib-2);right:var(--ib-2);bottom:var(--ib-2)}
-  body:has(.grecaptcha-badge) .cb-consent{bottom:calc(var(--ib-2) + 76px)}
   .cb-consent__actions>button{flex:1}
 }
 
