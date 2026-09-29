@@ -92,7 +92,7 @@ export function AccountTab({ account }: { account: Account }) {
     setIsDeleting(true)
     try {
       await apiDelete("/api/auth/account")
-      toast.success("Обліковий запис видалено.")
+      toast.success(t("profile.account.deleted"))
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Reload after account deletion to discard authenticated client state.
       window.location.href = "/sign-in"
     } catch (err) {

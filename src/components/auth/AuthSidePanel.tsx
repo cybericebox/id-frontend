@@ -13,6 +13,7 @@ import {
 import { Logo } from "@/components/brand/Logo"
 import { ThemeSwitch } from "@/components/ThemeToggle"
 import { cn } from "@/utils/cn"
+import { t } from "@/i18n/t"
 
 export type AuthVariant =
   | "signin"
@@ -21,82 +22,37 @@ export type AuthVariant =
   | "reset"
   | "setup"
 
-type Item = { icon: React.ComponentType<{ size?: number; className?: string }>; text: string }
-type Panel = { title: React.ReactNode; items: Item[] }
+type Item = { icon: React.ComponentType<{ size?: number; className?: string }>; key: string }
 
 // Each auth page gets its own copy — platform-specific, not generic.
-const PANELS: Record<AuthVariant, Panel> = {
-  signin: {
-    title: (
-      <>
-        Продовжуйте навчання
-        <br />
-        та практику.
-      </>
-    ),
-    items: [
-      { icon: Activity, text: "Рейтинг команд оновлюється в реальному часі під час події" },
-      { icon: Lock, text: "Ізольовані лабораторії з доступом через VPN" },
-      { icon: Puzzle, text: "Завдання будь-якого типу" },
-    ],
-  },
-  signup: {
-    title: (
-      <>
-        Платформа практичної
-        <br />
-        кібербезпеки.
-      </>
-    ),
-    items: [
-      { icon: Boxes, text: "Власне ізольоване середовище для кожної команди" },
-      { icon: TrendingUp, text: "Рейтинг у реальному часі під час подій" },
-      { icon: Users, text: "Індивідуальна та командна гра" },
-      { icon: Puzzle, text: "Завдання будь-якого типу" },
-    ],
-  },
-  recover: {
-    title: (
-      <>
-        Відновіть доступ
-        <br />
-        до облікового запису.
-      </>
-    ),
-    items: [
-      { icon: Gauge, text: "Динамічний скоринг завдань" },
-      { icon: Network, text: "Емуляція мережевих топологій рівнів L2/L3" },
-      { icon: Users, text: "Індивідуальна та командна гра" },
-    ],
-  },
-  reset: {
-    title: (
-      <>
-        Встановіть
-        <br />
-        новий пароль.
-      </>
-    ),
-    items: [
-      { icon: Lock, text: "Ізольовані лабораторії з доступом через VPN" },
-      { icon: Activity, text: "Рейтинг у реальному часі під час подій" },
-      { icon: Puzzle, text: "Завдання будь-якого типу" },
-    ],
-  },
-  setup: {
-    title: (
-      <>
-        Залишився
-        <br />
-        останній крок.
-      </>
-    ),
-    items: [
-      { icon: Server, text: "Емуляція повноцінних мережевих топологій L2/L3" },
-      { icon: Gauge, text: "Динамічний скоринг завдань" },
-      { icon: Boxes, text: "Власне ізольоване середовище для кожної команди" },
-    ],
-  },
+// Titles are two lines: authPanel.<variant>.title1 / title2.
+const PANELS: Record<AuthVariant, Item[]> = {
+  signin: [
+    { icon: Activity, key: "authPanel.item.liveTeamRating" },
+    { icon: Lock, key: "authPanel.item.vpnLabs" },
+    { icon: Puzzle, key: "authPanel.item.anyTask" },
+  ],
+  signup: [
+    { icon: Boxes, key: "authPanel.item.ownEnv" },
+    { icon: TrendingUp, key: "authPanel.item.liveRating" },
+    { icon: Users, key: "authPanel.item.soloTeam" },
+    { icon: Puzzle, key: "authPanel.item.anyTask" },
+  ],
+  recover: [
+    { icon: Gauge, key: "authPanel.item.dynScoring" },
+    { icon: Network, key: "authPanel.item.l2l3" },
+    { icon: Users, key: "authPanel.item.soloTeam" },
+  ],
+  reset: [
+    { icon: Lock, key: "authPanel.item.vpnLabs" },
+    { icon: Activity, key: "authPanel.item.liveRating" },
+    { icon: Puzzle, key: "authPanel.item.anyTask" },
+  ],
+  setup: [
+    { icon: Server, key: "authPanel.item.l2l3Full" },
+    { icon: Gauge, key: "authPanel.item.dynScoring" },
+    { icon: Boxes, key: "authPanel.item.ownEnv" },
+  ],
 }
 
 // Static export: the year is fixed at build time.
@@ -134,7 +90,7 @@ export function AuthSidePanel({
   className?: string
   variant?: AuthVariant
 }) {
-  const panel = PANELS[variant]
+  const items = PANELS[variant]
   return (
     <aside className={cn("ib-mass relative hidden overflow-hidden lg:block", className)}>
       <PanelArt />
@@ -149,13 +105,15 @@ export function AuthSidePanel({
 
         <div className="my-auto flex flex-col gap-8 py-12">
           <h2 className="text-[40px] font-semibold leading-[1.1] text-on-brand">
-            {panel.title}
+            {t(`authPanel.${variant}.title1`)}
+            <br />
+            {t(`authPanel.${variant}.title2`)}
           </h2>
           <ul className="flex flex-col gap-4">
-            {panel.items.map(({ icon: Icon, text }) => (
-              <li key={text} className="flex items-start gap-3">
+            {items.map(({ icon: Icon, key }) => (
+              <li key={key} className="flex items-start gap-3">
                 <Icon size={20} className="mt-px shrink-0 text-on-brand-3" />
-                <span className="text-sm font-medium leading-snug text-on-brand-2">{text}</span>
+                <span className="text-sm font-medium leading-snug text-on-brand-2">{t(key)}</span>
               </li>
             ))}
           </ul>
@@ -163,14 +121,14 @@ export function AuthSidePanel({
 
         <footer className="flex flex-col items-start gap-3 border-t border-brand-line pt-5 text-[13px] leading-relaxed text-on-brand-3">
           <p>
-            © {YEAR} ХНУРЕ · За підтримки{" "}
+            {t("authPanel.legal", { year: YEAR })}{" "}
             <a
               href="https://ice.nure.ua/ua/"
               target="_blank"
               rel="noopener noreferrer"
               className="font-normal text-on-brand-2 underline underline-offset-3 hover:text-on-brand"
             >
-              кафедри ІКІ ім. В. В. Поповського
+              {t("authPanel.legalLink")}
             </a>
           </p>
           {/* bottom-left: the reCAPTCHA badge occupies the bottom-right corner */}

@@ -85,7 +85,7 @@ export function SessionsTab() {
     try {
       await apiDelete(`/api/auth/sessions/${encodeURIComponent(id)}`)
       await load()
-      toast.success("Сеанс завершено.")
+      toast.success(t("profile.sessions.revoked"))
     } catch (err) {
       toast.error(extractError(err))
     } finally {
@@ -99,7 +99,7 @@ export function SessionsTab() {
     try {
       await apiDelete("/api/auth/sessions")
       await load()
-      toast.success("Інші сеанси завершено.")
+      toast.success(t("profile.sessions.revokedOthers"))
     } catch (err) {
       toast.error(extractError(err))
     } finally {

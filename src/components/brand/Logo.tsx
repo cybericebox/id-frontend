@@ -1,5 +1,6 @@
 import * as React from "react"
 import { mainOrigin } from "@/lib/origins"
+import { t } from "@/i18n/t"
 
 // The original CyberICEBox (ICE CTF) crest emblem — the brand logo used across
 // the apps (shipped as favicon). Embedded as a data-URI so the DS bundle is
@@ -26,7 +27,7 @@ export function Logo({ size = 64, className, href }: LogoProps) {
   const img = (
     <img
       src={CREST_SRC}
-      alt="CyberICEBox"
+      alt={t("meta.brand")}
       width={Math.round((size * 375) / 368)}
       height={size}
       className={className}
@@ -36,7 +37,7 @@ export function Logo({ size = 64, className, href }: LogoProps) {
   const target = href === null ? null : href ?? LANDING_HREF
   if (!target) return img
   return (
-    <a href={target} aria-label="CyberICEBox" style={{ display: "inline-flex", lineHeight: 0 }}>
+    <a href={target} aria-label={t("meta.brand")} style={{ display: "inline-flex", lineHeight: 0 }}>
       {img}
     </a>
   )

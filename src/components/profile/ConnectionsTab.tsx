@@ -40,7 +40,7 @@ export function ConnectionsTab({
     try {
       await apiDelete("/api/auth/google/link")
       onUpdated()
-      toast.success("Google-акаунт від’єднано.")
+      toast.success(t("profile.connections.unlinked"))
     } catch (err) {
       // 4xx lockout-guard (last login method) surfaces here — show, don't crash.
       toast.error(extractError(err))
