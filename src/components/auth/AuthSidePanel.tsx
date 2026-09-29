@@ -140,7 +140,7 @@ export function AuthSidePanel({
                   </a>
                 </Tooltip>
               ),
-            })}
+            }, { groupFrom: 1 })}
           </p>
           {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && <CookieSettingsButton className="text-on-brand-2 hover:text-on-brand" />}
           {/* bottom-left: the reCAPTCHA badge occupies the bottom-right corner */}
