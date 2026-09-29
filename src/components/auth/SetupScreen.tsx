@@ -26,6 +26,7 @@ import { usePasswordPolicy, type PasswordPolicy } from "@/lib/passwordPolicy"
 import { Spinner } from "@/components/ui/spinner"
 import { AuthLayout } from "./AuthLayout"
 import { useOneShotParam } from "@/lib/useOneShotParam"
+import { mainOrigin, publicDomain } from "@/lib/origins"
 import { AuthHeading, AuthPane, AuthSwitch, GoogleIcon } from "./parts"
 import { t } from "@/i18n/t"
 import { apiPost, apiUrl } from "@/api/client"
@@ -187,8 +188,7 @@ function SetupForm() {
   const returnTo = searchParams.get("return_to") ?? ""
 
   // Terms of Service live on the apex (main) frontend, not the id subdomain.
-  const domain = process.env.NEXT_PUBLIC_DOMAIN ?? ""
-  const termsUrl = domain ? `https://${domain}/terms` : "/terms"
+  const termsUrl = publicDomain ? `${mainOrigin}/terms` : "/terms"
 
   // Draft persistence: linking Google does a full-page redirect that wipes the
   // form. Persist the non-secret fields to sessionStorage (per-tab, cleared on

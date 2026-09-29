@@ -1,11 +1,10 @@
 import * as React from "react"
+import { mainOrigin } from "@/lib/origins"
 import { Logo } from "./Logo"
 
 // The landing (apex) origin — the brand lockup links here by default so the
 // organisation logo navigates home from every app.
-const LANDING_HREF = process.env.NEXT_PUBLIC_DOMAIN
-  ? `https://${process.env.NEXT_PUBLIC_DOMAIN}`
-  : "/"
+const LANDING_HREF = mainOrigin
 
 // Brand lockup — the old crest logo plus the «Cyber ICE Box» wordmark (ICE in crest ice blue). Links to the
 // landing by default; pass href={null} to render a non-linking lockup.
