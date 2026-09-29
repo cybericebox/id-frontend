@@ -7,7 +7,7 @@
 .cb-consent__text{flex:1;min-width:0}
 .cb-consent__actions{display:flex;align-items:center;gap:var(--ib-2);flex:none}
 
-.cb-consent--panel{display:block;max-width:560px;max-height:calc(100dvh - var(--ib-8));overflow-y:auto;padding:var(--ib-5)}
+.cb-consent--panel{display:block;max-width:360px;max-height:calc(100dvh - var(--ib-8));overflow-y:auto;padding:var(--ib-5)}
 .cb-consent__title{color:var(--ib-ink);font-size:var(--ib-fs-16);font-weight:var(--ib-w-semibold)}
 .cb-consent__cats{margin:var(--ib-3) 0 0;padding:0;list-style:none}
 .cb-consent__cats li{border-top:1px solid var(--ib-line)}
@@ -28,13 +28,10 @@
 .cb-switch:disabled{opacity:.5;cursor:not-allowed}
 .cb-switch:focus-visible{outline:2px solid var(--ib-action);outline-offset:2px}
 
-/* the reCAPTCHA badge (sign-in / sign-up) sits bottom-right: keep the buttons clear of it */
-body:has(.grecaptcha-badge) .cb-consent{bottom:calc(var(--ib-4) + 76px)}
-body:has(.grecaptcha-badge) .cb-consent--panel{max-height:calc(100dvh - var(--ib-8) - 76px)}
+/* the reCAPTCHA badge (sign-in / sign-up) has no z-index: the banner covers it while it is shown */
 
 @media (max-width:640px){
   .cb-consent{flex-direction:column;align-items:stretch;gap:var(--ib-3);left:var(--ib-2);right:var(--ib-2);bottom:var(--ib-2)}
-  body:has(.grecaptcha-badge) .cb-consent{bottom:calc(var(--ib-2) + 76px)}
   .cb-consent__actions>button{flex:1}
 }
 
