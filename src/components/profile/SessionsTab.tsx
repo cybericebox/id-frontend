@@ -35,7 +35,7 @@ function osFromUA(ua: string): string {
 // browserFromUA derives a human browser label from a user-agent string.
 function browserFromUA(ua: string): string {
   if (!ua) return t("profile.sessions.unknownBrowser")
-  if (/cybericebox/i.test(ua)) return "CyberICEBox CLI"
+  if (/cybericebox/i.test(ua)) return "Cyber ICE Box CLI"
   const edge = ua.match(/Edg\/(\d+)/)
   if (edge) return `Edge ${edge[1]}`
   const opera = ua.match(/OPR\/(\d+)/)
