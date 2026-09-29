@@ -4,7 +4,7 @@
   "inbox.title": "Вхідні",
   "inbox.new": "Нове повідомлення",
   "inbox.dismiss": "Закрити сповіщення",
-  "inbox.unread": "непрочитаних",
+  "inbox.titleUnread": "Вхідні: {count} непрочитаних",
   "inbox.unreadItem": "Непрочитане",
   "inbox.close": "Закрити вхідні",
   "inbox.open": "Відкрити",

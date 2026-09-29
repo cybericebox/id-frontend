@@ -4,7 +4,7 @@
   "inbox.title": "Inbox",
   "inbox.new": "New notification",
   "inbox.dismiss": "Dismiss notification",
-  "inbox.unread": "unread",
+  "inbox.titleUnread": "Inbox: {count} unread",
   "inbox.unreadItem": "Unread",
   "inbox.close": "Close inbox",
   "inbox.open": "Open",

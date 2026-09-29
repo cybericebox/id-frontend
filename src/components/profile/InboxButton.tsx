@@ -202,7 +202,7 @@ export function InboxButton() {
     }
   }, [refresh])
 
-  const label = unread ? `${t("inbox.title")}: ${unread} ${t("inbox.unread")}` : t("inbox.title")
+  const label = unread ? t("inbox.titleUnread", { count: unread }) : t("inbox.title")
 
   function announceRead() {
     try {
