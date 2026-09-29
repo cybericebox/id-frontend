@@ -14,7 +14,7 @@ import { Logo } from "@/components/brand/Logo"
 import { ThemeSwitch } from "@/components/ThemeToggle"
 import { CookieSettingsButton } from "@/components/CookieSettingsButton"
 import { cn } from "@/utils/cn"
-import { t } from "@/i18n/t"
+import { t, tRich } from "@/i18n/t"
 
 export type AuthVariant =
   | "signin"
@@ -122,7 +122,20 @@ export function AuthSidePanel({
 
         <footer className="flex flex-col items-start gap-3 border-t border-brand-line pt-5 text-[13px] leading-relaxed text-on-brand-3">
           <p>
-            {t("authPanel.legal", { year: YEAR })}{" "}
+            {tRich("authPanel.legal", {
+              year: YEAR,
+              nure: (
+                <a
+                  href="https://nure.ua"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={t("authPanel.nureFull")}
+                  className="font-normal text-on-brand-2 underline underline-offset-3 hover:text-on-brand"
+                >
+                  {t("authPanel.nure")}
+                </a>
+              ),
+            })}{" "}
             <a
               href="https://ice.nure.ua/ua/"
               target="_blank"

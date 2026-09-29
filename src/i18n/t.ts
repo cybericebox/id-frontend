@@ -8,6 +8,7 @@
 // procedure (see README).
 import en from "../../messages/en.json"
 import uk from "../../messages/uk.json"
+import { createElement, Fragment, type ReactNode } from "react"
 
 // `en` defines the canonical key set; `uk` is what users see.
 const active = uk
@@ -28,4 +29,19 @@ export function t(key: MessageKey | string, vars?: Record<string, string | numbe
   const msg = (active as Record<string, string>)[key] ?? (fallback as Record<string, string>)[key] ?? key
   if (!vars) return msg
   return msg.replace(/\{(\w+)\}/g, (m, name: string) => (name in vars ? String(vars[name]) : m))
+}
+
+/**
+ * Like t(), but placeholders may be elements (a link): returns the text split
+ * around them (keyed fragments), ready to render as children.
+ */
+export function tRich(key: MessageKey | string, vars: Record<string, ReactNode>): ReactNode[] {
+  return t(key)
+    .split(/(\{\w+\})/)
+    .map((part, i) => {
+      const name = /^\{(\w+)\}$/.exec(part)?.[1]
+      // the split of a fixed message never reorders, so the position is a stable key
+      // eslint-disable-next-line @eslint-react/no-array-index-key
+      return createElement(Fragment, { key: i }, name !== undefined && name in vars ? vars[name] : part)
+    })
 }
