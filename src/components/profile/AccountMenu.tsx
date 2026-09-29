@@ -1,27 +1,21 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Cookie, House, LogOut, Settings, UserRound, type LucideIcon, Puzzle } from "lucide-react"
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { apiGet, mediaUrl } from "@/api/client"
 import { t } from "@/i18n/t"
-import { accountLinks, catalogAllowed, type AccountLinkKey } from "@/lib/accountMenu"
+import { ACCOUNT_MENU_ICON_PROPS, ACCOUNT_MENU_ICONS, ACCOUNT_MENU_LABELS, accountMenu, catalogAllowed } from "@/lib/accountMenu"
 import { adminOrigin, exercisesOrigin, mainOrigin } from "@/lib/origins"
 import type { Account } from "@/components/profile/types"
 import { initials } from "@/lib/initials"
 import { openConsentSettings } from "@/lib/consent"
 import { COOKIE_POLICY_HREF } from "@/components/CookieSettingsLink"
 
-// Unified account menu (lib/accountMenu): same labels and icons in every app.
-const ACCOUNT_ITEMS: Record<AccountLinkKey, { label: string; icon: LucideIcon }> = {
-  profile: { label: "nav.profile", icon: UserRound },
-  admin: { label: "nav.admin", icon: Settings },
-  exercises: { label: "nav.exercises", icon: Puzzle },
-  main: { label: "nav.home", icon: House },
-}
+// Unified account menu (lib/accountMenu): same entries, labels and icons in every app.
+const ICON_CLASS = "shrink-0 text-dim group-focus:text-accent-foreground"
 
 export function AccountMenu({ account }: { account: Account }) {
   const adminTier = Boolean(account.Role) && account.Role !== "user"
@@ -36,7 +30,7 @@ export function AccountMenu({ account }: { account: Account }) {
     return () => { cancelled = true }
   }, [adminTier])
 
-  const links = accountLinks(
+  const entries = accountMenu(
     "id",
     { adminTier, catalog: adminTier || staff, returnTo: "" },
     { id: "", admin: adminOrigin, exercises: exercisesOrigin, main: mainOrigin },
@@ -63,25 +57,30 @@ export function AccountMenu({ account }: { account: Account }) {
           <span className="text-xs font-normal text-dim">{account.Email}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {links.map(({ key, href }) => {
-          const { label, icon: Icon } = ACCOUNT_ITEMS[key]
+        {entries.map((entry, i) => {
+          if (entry.kind === "divider") return <DropdownMenuSeparator key={i} />
+          if (entry.kind === "cookies") {
+            const Icon = ACCOUNT_MENU_ICONS.cookies
+            // A link to the cookie policy. With JS only the navigation is cancelled (on the native event,
+            // so the menu still sees the select and closes); the panel opens once focus is back on the trigger.
+            return (
+              <DropdownMenuItem key={i} asChild className="group gap-2" onSelect={() => { window.setTimeout(openConsentSettings, 0) }}>
+                <a href={COOKIE_POLICY_HREF} aria-label={t(ACCOUNT_MENU_LABELS.cookiesAria)} onClick={(e) => e.nativeEvent.preventDefault()}>
+                  <Icon {...ACCOUNT_MENU_ICON_PROPS} className={ICON_CLASS} />{t(ACCOUNT_MENU_LABELS.cookies)}
+                </a>
+              </DropdownMenuItem>
+            )
+          }
+          const key = entry.kind === "signOut" ? "signOut" : entry.key
+          const Icon = ACCOUNT_MENU_ICONS[key]
           return (
-            <DropdownMenuItem key={key} asChild className="gap-2">
-              <a href={href}><Icon className="h-4 w-4" aria-hidden="true" />{t(label)}</a>
+            <DropdownMenuItem key={key} asChild className="group gap-2">
+              <a href={entry.kind === "signOut" ? "/sign-out" : entry.href}>
+                <Icon {...ACCOUNT_MENU_ICON_PROPS} className={ICON_CLASS} />{t(ACCOUNT_MENU_LABELS[key])}
+              </a>
             </DropdownMenuItem>
           )
         })}
-        {/* A link to the cookie policy. With JS only the navigation is cancelled (on the native event,
-            so the menu still sees the select and closes); the panel opens once focus is back on the trigger. */}
-        <DropdownMenuItem asChild className="gap-2" onSelect={() => { window.setTimeout(openConsentSettings, 0) }}>
-          <a href={COOKIE_POLICY_HREF} onClick={(e) => e.nativeEvent.preventDefault()}>
-            <Cookie className="h-4 w-4" aria-hidden="true" />{t("consent.settings")}
-          </a>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild className="gap-2">
-          <a href="/sign-out"><LogOut className="h-4 w-4" aria-hidden="true" />{t("common.signOut")}</a>
-        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

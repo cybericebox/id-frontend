@@ -32,7 +32,7 @@ describe("cookie settings entry", () => {
       expect(src(f), f).not.toMatch(/GOOGLE_ANALYTICS_ID &&/)
     }
     const menu = src("components/profile/AccountMenu.tsx")
-    expect(menu).toMatch(/onSelect=\{\(\) => \{ window\.setTimeout\(openConsentSettings, 0\) \}\}>\s*<a href=\{COOKIE_POLICY_HREF\} onClick=\{\(e\) => e\.nativeEvent\.preventDefault\(\)\}>/)
+    expect(menu).toMatch(/onSelect=\{\(\) => \{ window\.setTimeout\(openConsentSettings, 0\) \}\}>\s*<a href=\{COOKIE_POLICY_HREF\}[^>]* onClick=\{\(e\) => e\.nativeEvent\.preventDefault\(\)\}>/)
   })
 
   it("without GA mounts only the consent panel, no gtag script", () => {

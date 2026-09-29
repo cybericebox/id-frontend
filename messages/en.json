@@ -1,6 +1,5 @@
 {
   "common.signIn": "Sign in",
-  "common.signOut": "Sign out",
   "inbox.title": "Inbox",
   "inbox.new": "New notification",
   "inbox.dismiss": "Dismiss notification",
@@ -153,10 +152,6 @@
   "profile.title": "Profile",
   "profile.displayName": "Display name",
   "profile.avatar": "Avatar",
-  "nav.profile": "Profile",
-  "nav.admin": "Administration",
-  "nav.exercises": "Exercise catalog",
-  "nav.home": "Home",
   "nav.accountMenu": "Account menu",
   "nav.settings": "Settings",
   "nav.signOut": "Sign out",
@@ -311,6 +306,12 @@
   "consent.analytics.title": "Analytics",
   "consent.analytics.text": "Helps us understand how you use the site so we can improve it (Google Analytics).",
   "consent.saveChoice": "Save choice",
+  "accountMenu.profile": "Profile",
+  "accountMenu.home": "Home",
+  "accountMenu.admin": "Administration",
+  "accountMenu.exercises": "Exercise catalog",
+  "accountMenu.signOut": "Sign out",
+  "consent.menuLabel": "Cookies",
   "consent.settings": "Cookie settings",
   "setup.privacyLink": "Privacy Policy"
 }

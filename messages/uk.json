@@ -1,6 +1,5 @@
 {
   "common.signIn": "Увійти",
-  "common.signOut": "Вийти",
   "inbox.title": "Вхідні",
   "inbox.new": "Нове повідомлення",
   "inbox.dismiss": "Закрити сповіщення",
@@ -153,10 +152,6 @@
   "profile.title": "Профіль",
   "profile.displayName": "Відображуване ім'я",
   "profile.avatar": "Аватар",
-  "nav.profile": "Профіль",
-  "nav.admin": "Адміністрування",
-  "nav.exercises": "Каталог завдань",
-  "nav.home": "Головна",
   "nav.accountMenu": "Меню облікового запису",
   "nav.settings": "Налаштування",
   "nav.signOut": "Вийти",
@@ -311,6 +306,12 @@
   "consent.analytics.title": "Аналітика",
   "consent.analytics.text": "Допомагає нам зрозуміти, як ви користуєтеся сайтом, щоб покращувати його (Google Analytics).",
   "consent.saveChoice": "Зберегти вибір",
+  "accountMenu.profile": "Профіль",
+  "accountMenu.home": "Головна",
+  "accountMenu.admin": "Адміністрування",
+  "accountMenu.exercises": "Каталог завдань",
+  "accountMenu.signOut": "Вийти",
+  "consent.menuLabel": "Файли cookie",
   "consent.settings": "Налаштування файлів cookie",
   "setup.privacyLink": "Політикою конфіденційності"
 }
