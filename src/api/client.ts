@@ -4,11 +4,10 @@
 // and the browser stores/sends the host-scoped session cookie. No silent-auth
 // bootstrap — a plain credentialed fetch is authoritative.
 
+import { apiOrigin } from "@/lib/origins"
 import { isUnavailableStatus, reportServiceUnavailable } from "@/lib/serviceStatus"
 
-const DOMAIN = process.env.NEXT_PUBLIC_DOMAIN ?? ""
-const API_HOST = process.env.NEXT_PUBLIC_API_DOMAIN || (DOMAIN && `api.${DOMAIN}`)
-const BASE_URL = API_HOST ? `https://${API_HOST}` : ""
+const BASE_URL = apiOrigin
 
 export class ApiError extends Error {
   constructor(
