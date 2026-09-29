@@ -268,7 +268,7 @@
   "authPanel.item.dynScoring": "Dynamic challenge scoring",
   "authPanel.item.l2l3": "L2/L3 network topology emulation",
   "authPanel.item.l2l3Full": "Full L2/L3 network topology emulation",
-  "authPanel.legal": "© {year} Cyber ICE Box · Supported by {department} · {nure}",
+  "authPanel.legal": "© {year} Cyber ICE Box · Supported by {department} · {nure}",
   "authPanel.nure": "KhNURE",
   "authPanel.nureFull": "Kharkiv National University of Radio Electronics",
   "authPanel.departmentFull": "V. V. Popovskyi Department of Infocommunication Engineering",

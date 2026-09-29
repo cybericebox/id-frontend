@@ -15,7 +15,7 @@ import { ThemeSwitch } from "@/components/ThemeToggle"
 import { CookieSettingsButton } from "@/components/CookieSettingsButton"
 import { Tooltip } from "@/components/ui/tooltip"
 import { cn } from "@/utils/cn"
-import { t, tRich } from "@/i18n/t"
+import { t, tSegments } from "@/i18n/t"
 import "./auth-panel.css"
 
 export type AuthVariant =
@@ -124,7 +124,7 @@ export function AuthSidePanel({
 
         <footer className="flex flex-col items-start gap-3 border-t border-brand-line pt-5 text-[13px] leading-relaxed text-on-brand-3">
           <p className="auth-legal text-[12px] xl:text-[13px]">
-            {tRich("authPanel.legal", {
+            {tSegments("authPanel.legal", {
               year: YEAR,
               department: (
                 <Tooltip content={t("authPanel.departmentFull")} align="start">

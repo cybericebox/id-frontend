@@ -36,7 +36,11 @@ export function t(key: MessageKey | string, vars?: Record<string, string | numbe
  * around them (keyed fragments), ready to render as children.
  */
 export function tRich(key: MessageKey | string, vars: Record<string, ReactNode>): ReactNode[] {
-  return t(key)
+  return richParts(t(key), vars)
+}
+
+function richParts(text: string, vars: Record<string, ReactNode>): ReactNode[] {
+  return text
     .split(/(\{\w+\})/)
     .map((part, i) => {
       const name = /^\{(\w+)\}$/.exec(part)?.[1]
@@ -44,4 +48,18 @@ export function tRich(key: MessageKey | string, vars: Record<string, ReactNode>)
       // eslint-disable-next-line @eslint-react/no-array-index-key
       return createElement(Fragment, { key: i }, name !== undefined && name in vars ? vars[name] : part)
     })
+}
+
+/**
+ * tRich for a « · »-separated credit line: each segment becomes an unbreakable
+ * (nowrap) span and keeps its trailing dot, so lines break only after a separator.
+ */
+export function tSegments(key: MessageKey | string, vars: Record<string, ReactNode>): ReactNode[] {
+  const parts = t(key).split(" · ")
+  return parts.flatMap((part, i) => [
+    // segments of a fixed message never reorder, so the position is a stable key
+    // eslint-disable-next-line @eslint-react/no-array-index-key
+    createElement("span", { key: i, style: { whiteSpace: "nowrap" } }, ...richParts(part, vars), i < parts.length - 1 ? " ·" : null),
+    i < parts.length - 1 ? " " : null,
+  ])
 }
