@@ -10,6 +10,7 @@ import { Bell, X } from "lucide-react"
 
 import { apiGet, apiPatch } from "@/api/client"
 import { toast } from "@/components/ui/toast"
+import { EmptyState } from "@/components/ui/empty-state"
 import { LoadingArea, Spinner } from "@/components/ui/spinner"
 import { t, locale } from "@/i18n/t"
 import { onServiceRestored } from "@/lib/serviceStatus"
@@ -48,18 +49,6 @@ function safeHref(value: string): string | null {
   if (href.startsWith("/") && !href.startsWith("//")) return href
   if (href.startsWith("#") || /^https?:\/\/|^mailto:/i.test(href)) return href
   return null
-}
-
-function EmptyInbox() {
-  return <div data-empty-state className="flex min-h-48 flex-col items-center justify-center gap-3 px-4 py-8 text-center">
-    <span className="flex h-12 w-12 items-center justify-center">
-      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-8 w-8 text-dim">
-        <path d="M4.5 5.5h15L21.5 18a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2l2-12.5Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-        <path d="M3.5 14h4.7l1.5 2h4.6l1.5-2h4.7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </span>
-    <p className="text-sm text-dim">{t("inbox.empty")}</p>
-  </div>
 }
 
 export function InboxButton() {
@@ -271,8 +260,9 @@ export function InboxButton() {
           </div>
         </div>
         {error && <p role="alert" className="mx-3 mt-3 rounded-md bg-[var(--ib-danger-bg)] p-2 text-xs text-[var(--ib-danger)]">{error}</p>}
-        <div ref={scrollAreaRef} className="min-h-0 overflow-y-auto">
-          {loading ? <LoadingArea label={t("common.loading")} /> : items.length === 0 ? <EmptyInbox /> : <ul className="divide-y divide-line">{items.map((item, index) => {
+        <div ref={scrollAreaRef} className="flex min-h-0 flex-col overflow-y-auto">
+          {/* loading and empty share one centered box of the same height, so nothing jumps */}
+          {loading || items.length === 0 ? <div className="flex min-h-48 flex-1 items-center justify-center">{loading ? <LoadingArea label={t("common.loading")} /> : <EmptyState message={t("inbox.empty")} inbox />}</div> : <ul className="divide-y divide-line">{items.map((item, index) => {
             const href = safeHref(item.Link ?? "")
             return <li key={item.ID} ref={index === items.length - 1 ? lastItemRef : undefined} className="px-4 py-3 hover:bg-hover">
               <NotificationMessageCard
