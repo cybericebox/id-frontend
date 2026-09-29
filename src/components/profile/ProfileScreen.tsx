@@ -19,6 +19,9 @@ import { Wordmark } from "@/components/brand/Wordmark"
 import { apiGet, mediaUrl } from "@/api/client"
 import { ThemeSwitch } from "@/components/ThemeToggle"
 import { safeReturnTo } from "@/lib/auth"
+import { backLabel } from "@/lib/backLink"
+import { useBackLink } from "@/lib/useBackLink"
+import { Tooltip } from "@/components/ui/tooltip"
 import { isServiceUnavailable } from "@/i18n/apiError"
 import { PageError } from "@/components/PageError"
 import { onServiceRestored } from "@/lib/serviceStatus"
@@ -34,6 +37,8 @@ import { InboxButton } from "@/components/profile/InboxButton"
 import { AccountMenu } from "@/components/profile/AccountMenu"
 import { initials } from "@/lib/initials"
 import { roleLabel } from "@/lib/roles"
+
+const BACK_ARROW_CLASS = "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-dim hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-action"
 
 type TabKey = "profile" | "account" | "security" | "sessions" | "connections"
 
@@ -67,6 +72,10 @@ function ProfileShell() {
   // safeReturnTo (same-platform https only) to prevent open-redirect / javascript:
   // URL injection; an invalid value falls back to "" so the Back link is hidden.
   const returnTo = safeReturnTo(searchParams.get("return_to") ?? "", "")
+  // Coming from admin, an event site or the catalog (return_to, else the referrer; kept for the
+  // tab): the arrow leads there with a destination tooltip. Otherwise it stays the plain Back.
+  const back = useBackLink(searchParams.get("return_to"))
+  const backKey = backLabel(back)
 
   const [active, setActive] = useState<TabKey>(
     TABS.some((x) => x.key === initialTab) ? initialTab : "profile"
@@ -158,7 +167,11 @@ function ProfileShell() {
           </div>
         </div>
         <div className="mt-5 flex items-center gap-3">
-          {returnTo && <Link href={returnTo} aria-label={t("common.back")} title={t("common.back")} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-dim hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-action"><ArrowLeft size={18} aria-hidden="true" /></Link>}
+          {back && backKey ? (
+            <Tooltip content={t(backKey)} align="start">
+              <a href={back.href} aria-label={t(backKey)} className={BACK_ARROW_CLASS}><ArrowLeft size={18} aria-hidden="true" /></a>
+            </Tooltip>
+          ) : returnTo && <Link href={returnTo} aria-label={t("common.back")} title={t("common.back")} className={BACK_ARROW_CLASS}><ArrowLeft size={18} aria-hidden="true" /></Link>}
           <h1 className="text-2xl font-semibold">{t("profile.heading")}</h1>
         </div>
       </header>

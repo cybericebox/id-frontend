@@ -317,5 +317,8 @@
   "accountMenu.signOut": "Вийти",
   "consent.menuLabel": "Файли cookie",
   "consent.settings": "Налаштування файлів cookie",
-  "setup.privacyLink": "Політикою конфіденційності"
+  "setup.privacyLink": "Політикою конфіденційності",
+  "back.toAdmin": "Перейти до адміністрування",
+  "back.toEvent": "Перейти до заходу",
+  "back.toCatalog": "Перейти до каталогу"
 }

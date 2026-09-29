@@ -317,5 +317,8 @@
   "accountMenu.signOut": "Sign out",
   "consent.menuLabel": "Cookies",
   "consent.settings": "Cookie settings",
-  "setup.privacyLink": "Privacy Policy"
+  "setup.privacyLink": "Privacy Policy",
+  "back.toAdmin": "Go to administration",
+  "back.toEvent": "Go to the event",
+  "back.toCatalog": "Go to the catalog"
 }
