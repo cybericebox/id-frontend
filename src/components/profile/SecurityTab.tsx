@@ -178,8 +178,9 @@ export function SecurityTab({ account }: { account: Account }) {
                   !form.formState.isDirty ||
                   !form.formState.isValid
                 }
+                busy={isSubmitting}
               >
-                {isSubmitting ? t("common.loading") : t("profile.security.save")}
+                {t("profile.security.save")}
               </Button>
               {form.formState.isDirty && (
                 <Button

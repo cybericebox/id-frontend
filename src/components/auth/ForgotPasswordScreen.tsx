@@ -158,8 +158,9 @@ function ForgotPasswordForm() {
                 type="submit"
                 className="w-full"
                 disabled={isSubmitting}
+                busy={isSubmitting}
               >
-                {isSubmitting ? t("common.loading") : t("forgotPassword.submit")}
+                {t("forgotPassword.submit")}
               </Button>
             </form>
           </Form>

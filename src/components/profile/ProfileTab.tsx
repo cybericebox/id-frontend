@@ -285,8 +285,9 @@ export function ProfileTab({
                   !form.formState.isDirty ||
                   !form.formState.isValid
                 }
+                busy={isSubmitting}
               >
-                {isSubmitting ? t("common.loading") : t("profile.profile.save")}
+                {t("profile.profile.save")}
               </Button>
               {form.formState.isDirty && (
                 <Button
