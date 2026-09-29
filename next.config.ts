@@ -18,7 +18,9 @@ const nextConfig: NextConfig = {
   // them forever; an old cached /x → /x/ (from when trailingSlash was on) plus a
   // live /x/ → /x makes ERR_TOO_MANY_REDIRECTS. Static hosting never redirects.
   skipTrailingSlashRedirect: true,
-  allowedDevOrigins: DOMAIN ? [DOMAIN, `*.${DOMAIN}`] : [],
+  // Dev-only: platform domains are always allowed, so `next dev` works behind the
+  // local proxy/tunnel even when NEXT_PUBLIC_DOMAIN is not set.
+  allowedDevOrigins: [...new Set([...(DOMAIN ? [DOMAIN] : []), "cybericebox.com", "cybericebox-dev.pp.ua", "cybericebox.pp.ua"])].flatMap((d) => [d, `*.${d}`]),
 }
 
 export default nextConfig
