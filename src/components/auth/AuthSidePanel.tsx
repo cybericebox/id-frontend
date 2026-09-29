@@ -1,7 +1,6 @@
 import * as React from "react"
 import {
   Boxes,
-  Flag,
   Users,
   Lock,
   Network,
@@ -9,6 +8,7 @@ import {
   Activity,
   TrendingUp,
   Gauge,
+  Puzzle,
 } from "lucide-react"
 import { Logo } from "@/components/brand/Logo"
 import { ThemeSwitch } from "@/components/ThemeToggle"
@@ -37,7 +37,7 @@ const PANELS: Record<AuthVariant, Panel> = {
     items: [
       { icon: Activity, text: "Рейтинг команд оновлюється в реальному часі під час події" },
       { icon: Lock, text: "Ізольовані лабораторії з доступом через VPN" },
-      { icon: Flag, text: "Завдання будь-якого типу" },
+      { icon: Puzzle, text: "Завдання будь-якого типу" },
     ],
   },
   signup: {
@@ -52,7 +52,7 @@ const PANELS: Record<AuthVariant, Panel> = {
       { icon: Boxes, text: "Власне ізольоване середовище для кожної команди" },
       { icon: TrendingUp, text: "Рейтинг у реальному часі під час подій" },
       { icon: Users, text: "Індивідуальна та командна гра" },
-      { icon: Flag, text: "Завдання будь-якого типу" },
+      { icon: Puzzle, text: "Завдання будь-якого типу" },
     ],
   },
   recover: {
@@ -80,7 +80,7 @@ const PANELS: Record<AuthVariant, Panel> = {
     items: [
       { icon: Lock, text: "Ізольовані лабораторії з доступом через VPN" },
       { icon: Activity, text: "Рейтинг у реальному часі під час подій" },
-      { icon: Flag, text: "Завдання будь-якого типу" },
+      { icon: Puzzle, text: "Завдання будь-якого типу" },
     ],
   },
   setup: {
