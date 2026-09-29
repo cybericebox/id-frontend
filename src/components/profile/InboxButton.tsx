@@ -11,7 +11,7 @@ import { Bell, X } from "lucide-react"
 import { apiGet, apiPatch } from "@/api/client"
 import { toast } from "@/components/ui/toast"
 import { EmptyState } from "@/components/ui/empty-state"
-import { LoadingArea, Spinner } from "@/components/ui/spinner"
+import { Spinner } from "@/components/ui/spinner"
 import { t, locale } from "@/i18n/t"
 import { onServiceRestored } from "@/lib/serviceStatus"
 import { NotificationMessageCard } from "./NotificationMessageCard"
@@ -265,7 +265,7 @@ export function InboxButton() {
         {error && <p role="alert" className="mx-3 mt-3 rounded-md bg-[var(--ib-danger-bg)] p-2 text-xs text-[var(--ib-danger)]">{error}</p>}
         <div ref={scrollAreaRef} className="flex min-h-0 flex-col overflow-y-auto">
           {/* loading and empty share one centered box of the same height, so nothing jumps */}
-          {loading || items.length === 0 ? <div className="flex min-h-48 flex-1 items-center justify-center">{loading ? <LoadingArea label={t("common.loading")} /> : <EmptyState message={t("inbox.empty")} />}</div> : <ul className="divide-y divide-line">{items.map((item, index) => {
+          {loading || items.length === 0 ? <div className="flex min-h-48 flex-1 items-center justify-center">{loading ? <Spinner size="lg" label={t("common.loading")} /> : <EmptyState message={t("inbox.empty")} />}</div> : <ul className="divide-y divide-line">{items.map((item, index) => {
             const href = safeHref(item.Link ?? "")
             return <li key={item.ID} ref={index === items.length - 1 ? lastItemRef : undefined} className="px-4 py-3 hover:bg-hover">
               <NotificationMessageCard

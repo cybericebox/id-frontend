@@ -27,6 +27,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { apiPatch, apiUrl, mediaUrl } from "@/api/client"
 import { localizedError, localizedResponseError } from "@/i18n/apiError"
 import { t } from "@/i18n/t"
+import { initials } from "@/lib/initials"
 import type { Account } from "./types"
 
 const NAME_DRAFT_KEY = "draft:profile-name"
@@ -195,8 +196,7 @@ export function ProfileTab({
                 decoding="async"
               />
             ) : (
-              `${account.FirstName?.[0] ?? ""}${account.LastName?.[0] ?? ""}`.toUpperCase() ||
-              "?"
+              initials(account.FirstName, account.LastName, account.Email)
             )}
           </span>
           <div className="min-w-0 space-y-2">

@@ -11,6 +11,7 @@ import { t } from "@/i18n/t"
 import { accountLinks, catalogAllowed, type AccountLinkKey } from "@/lib/accountMenu"
 import { adminOrigin, exercisesOrigin, mainOrigin } from "@/lib/origins"
 import type { Account } from "@/components/profile/types"
+import { initials } from "@/lib/initials"
 
 // Unified account menu (lib/accountMenu): same labels and icons in every app.
 const ACCOUNT_ITEMS: Record<AccountLinkKey, { label: string; icon: LucideIcon }> = {
@@ -39,7 +40,7 @@ export function AccountMenu({ account }: { account: Account }) {
     { id: "", admin: adminOrigin, exercises: exercisesOrigin, main: mainOrigin },
   )
   const fullName = `${account.FirstName} ${account.LastName}`.trim() || account.Email
-  const initials = `${account.FirstName?.[0] ?? ""}${account.LastName?.[0] ?? ""}`.toUpperCase() || "?"
+  const avatarInitials = initials(account.FirstName, account.LastName, account.Email)
 
   return (
     <DropdownMenu>
@@ -51,7 +52,7 @@ export function AccountMenu({ account }: { account: Account }) {
           // eslint-disable-next-line @next/next/no-img-element -- static export, unoptimized images
           <img src={mediaUrl(account.Picture)} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
         ) : (
-          initials
+          avatarInitials
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">

@@ -32,6 +32,7 @@ import { SessionsTab } from "@/components/profile/SessionsTab"
 import { ConnectionsTab } from "@/components/profile/ConnectionsTab"
 import { InboxButton } from "@/components/profile/InboxButton"
 import { AccountMenu } from "@/components/profile/AccountMenu"
+import { initials } from "@/lib/initials"
 
 type TabKey = "profile" | "account" | "security" | "sessions" | "connections"
 
@@ -183,8 +184,7 @@ function ProfileShell() {
                 decoding="async"
               />
             ) : (
-              `${account.FirstName?.[0] ?? ""}${account.LastName?.[0] ?? ""}`.toUpperCase() ||
-              "?"
+              initials(account.FirstName, account.LastName, account.Email)
             )}
           </span>
           <div className="min-w-0 flex-1">
