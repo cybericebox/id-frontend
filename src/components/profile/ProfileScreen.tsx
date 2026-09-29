@@ -33,6 +33,7 @@ import { ConnectionsTab } from "@/components/profile/ConnectionsTab"
 import { InboxButton } from "@/components/profile/InboxButton"
 import { AccountMenu } from "@/components/profile/AccountMenu"
 import { initials } from "@/lib/initials"
+import { roleLabel } from "@/lib/roles"
 
 type TabKey = "profile" | "account" | "security" | "sessions" | "connections"
 
@@ -43,14 +44,6 @@ const TABS: { key: TabKey; label: string; desc: string; icon: LucideIcon }[] = [
   { key: "sessions", label: "profile.tab.sessions", desc: "profile.tab.sessions.desc", icon: MonitorSmartphone },
   { key: "connections", label: "profile.tab.connections", desc: "profile.tab.connections.desc", icon: Link2 },
 ]
-
-// Humanize a backend role string via i18n, falling back to the raw value when
-// no label key exists (t() returns the key itself on a miss).
-function roleLabel(role: string): string {
-  const key = `role.${role}`
-  const label = t(key)
-  return label === key ? role : label
-}
 
 // Format the join date for "Member since"; returns "" for missing/invalid input.
 function memberSince(createdAt: string): string {
