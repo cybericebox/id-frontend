@@ -7,10 +7,11 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { THEME_BOOT_SCRIPT } from "@/lib/theme"
 import { ToastProvider } from "@/components/ui/toast"
+import { t } from "@/i18n/t"
 
 export const metadata: Metadata = {
-  title: "Cyber ICE Box Platform ID",
-  description: "Cyber ICE Box Platform ID — identity & authentication portal",
+  title: { default: `${t("meta.default")} · ${t("meta.brand")}`, template: `%s · ${t("meta.brand")}` },
+  description: t("meta.description"),
   // noindex also as a meta tag: static hosts (GitHub Pages) cannot send X-Robots-Tag.
   robots: { index: false, follow: false },
 }

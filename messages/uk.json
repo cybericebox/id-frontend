@@ -236,5 +236,16 @@
   "signIn.googleBlocked": "Обліковий запис заблоковано.",
   "signIn.googleAlreadyRegistered": "Акаунт з цією поштою вже існує. Увійдіть і підключіть Google у профілі.",
   "signIn.googleNotRegistered": "Цей Google-акаунт не зареєстровано. Зареєструйтеся.",
-  "signUp.googleNotRegisteredTitle": "Акаунт ще не зареєстровано"
+  "signUp.googleNotRegisteredTitle": "Акаунт ще не зареєстровано",
+  "meta.brand": "Cyber ICE Box",
+  "meta.default": "Акаунт",
+  "meta.description": "Вхід, реєстрація та профіль Cyber ICE Box",
+  "meta.signIn": "Вхід",
+  "meta.signUp": "Реєстрація",
+  "meta.profile": "Профіль",
+  "meta.forgotPassword": "Відновлення пароля",
+  "meta.resetPassword": "Новий пароль",
+  "meta.setup": "Налаштування акаунта",
+  "meta.confirmEmail": "Підтвердження пошти",
+  "meta.signOut": "Вихід"
 }

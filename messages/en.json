@@ -236,5 +236,16 @@
   "signIn.googleBlocked": "This account is blocked.",
   "signIn.googleAlreadyRegistered": "An account with this email already exists. Sign in and connect Google in your profile.",
   "signIn.googleNotRegistered": "This Google account is not registered. Please sign up.",
-  "signUp.googleNotRegisteredTitle": "Account not registered yet"
+  "signUp.googleNotRegisteredTitle": "Account not registered yet",
+  "meta.brand": "Cyber ICE Box",
+  "meta.default": "Account",
+  "meta.description": "Cyber ICE Box sign-in, sign-up and profile",
+  "meta.signIn": "Sign in",
+  "meta.signUp": "Sign up",
+  "meta.profile": "Profile",
+  "meta.forgotPassword": "Password recovery",
+  "meta.resetPassword": "New password",
+  "meta.setup": "Account setup",
+  "meta.confirmEmail": "Email confirmation",
+  "meta.signOut": "Sign out"
 }
