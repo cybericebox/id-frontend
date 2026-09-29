@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Flag, House, LogOut, Settings, UserRound, type LucideIcon } from "lucide-react"
+import { House, LogOut, Settings, UserRound, type LucideIcon, Puzzle } from "lucide-react"
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -16,7 +16,7 @@ import type { Account } from "@/components/profile/types"
 const ACCOUNT_ITEMS: Record<AccountLinkKey, { label: string; icon: LucideIcon }> = {
   profile: { label: "nav.profile", icon: UserRound },
   admin: { label: "nav.admin", icon: Settings },
-  exercises: { label: "nav.exercises", icon: Flag },
+  exercises: { label: "nav.exercises", icon: Puzzle },
   main: { label: "nav.home", icon: House },
 }
 
