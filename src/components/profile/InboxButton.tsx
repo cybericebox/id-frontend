@@ -6,13 +6,14 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import * as Popover from "@radix-ui/react-popover"
 import DOMPurify from "isomorphic-dompurify"
-import { Bell, ChevronLeft, X } from "lucide-react"
+import { Bell, X } from "lucide-react"
 
 import { apiGet, apiPatch } from "@/api/client"
 import { toast } from "@/components/ui/toast"
 import { LoadingArea } from "@/components/ui/spinner"
 import { t, locale } from "@/i18n/t"
 import { onServiceRestored } from "@/lib/serviceStatus"
+import { NotificationMessageCard } from "./NotificationMessageCard"
 import { NotificationPopIn, popInDuration } from "./NotificationPopIn"
 
 type Message = {
@@ -32,6 +33,12 @@ type InboxCursor = { ID: string; CreatedAt: string }
 type InboxPoll = { Cursor: InboxCursor | null; NewInbox: Message[]; UnreadCount: number }
 type InboxPage = { Items: Message[]; NextCursor: InboxCursor | null }
 const READ_SYNC_KEY = "cybericebox:inbox-read"
+
+// Outside an Event site the inbox shows only notifications without an Event;
+// Event-bound ones appear only on their Event's site.
+function inboxURL(path = "", params: Record<string, string> = {}): string {
+  return `/api/notifications/inbox${path}?${new URLSearchParams({ ...params, event: "none" })}`
+}
 
 function safeHref(value: string): string | null {
   const href = value.trim()
@@ -56,7 +63,6 @@ export function InboxButton() {
   const [open, setOpen] = useState(false)
   const [items, setItems] = useState<Message[]>([])
   const [popIns, setPopIns] = useState<Message[]>([])
-  const [selected, setSelected] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadingOlder, setLoadingOlder] = useState(false)
   const [olderCursor, setOlderCursor] = useState<InboxCursor | null>(null)
@@ -79,8 +85,7 @@ export function InboxButton() {
     loadingOlderRef.current = true
     setLoadingOlder(true)
     try {
-      const query = new URLSearchParams({ before_id: before.ID, before_at: before.CreatedAt })
-      const page = await apiGet<InboxPage>(`/api/notifications/inbox?${query}`)
+      const page = await apiGet<InboxPage>(inboxURL("", { before_id: before.ID, before_at: before.CreatedAt }))
       if (revision !== listRevisionRef.current) return
       olderCursorRef.current = page.NextCursor
       setOlderCursor(page.NextCursor)
@@ -96,17 +101,17 @@ export function InboxButton() {
   useEffect(() => {
     const area = scrollAreaRef.current
     const last = lastItemRef.current
-    if (!open || selected || !olderCursor || loading || !area || !last || typeof IntersectionObserver === "undefined") return
+    if (!open || !olderCursor || loading || !area || !last || typeof IntersectionObserver === "undefined") return
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) void loadOlder()
     }, { root: area })
     observer.observe(last)
     return () => observer.disconnect()
-  }, [open, selected, olderCursor, lastItemID, loading, loadOlder])
+  }, [open, olderCursor, lastItemID, loading, loadOlder])
 
   const refresh = useCallback((): Promise<Message[] | null> => {
     const revision = ++listRevisionRef.current
-    return apiGet<InboxPage>("/api/notifications/inbox")
+    return apiGet<InboxPage>(inboxURL())
       .then((page) => {
         if (revision !== listRevisionRef.current) return null
         const list = page.Items ?? []
@@ -137,7 +142,7 @@ export function InboxButton() {
       polling = true
       try {
         if (!initialized) {
-          const baseline = await apiGet<InboxPoll>("/api/notifications/inbox/poll")
+          const baseline = await apiGet<InboxPoll>(inboxURL("/poll"))
           if (!active) return
           cursorRef.current = baseline.Cursor ?? { ID: "00000000-0000-0000-0000-000000000000", CreatedAt: "1970-01-01T00:00:00Z" }
           unreadCountRef.current = baseline.UnreadCount
@@ -147,8 +152,7 @@ export function InboxButton() {
           return
         }
         const since = cursorRef.current!
-        const query = new URLSearchParams({ since_id: since.ID, since_at: since.CreatedAt })
-        const result = await apiGet<InboxPoll>(`/api/notifications/inbox/poll?${query}`)
+        const result = await apiGet<InboxPoll>(inboxURL("/poll", { since_id: since.ID, since_at: since.CreatedAt }))
         if (!active) return
         cursorRef.current = result.Cursor ?? since
         const fresh = (result.NewInbox ?? []).filter((item) => !item.ReadAt)
@@ -193,7 +197,6 @@ export function InboxButton() {
     }
   }, [refresh])
 
-  const active = items.find((item) => item.ID === selected)
   const label = unread ? `${t("inbox.title")}: ${unread} ${t("inbox.unread")}` : t("inbox.title")
 
   function announceRead() {
@@ -219,21 +222,17 @@ export function InboxButton() {
     }
   }
 
-  async function followAction(item: Message, href: string) {
+  async function followLink(item: Message, href: string) {
     if (!(await markRead(item))) return
-    if (safeHref(href)) window.location.assign(href)
-  }
-
-  async function openMessage(item: Message) {
-    setSelected(item.ID)
-    setError("")
-    await markRead(item)
+    setOpen(false)
+    openRef.current = false
+    window.location.assign(href)
   }
 
   async function readAll() {
     setError("")
     try {
-      await apiPatch("/api/notifications/inbox/read-all", {})
+      await apiPatch(inboxURL("/read-all"), {})
       const now = new Date().toISOString()
       unreadCountRef.current = 0
       setUnread(0)
@@ -249,8 +248,7 @@ export function InboxButton() {
   return <><Popover.Root open={open} onOpenChange={(next) => {
     openRef.current = next
     setOpen(next)
-    if (next) refresh()
-    else setSelected(null)
+    if (next) void refresh()
   }}>
     <Popover.Trigger asChild>
       <button type="button" aria-label={label} className="relative inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-dim hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-action">
@@ -261,34 +259,33 @@ export function InboxButton() {
     <Popover.Portal>
       <Popover.Content align="end" sideOffset={20} collisionPadding={12} aria-label={t("inbox.title")} className="z-50 flex max-h-[min(38rem,calc(100vh-5rem))] w-[min(32rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-lg border border-line bg-surface text-ink shadow-[var(--ib-shadow-overlay)] outline-none">
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-line px-4 py-3">
-          <div className="flex min-w-0 items-center gap-2">
-            {active && <button type="button" onClick={() => setSelected(null)} aria-label={t("inbox.back")} className="rounded-md p-1 hover:bg-hover focus-visible:outline-2 focus-visible:outline-action"><ChevronLeft size={16} /></button>}
-            {active ? <h2 className="truncate text-sm font-semibold">{active.Title}</h2> : <h2>
-              <span className="sr-only">{t("inbox.title")}</span>
-              <Bell size={19} aria-hidden="true" className="text-dim" />
-            </h2>}
-          </div>
+          <h2><span className="sr-only">{t("inbox.title")}</span><Bell size={19} aria-hidden="true" className="text-dim" /></h2>
           <div className="flex shrink-0 items-center gap-2">
-            {!active && <button type="button" disabled={unread === 0} onClick={() => void readAll()} className="rounded-md px-2 py-1 text-xs font-medium text-action hover:bg-hover focus-visible:outline-2 focus-visible:outline-action disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent">{t("inbox.readAll")}</button>}
+            <button type="button" disabled={unread === 0} onClick={() => void readAll()} className="rounded-md px-2 py-1 text-xs font-medium text-action hover:bg-hover focus-visible:outline-2 focus-visible:outline-action disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent">{t("inbox.readAll")}</button>
             <Popover.Close aria-label={t("inbox.close")} className="rounded-md p-1 text-dim hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-action"><X size={16} /></Popover.Close>
           </div>
         </div>
         {error && <p role="alert" className="mx-3 mt-3 rounded-md bg-[var(--ib-danger-bg)] p-2 text-xs text-[var(--ib-danger)]">{error}</p>}
-        {active ? <section className="min-h-0 overflow-y-auto p-4" aria-label={t("inbox.message")}>
-          <time className="block text-xs text-dim" dateTime={active.CreatedAt}>{new Date(active.CreatedAt).toLocaleString(locale)}</time>
-          <div className="mt-4 break-words text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(active.Body ?? "") }} />
-          {safeHref(active.Link ?? "") && <a className="mt-4 inline-block text-sm font-medium text-action hover:underline" href={safeHref(active.Link ?? "")!}>{t("inbox.open")}</a>}
-        </section> : <>
-          <div ref={scrollAreaRef} className="min-h-0 overflow-y-auto">
-            {loading ? <LoadingArea label={t("common.loading")} /> : items.length === 0 ? <EmptyInbox /> : <ul className="divide-y divide-line">{items.map((item, index) => <li key={item.ID} ref={index === items.length - 1 ? lastItemRef : undefined}><button type="button" onClick={() => void openMessage(item)} className="flex w-full flex-col gap-1 px-4 py-3 text-left text-sm hover:bg-hover focus-visible:outline-2 focus-visible:outline-action"><span className="flex w-full items-center gap-2"><span className={`min-w-0 flex-1 truncate ${item.ReadAt ? "" : "font-semibold"}`}>{item.Title}</span>{!item.ReadAt && <span aria-label={t("inbox.unreadItem")} className="h-2 w-2 shrink-0 rounded-full bg-action" />}</span><time className="text-xs text-dim" dateTime={item.CreatedAt}>{new Date(item.CreatedAt).toLocaleString(locale)}</time></button></li>)}</ul>}
-            {loadingOlder && <p role="status" className="px-4 py-3 text-center text-xs text-dim">{t("common.loading")}</p>}
-          </div>
-        </>}
+        <div ref={scrollAreaRef} className="min-h-0 overflow-y-auto">
+          {loading ? <LoadingArea label={t("common.loading")} /> : items.length === 0 ? <EmptyInbox /> : <ul className="divide-y divide-line">{items.map((item, index) => {
+            const href = safeHref(item.Link ?? "")
+            return <li key={item.ID} ref={index === items.length - 1 ? lastItemRef : undefined} className="px-4 py-3 hover:bg-hover">
+              <NotificationMessageCard
+                icon={item.Icon} tone={item.Tone} accentColor={item.AccentColor} title={item.Title}
+                body={item.Body ? <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(item.Body, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }) }} /> : undefined}
+                unread={!item.ReadAt} compact
+                timestamp={<time dateTime={item.CreatedAt}>{new Date(item.CreatedAt).toLocaleString(locale)}</time>}
+                actions={href ? <a href={href} onClick={(event) => { event.preventDefault(); void followLink(item, href) }} className="text-sm font-medium text-action underline-offset-2 hover:underline">{t("inbox.open")}</a> : !item.ReadAt ? <button type="button" onClick={() => void markRead(item)} className="text-xs font-medium text-action hover:underline">{t("inbox.markRead")}</button> : undefined}
+              />
+            </li>
+          })}</ul>}
+          {loadingOlder && <p role="status" className="px-4 py-3 text-center text-xs text-dim">{t("common.loading")}</p>}
+        </div>
       </Popover.Content>
     </Popover.Portal>
   </Popover.Root>
   {popIns.length > 0 && createPortal(<div className="fixed right-4 top-20 z-[70] flex max-h-[calc(100vh-6rem)] flex-col gap-3 overflow-y-auto" aria-live="polite">
-    {popIns.slice(0, 3).map((item) => <NotificationPopIn key={item.ID} message={item} onClose={() => setPopIns((current) => current.filter((entry) => entry.ID !== item.ID))} onAction={(href) => { void followAction(item, href) }} />)}
+    {popIns.slice(0, 3).map((item) => <NotificationPopIn key={item.ID} message={item} onClose={() => setPopIns((current) => current.filter((entry) => entry.ID !== item.ID))} onAction={(href) => { const safe = safeHref(href); if (safe) void followLink(item, safe) }} />)}
   </div>, document.body)}
   </>
 }
