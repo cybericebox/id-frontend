@@ -128,7 +128,7 @@ export function ConsentBanner({ gaId }: { gaId: string }) {
               <span className="cb-consent__name">{t("consent.necessary.title")}</span>
               <span className="cb-consent__desc">{t("consent.necessary.text")}</span>
             </span>
-            <input type="checkbox" role="switch" className="cb-switch" checked disabled />
+            <input type="checkbox" role="switch" className="cb-switch" checked disabled aria-label={t("consent.necessary.switch")} />
           </label>
         </li>
         <li>
