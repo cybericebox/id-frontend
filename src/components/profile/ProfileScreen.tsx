@@ -171,7 +171,11 @@ function ProfileShell() {
             <Tooltip content={t(backKey)} align="start">
               <a href={back.href} aria-label={t(backKey)} className={BACK_ARROW_CLASS}><ArrowLeft size={18} aria-hidden="true" /></a>
             </Tooltip>
-          ) : returnTo && <Link href={returnTo} aria-label={t("common.back")} title={t("common.back")} className={BACK_ARROW_CLASS}><ArrowLeft size={18} aria-hidden="true" /></Link>}
+          ) : returnTo && (
+            <Tooltip content={t("common.back")} align="start">
+              <Link href={returnTo} aria-label={t("common.back")} className={BACK_ARROW_CLASS}><ArrowLeft size={18} aria-hidden="true" /></Link>
+            </Tooltip>
+          )}
           <h1 className="text-2xl font-semibold">{t("profile.heading")}</h1>
         </div>
       </header>

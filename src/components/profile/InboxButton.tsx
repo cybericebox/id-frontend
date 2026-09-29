@@ -13,6 +13,7 @@ import { Bell, Check, ChevronRight, X } from "lucide-react"
 import { EmptyState } from "@/components/ui/empty-state"
 import { LoadError } from "@/components/ui/load-error"
 import { Spinner } from "@/components/ui/spinner"
+import { Tooltip } from "@/components/ui/tooltip"
 
 import { apiGet, apiPatch, apiPost } from "@/api/client"
 import { localizedError } from "@/i18n/apiError"
@@ -385,7 +386,7 @@ export function InboxButton({ defaultTab = "all", event }: InboxButtonProps = {}
                 unread={unreadItem} compact
                 timestamp={<span className="flex min-w-0 items-center justify-between gap-2">
                   {resolved
-                    ? <span className="min-w-0 truncate" title={formatInboxTime(item.CreatedAt)}>{resolvedLine(item)}</span>
+                    ? <Tooltip content={formatInboxTime(item.CreatedAt)} align="start" className="min-w-0"><span className="min-w-0 truncate" tabIndex={0}>{resolvedLine(item)}</span></Tooltip>
                     : <time dateTime={item.CreatedAt} className="min-w-0 truncate">{formatInboxTime(item.CreatedAt)}</time>}
                   {!event && <EventLabel name={item.EventName} />}
                 </span>}

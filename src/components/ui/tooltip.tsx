@@ -10,11 +10,13 @@ export function Tooltip({
   content,
   side = "top",
   align = "center",
+  className,
   children,
 }: {
   content: React.ReactNode
   side?: "top" | "bottom"
   align?: "center" | "start" | "end"
+  className?: string
   children: React.ReactElement
 }) {
   const id = React.useId()
@@ -24,7 +26,8 @@ export function Tooltip({
         "ib-tip",
         side === "bottom" && "ib-tip--bottom",
         align === "start" && "ib-tip--start",
-        align === "end" && "ib-tip--end"
+        align === "end" && "ib-tip--end",
+        className
       )}
     >
       <Slot aria-describedby={id}>{children}</Slot>
