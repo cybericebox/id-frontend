@@ -4,6 +4,7 @@ import { TriangleAlert } from "lucide-react"
 
 import { Wordmark } from "@/components/brand/Wordmark"
 import { Button } from "@/components/ui/button"
+import { errorCode } from "@/components/ui/load-error"
 import { t } from "@/i18n/t"
 
 // Browser history back; a tab opened straight on the failing page goes home instead.
@@ -16,9 +17,10 @@ export function goBack() {
 
 /**
  * Error boundary screen (app/error.tsx, app/global-error.tsx) and a full-page load
- * failure: warning mark, «Оновити» (retry) and «Назад». Never shows error details.
+ * failure: warning mark, «Оновити» (retry) and «Назад». Shows only the numeric error code (when `error` carries one), never details.
  */
-export function ErrorScreen({ onRetry, title = t("error.page.title") }: { onRetry: () => void; title?: string }) {
+export function ErrorScreen({ onRetry, title = t("error.page.title"), error }: { onRetry: () => void; title?: string; error?: unknown }) {
+  const code = errorCode(error)
   return (
     <main className="flex min-h-screen items-center justify-center bg-paper p-4">
       <div className="flex w-full max-w-md flex-col">
@@ -29,6 +31,7 @@ export function ErrorScreen({ onRetry, title = t("error.page.title") }: { onRetr
           <TriangleAlert size={32} className="text-danger" aria-hidden />
           <h1 className="text-lg font-semibold">{title}</h1>
           <p className="text-sm text-dim">{t("error.page.body")}</p>
+          {code !== undefined && <p className="font-mono text-xs text-dim">{t("error.load.code", { code })}</p>}
           <div className="mt-2 flex flex-wrap justify-center gap-2">
             <Button onClick={onRetry}>{t("error.page.reload")}</Button>
             <Button variant="outline" onClick={goBack}>{t("error.page.back")}</Button>

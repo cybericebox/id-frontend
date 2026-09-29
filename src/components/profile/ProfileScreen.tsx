@@ -86,7 +86,7 @@ function ProfileShell() {
     searchParams.get("tab") ? initialTab : null
   )
   const [account, setAccount] = useState<Account | null>(null)
-  const [loadError, setLoadError] = useState<{ unavailable: boolean } | null>(null)
+  const [loadError, setLoadError] = useState<{ unavailable: boolean; error: unknown } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   const load = useCallback(async () => {
@@ -99,7 +99,7 @@ function ProfileShell() {
       // A 401 is handled centrally by the api client (auto-redirect to sign-in).
       // Backend down / gateway 5xx → "temporarily unavailable" with auto-retry;
       // anything else is a genuine load failure.
-      setLoadError({ unavailable: isServiceUnavailable(err) })
+      setLoadError({ unavailable: isServiceUnavailable(err), error: err })
     } finally {
       setIsLoading(false)
     }
@@ -132,7 +132,7 @@ function ProfileShell() {
     // Unreachable backend is shown by the app-wide overlay (ServiceStatusGate);
     // keep the loader underneath until it refetches on restore.
     if (!loadError || loadError.unavailable) return <PageLoader />
-    return <ErrorScreen onRetry={load} title={t("profile.loadError")} />
+    return <ErrorScreen onRetry={load} error={loadError.error} title={t("profile.loadError")} />
   }
 
   // Render the content for a given tab — shared by the desktop pane and the
