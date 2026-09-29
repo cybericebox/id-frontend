@@ -275,5 +275,11 @@
   "profile.connections.unlinked": "Google account unlinked.",
   "profile.account.deleted": "Account deleted.",
   "profile.sessions.revoked": "Session revoked.",
-  "profile.sessions.revokedOthers": "Other sessions revoked."
+  "profile.sessions.revokedOthers": "Other sessions revoked.",
+  "consent.title": "Analytics cookies",
+  "consent.text": "We would like to use Google Analytics to understand how visitors use the platform. Analytics cookies are set only with your consent; declining does not limit any features. See the {link} for details.",
+  "consent.policyLink": "Cookie Policy",
+  "consent.accept": "Accept analytics",
+  "consent.reject": "Decline",
+  "consent.settings": "Cookie settings"
 }

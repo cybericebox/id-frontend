@@ -275,5 +275,11 @@
   "profile.connections.unlinked": "Google-акаунт від’єднано.",
   "profile.account.deleted": "Обліковий запис видалено.",
   "profile.sessions.revoked": "Сеанс завершено.",
-  "profile.sessions.revokedOthers": "Інші сеанси завершено."
+  "profile.sessions.revokedOthers": "Інші сеанси завершено.",
+  "consent.title": "Аналітичні cookie",
+  "consent.text": "Ми хочемо використовувати Google Analytics, щоб розуміти, як відвідувачі користуються платформою. Аналітичні cookie встановлюються лише з вашої згоди; відмова не обмежує жодних функцій. Докладніше — у {link}.",
+  "consent.policyLink": "Політиці cookie",
+  "consent.accept": "Прийняти аналітику",
+  "consent.reject": "Відхилити",
+  "consent.settings": "Налаштування cookie"
 }

@@ -2,6 +2,7 @@ import * as React from "react"
 import { AuthSidePanel, type AuthVariant } from "./AuthSidePanel"
 import { cn } from "@/utils/cn"
 import { ThemeSwitch } from "@/components/ThemeToggle"
+import { CookieSettingsButton } from "@/components/CookieSettingsButton"
 import { Wordmark } from "@/components/brand/Wordmark"
 
 // Split auth layout (ds-v2 auth-split): brand-mass panel + form on paper.
@@ -42,7 +43,8 @@ export function AuthLayout({
           {children}
         </div>
         {/* narrow screens: theme switch at the bottom (on wide screens it sits in the panel footer) */}
-        <footer className="flex justify-center px-6 pb-5 lg:hidden">
+        <footer className="flex flex-col items-center gap-3 px-6 pb-5 text-[13px] text-dim lg:hidden">
+          {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && <CookieSettingsButton className="hover:text-ink" />}
           <ThemeSwitch />
         </footer>
       </div>

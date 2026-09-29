@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { House, LogOut, Settings, UserRound, type LucideIcon, Puzzle } from "lucide-react"
+import { Cookie, House, LogOut, Settings, UserRound, type LucideIcon, Puzzle } from "lucide-react"
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -12,6 +12,7 @@ import { accountLinks, catalogAllowed, type AccountLinkKey } from "@/lib/account
 import { adminOrigin, exercisesOrigin, mainOrigin } from "@/lib/origins"
 import type { Account } from "@/components/profile/types"
 import { initials } from "@/lib/initials"
+import { openConsentSettings } from "@/lib/consent"
 
 // Unified account menu (lib/accountMenu): same labels and icons in every app.
 const ACCOUNT_ITEMS: Record<AccountLinkKey, { label: string; icon: LucideIcon }> = {
@@ -69,6 +70,11 @@ export function AccountMenu({ account }: { account: Account }) {
             </DropdownMenuItem>
           )
         })}
+        {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && (
+          <DropdownMenuItem className="gap-2" onSelect={openConsentSettings}>
+            <Cookie className="h-4 w-4" aria-hidden="true" />{t("consent.settings")}
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild className="gap-2">
           <a href="/sign-out"><LogOut className="h-4 w-4" aria-hidden="true" />{t("common.signOut")}</a>
