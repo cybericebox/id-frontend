@@ -10,7 +10,7 @@ import { ToastProvider } from "@/components/ui/toast"
 import { t } from "@/i18n/t"
 
 export const metadata: Metadata = {
-  title: { default: `${t("meta.default")} · ${t("meta.brand")}`, template: `%s · ${t("meta.brand")}` },
+  title: { default: t("meta.defaultTitle"), template: t("meta.titleTemplate") },
   description: t("meta.description"),
   // noindex also as a meta tag: static hosts (GitHub Pages) cannot send X-Robots-Tag.
   robots: { index: false, follow: false },

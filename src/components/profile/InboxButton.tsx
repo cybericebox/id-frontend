@@ -10,7 +10,7 @@ import { Bell, X } from "lucide-react"
 
 import { apiGet, apiPatch } from "@/api/client"
 import { toast } from "@/components/ui/toast"
-import { LoadingArea } from "@/components/ui/spinner"
+import { LoadingArea, Spinner } from "@/components/ui/spinner"
 import { t, locale } from "@/i18n/t"
 import { onServiceRestored } from "@/lib/serviceStatus"
 import { NotificationMessageCard } from "./NotificationMessageCard"
@@ -284,7 +284,7 @@ export function InboxButton() {
               />
             </li>
           })}</ul>}
-          {loadingOlder && <p role="status" className="px-4 py-3 text-center text-xs text-dim">{t("common.loading")}</p>}
+          {loadingOlder && <div className="flex justify-center px-4 py-3"><Spinner size="sm" label={t("common.loading")} /></div>}
         </div>
       </Popover.Content>
     </Popover.Portal>
