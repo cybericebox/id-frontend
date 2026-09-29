@@ -23,7 +23,7 @@ import { backLabel } from "@/lib/backLink"
 import { useBackLink } from "@/lib/useBackLink"
 import { Tooltip } from "@/components/ui/tooltip"
 import { isServiceUnavailable } from "@/i18n/apiError"
-import { PageError } from "@/components/PageError"
+import { ErrorScreen } from "@/components/ErrorScreen"
 import { onServiceRestored } from "@/lib/serviceStatus"
 import { PageLoader } from "@/components/ui/spinner"
 import { t, locale } from "@/i18n/t"
@@ -132,7 +132,7 @@ function ProfileShell() {
     // Unreachable backend is shown by the app-wide overlay (ServiceStatusGate);
     // keep the loader underneath until it refetches on restore.
     if (!loadError || loadError.unavailable) return <PageLoader />
-    return <PageError onRetry={load} />
+    return <ErrorScreen onRetry={load} title={t("profile.loadError")} />
   }
 
   // Render the content for a given tab — shared by the desktop pane and the

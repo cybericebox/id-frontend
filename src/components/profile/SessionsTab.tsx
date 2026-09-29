@@ -11,9 +11,9 @@ import {
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/toast"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { LoadingArea } from "@/components/ui/spinner"
 import { EmptyState } from "@/components/ui/empty-state"
+import { LoadError } from "@/components/ui/load-error"
 import { apiGet, apiDelete } from "@/api/client"
 import { t, locale } from "@/i18n/t"
 import type { SessionInfo } from "./types"
@@ -59,18 +59,18 @@ function formatDate(dateStr: string): string {
 
 export function SessionsTab() {
   const [sessions, setSessions] = useState<SessionInfo[]>([])
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<unknown>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [busyId, setBusyId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    setErrorMsg(null)
+    setLoadError(null)
     setIsLoading(true)
     try {
       const data = await apiGet<SessionInfo[]>("/api/auth/sessions")
       setSessions(data ?? [])
     } catch (err) {
-      setErrorMsg(extractError(err))
+      setLoadError(err)
     } finally {
       setIsLoading(false)
     }
@@ -82,7 +82,6 @@ export function SessionsTab() {
 
   const revokeOne = async (id: string) => {
     setBusyId(id)
-    setErrorMsg(null)
     try {
       await apiDelete(`/api/auth/sessions/${encodeURIComponent(id)}`)
       await load()
@@ -96,7 +95,6 @@ export function SessionsTab() {
 
   const revokeAll = async () => {
     setBusyId("__all__")
-    setErrorMsg(null)
     try {
       await apiDelete("/api/auth/sessions")
       await load()
@@ -117,15 +115,11 @@ export function SessionsTab() {
         <CardDescription>{t("profile.sessions.description")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {errorMsg && (
-          <Alert variant="destructive">
-            <AlertDescription>{errorMsg}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* One block for loading / empty / list: same min height, states centered. */}
+        {/* One block for loading / error / empty / list: same min height, states centered. */}
         {isLoading ? (
           <LoadingArea label={t("common.loading")} />
+        ) : loadError ? (
+          <LoadError message={t("profile.sessions.loadError")} error={loadError} onRetry={() => { void load() }} />
         ) : sessions.length === 0 ? (
           <EmptyState message={t("profile.sessions.empty")} />
         ) : (

@@ -15,10 +15,10 @@ export function goBack() {
 }
 
 /**
- * Error boundary screen (app/error.tsx, app/global-error.tsx), the PageError layout:
- * warning mark, «Оновити» (retry the segment) and «Назад». Never shows error details.
+ * Error boundary screen (app/error.tsx, app/global-error.tsx) and a full-page load
+ * failure: warning mark, «Оновити» (retry) and «Назад». Never shows error details.
  */
-export function ErrorScreen({ onRetry }: { onRetry: () => void }) {
+export function ErrorScreen({ onRetry, title = t("error.page.title") }: { onRetry: () => void; title?: string }) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-paper p-4">
       <div className="flex w-full max-w-md flex-col">
@@ -27,7 +27,7 @@ export function ErrorScreen({ onRetry }: { onRetry: () => void }) {
         </div>
         <div role="alert" className="flex flex-col items-center gap-3 rounded-lg border border-line bg-surface p-8 text-center">
           <TriangleAlert size={32} className="text-danger" aria-hidden />
-          <h1 className="text-lg font-semibold">{t("error.page.title")}</h1>
+          <h1 className="text-lg font-semibold">{title}</h1>
           <p className="text-sm text-dim">{t("error.page.body")}</p>
           <div className="mt-2 flex flex-wrap justify-center gap-2">
             <Button onClick={onRetry}>{t("error.page.reload")}</Button>
