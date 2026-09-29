@@ -1,4 +1,5 @@
 import * as React from "react"
+import { mainOrigin } from "@/lib/origins"
 
 // The original CyberICEBox (ICE CTF) crest emblem — the brand logo used across
 // the apps (shipped as favicon). Embedded as a data-URI so the DS bundle is
@@ -18,11 +19,8 @@ export interface LogoProps {
   href?: string | null
 }
 
-// The landing (apex) origin. NEXT_PUBLIC_DOMAIN is baked as a placeholder and
-// substituted at container start; falls back to "/" when unset (dev/SSR).
-const LANDING_HREF = process.env.NEXT_PUBLIC_DOMAIN
-  ? `https://${process.env.NEXT_PUBLIC_DOMAIN}`
-  : "/"
+// The landing (apex) origin; "/" when NEXT_PUBLIC_DOMAIN is unset (dev/SSR).
+const LANDING_HREF = mainOrigin
 
 export function Logo({ size = 64, className, href }: LogoProps) {
   const img = (
