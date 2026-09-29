@@ -29,6 +29,12 @@ describe("messages uk/en parity", () => {
       if (k in UK) expect(placeholders(UK[k]), `placeholders differ for ${k}`).toEqual(placeholders(EN[k]))
     }
   })
+
+  // errors.uk.json is intentionally partial (see apiError.ts), but every code it
+  // translates must also have an English message.
+  it("has an English message for every translated error code", () => {
+    expect(Object.keys(errorsUk).filter((k) => !(k in errorsEn))).toEqual([])
+  })
 })
 
 describe("t()", () => {

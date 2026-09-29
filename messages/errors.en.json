@@ -12,6 +12,8 @@
   "20418": "Account is blocked",
   "20420": "Unsupported image type",
   "20421": "Avatar file too large",
+  "20501": "Invalid link. Request a new one",
+  "20502": "The link has expired. Request a new one",
   "20601": "Invalid recaptcha token",
   "20602": "No recaptcha token",
   "20603": "Invalid recaptcha action",
