@@ -28,16 +28,19 @@ type Message = {
   Actions?: { label: string; href: string }[] | null
   ReadAt: string | null
   CreatedAt: string
+  // Set when the notification belongs to an Event; labelled with its name.
+  EventID?: string | null
+  EventName?: string | null
+  EventTag?: string | null
 }
 type InboxCursor = { ID: string; CreatedAt: string }
 type InboxPoll = { Cursor: InboxCursor | null; NewInbox: Message[]; UnreadCount: number }
 type InboxPage = { Items: Message[]; NextCursor: InboxCursor | null }
 const READ_SYNC_KEY = "cybericebox:inbox-read"
 
-// Outside an Event site the inbox shows only notifications without an Event;
-// Event-bound ones appear only on their Event's site.
-function inboxURL(path = "", params: Record<string, string> = {}): string {
-  return `/api/notifications/inbox${path}?${new URLSearchParams({ ...params, event: "none" })}`
+function EventLabel({ name }: { name?: string | null }) {
+  if (!name) return null
+  return <span className="max-w-[60%] truncate rounded bg-soft px-1.5 py-0.5 text-[11px] font-medium text-dim">{name}</span>
 }
 
 function safeHref(value: string): string | null {
@@ -85,7 +88,8 @@ export function InboxButton() {
     loadingOlderRef.current = true
     setLoadingOlder(true)
     try {
-      const page = await apiGet<InboxPage>(inboxURL("", { before_id: before.ID, before_at: before.CreatedAt }))
+      const query = new URLSearchParams({ before_id: before.ID, before_at: before.CreatedAt })
+      const page = await apiGet<InboxPage>(`/api/notifications/inbox?${query}`)
       if (revision !== listRevisionRef.current) return
       olderCursorRef.current = page.NextCursor
       setOlderCursor(page.NextCursor)
@@ -111,7 +115,7 @@ export function InboxButton() {
 
   const refresh = useCallback((): Promise<Message[] | null> => {
     const revision = ++listRevisionRef.current
-    return apiGet<InboxPage>(inboxURL())
+    return apiGet<InboxPage>("/api/notifications/inbox")
       .then((page) => {
         if (revision !== listRevisionRef.current) return null
         const list = page.Items ?? []
@@ -142,7 +146,7 @@ export function InboxButton() {
       polling = true
       try {
         if (!initialized) {
-          const baseline = await apiGet<InboxPoll>(inboxURL("/poll"))
+          const baseline = await apiGet<InboxPoll>("/api/notifications/inbox/poll")
           if (!active) return
           cursorRef.current = baseline.Cursor ?? { ID: "00000000-0000-0000-0000-000000000000", CreatedAt: "1970-01-01T00:00:00Z" }
           unreadCountRef.current = baseline.UnreadCount
@@ -152,7 +156,8 @@ export function InboxButton() {
           return
         }
         const since = cursorRef.current!
-        const result = await apiGet<InboxPoll>(inboxURL("/poll", { since_id: since.ID, since_at: since.CreatedAt }))
+        const query = new URLSearchParams({ since_id: since.ID, since_at: since.CreatedAt })
+        const result = await apiGet<InboxPoll>(`/api/notifications/inbox/poll?${query}`)
         if (!active) return
         cursorRef.current = result.Cursor ?? since
         const fresh = (result.NewInbox ?? []).filter((item) => !item.ReadAt)
@@ -232,7 +237,7 @@ export function InboxButton() {
   async function readAll() {
     setError("")
     try {
-      await apiPatch(inboxURL("/read-all"), {})
+      await apiPatch("/api/notifications/inbox/read-all", {})
       const now = new Date().toISOString()
       unreadCountRef.current = 0
       setUnread(0)
@@ -274,7 +279,7 @@ export function InboxButton() {
                 icon={item.Icon} tone={item.Tone} accentColor={item.AccentColor} title={item.Title}
                 body={item.Body ? <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(item.Body, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }) }} /> : undefined}
                 unread={!item.ReadAt} compact
-                timestamp={<time dateTime={item.CreatedAt}>{new Date(item.CreatedAt).toLocaleString(locale)}</time>}
+                timestamp={<span className="flex min-w-0 items-center gap-2"><time dateTime={item.CreatedAt}>{new Date(item.CreatedAt).toLocaleString(locale)}</time><EventLabel name={item.EventName} /></span>}
                 actions={href ? <a href={href} onClick={(event) => { event.preventDefault(); void followLink(item, href) }} className="text-sm font-medium text-action underline-offset-2 hover:underline">{t("inbox.open")}</a> : !item.ReadAt ? <button type="button" onClick={() => void markRead(item)} className="text-xs font-medium text-action hover:underline">{t("inbox.markRead")}</button> : undefined}
               />
             </li>
