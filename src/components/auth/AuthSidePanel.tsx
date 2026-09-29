@@ -130,7 +130,7 @@ export function AuthSidePanel({
                   target="_blank"
                   rel="noopener noreferrer"
                   title={t("authPanel.nureFull")}
-                  className="font-normal text-on-brand-2 underline underline-offset-3 hover:text-on-brand"
+                  className="rounded-xs font-medium text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand"
                 >
                   {t("authPanel.nure")}
                 </a>
@@ -140,7 +140,7 @@ export function AuthSidePanel({
               href="https://ice.nure.ua/ua/"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-normal text-on-brand-2 underline underline-offset-3 hover:text-on-brand"
+              className="rounded-xs font-medium text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand"
             >
               {t("authPanel.legalLink")}
             </a>
