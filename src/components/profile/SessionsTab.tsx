@@ -10,6 +10,7 @@ import {
   CardContent,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { toast } from "@/components/ui/toast"
 import { LoadingArea } from "@/components/ui/spinner"
 import { EmptyState } from "@/components/ui/empty-state"
@@ -62,6 +63,8 @@ export function SessionsTab() {
   const [loadError, setLoadError] = useState<unknown>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmError, setConfirmError] = useState("")
 
   const load = useCallback(async () => {
     setLoadError(null)
@@ -95,12 +98,14 @@ export function SessionsTab() {
 
   const revokeAll = async () => {
     setBusyId("__all__")
+    setConfirmError("")
     try {
       await apiDelete("/api/auth/sessions")
+      setConfirmOpen(false)
       await load()
       toast.success(t("profile.sessions.revokedOthers"))
     } catch (err) {
-      toast.error(extractError(err))
+      setConfirmError(extractError(err))
     } finally {
       setBusyId(null)
     }
@@ -164,12 +169,23 @@ export function SessionsTab() {
         {hasOthers && (
           <Button
             variant="outline"
-            onClick={revokeAll}
+            onClick={() => { setConfirmError(""); setConfirmOpen(true) }}
             disabled={busyId === "__all__"}
           >
             {t("profile.sessions.revokeAll")}
           </Button>
         )}
+        <ConfirmDialog
+          open={confirmOpen}
+          onCancel={() => setConfirmOpen(false)}
+          tone="danger"
+          busy={busyId === "__all__"}
+          error={confirmError}
+          title={t("profile.sessions.revokeAllTitle")}
+          description={t("profile.sessions.revokeAllBody")}
+          confirmLabel={t("profile.sessions.revokeAllConfirm")}
+          onConfirm={() => void revokeAll()}
+        />
       </CardContent>
     </Card>
   )
