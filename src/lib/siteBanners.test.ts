@@ -33,11 +33,11 @@ describe("site banner model", () => {
     expect(ids).toEqual(["c", "w", "i1", "i2"])
   })
 
-  it("dismiss persists under ID:Version; an edited banner reappears", () => {
+  it("dismiss persists under ID and Version; an edited banner reappears", () => {
     const storage = memoryStorage()
     expect(isDismissed(banner(), storage)).toBe(false)
     rememberDismissed(banner(), storage)
-    expect([...storage.map.keys()].some((key) => key.endsWith("b1:1"))).toBe(true)
+    expect([...storage.map.keys()].some((key) => key.endsWith("b1_1"))).toBe(true)
     expect(isDismissed(banner(), storage)).toBe(true)
     expect(isDismissed(banner({ Version: 2 }), storage)).toBe(false)
   })

@@ -28,8 +28,8 @@ import { apiPost, apiDelete } from "@/api/client"
 import { t } from "@/i18n/t"
 import type { Account } from "./types"
 import { extractError } from "./ProfileTab"
+import { STORAGE_DRAFT_ACCOUNT_EMAIL } from "@/lib/storageKeys"
 
-const EMAIL_DRAFT_KEY = "draft:account-email"
 
 const EmailSchema = z.object({
   Email: z.string().email({ message: t("validation.invalidEmail") }),
@@ -52,14 +52,14 @@ export function AccountTab({ account }: { account: Account }) {
   // email survives an auth redirect (client auto-redirects on 401). Cleared on send.
   useEffect(() => {
     try {
-      const raw = sessionStorage.getItem(EMAIL_DRAFT_KEY)
+      const raw = sessionStorage.getItem(STORAGE_DRAFT_ACCOUNT_EMAIL)
       if (raw) form.reset(JSON.parse(raw))
     } catch {
       /* ignore */
     }
     const sub = form.watch((values) => {
       try {
-        sessionStorage.setItem(EMAIL_DRAFT_KEY, JSON.stringify(values))
+        sessionStorage.setItem(STORAGE_DRAFT_ACCOUNT_EMAIL, JSON.stringify(values))
       } catch {
         /* ignore */
       }
@@ -72,7 +72,7 @@ export function AccountTab({ account }: { account: Account }) {
     setIsSubmitting(true)
     try {
       await apiPost("/api/auth/account/email", { Email: data.Email })
-      sessionStorage.removeItem(EMAIL_DRAFT_KEY) // sent — drop the draft
+      sessionStorage.removeItem(STORAGE_DRAFT_ACCOUNT_EMAIL) // sent — drop the draft
       toast.success(t("profile.account.emailSent"))
       form.reset({ Email: "" })
     } catch (err) {

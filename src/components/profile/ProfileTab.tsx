@@ -30,8 +30,8 @@ import { t } from "@/i18n/t"
 import { initials } from "@/lib/initials"
 import type { Account } from "./types"
 
-const NAME_DRAFT_KEY = "draft:profile-name"
 import { AvatarCropDialog } from "./AvatarCropDialog"
+import { STORAGE_DRAFT_PROFILE_NAME } from "@/lib/storageKeys"
 
 const ProfileSchema = z.object({
   FirstName: z.string().min(1, { message: t("validation.required") }).max(255),
@@ -64,14 +64,14 @@ export function ProfileTab({
   // Cleared on a successful save.
   useEffect(() => {
     try {
-      const raw = sessionStorage.getItem(NAME_DRAFT_KEY)
+      const raw = sessionStorage.getItem(STORAGE_DRAFT_PROFILE_NAME)
       if (raw) form.reset(JSON.parse(raw))
     } catch {
       /* ignore */
     }
     const sub = form.watch((values) => {
       try {
-        sessionStorage.setItem(NAME_DRAFT_KEY, JSON.stringify(values))
+        sessionStorage.setItem(STORAGE_DRAFT_PROFILE_NAME, JSON.stringify(values))
       } catch {
         /* ignore */
       }
@@ -164,7 +164,7 @@ export function ProfileTab({
         FirstName: data.FirstName,
         LastName: data.LastName,
       })
-      sessionStorage.removeItem(NAME_DRAFT_KEY) // saved — drop the draft
+      sessionStorage.removeItem(STORAGE_DRAFT_PROFILE_NAME) // saved — drop the draft
       form.reset(data)
       toast.success(t("profile.profile.saved"))
       onUpdated()

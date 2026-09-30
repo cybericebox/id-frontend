@@ -32,6 +32,7 @@ import { AuthHeading, AuthPane, AuthSwitch, GoogleIcon } from "./parts"
 import { t } from "@/i18n/t"
 import { apiPost, apiUrl } from "@/api/client"
 import { localizedError } from "@/i18n/apiError"
+import { setupDraftKey } from "@/lib/storageKeys"
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -209,7 +210,7 @@ function SetupForm() {
   // form. Persist the non-secret fields to sessionStorage (per-tab, cleared on
   // close) keyed by token, so they're restored when the user returns. Passwords
   // are intentionally NOT persisted (avoid writing secrets to web storage).
-  const draftKey = token ? `setup-draft:${token}` : ""
+  const draftKey = token ? setupDraftKey(token) : ""
 
   // Fetch state
   const [setupInfo, setSetupInfo] = useState<SetupInfo | null>(null)
