@@ -336,5 +336,8 @@
   "setup.privacyLink": "Політикою конфіденційності",
   "back.toAdmin": "Повернутися до адміністрування",
   "back.toEvent": "Повернутися до заходу",
-  "back.toCatalog": "Повернутися до каталогу завдань"
+  "back.toCatalog": "Повернутися до каталогу завдань",
+  "siteBanner.label": "Оголошення",
+  "siteBanner.dismiss": "Закрити оголошення",
+  "siteBanner.more": "Докладніше"
 }

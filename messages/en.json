@@ -336,5 +336,8 @@
   "setup.privacyLink": "Privacy Policy",
   "back.toAdmin": "Back to administration",
   "back.toEvent": "Back to event",
-  "back.toCatalog": "Back to task catalog"
+  "back.toCatalog": "Back to task catalog",
+  "siteBanner.label": "Announcements",
+  "siteBanner.dismiss": "Dismiss announcement",
+  "siteBanner.more": "Learn more"
 }

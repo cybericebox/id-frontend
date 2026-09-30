@@ -7,6 +7,7 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { THEME_BOOT_SCRIPT } from "@/lib/theme"
 import { ToastProvider } from "@/components/ui/toast"
+import { SiteBanners } from "@/components/SiteBanners"
 import { t } from "@/i18n/t"
 
 export const metadata: Metadata = {
@@ -30,6 +31,8 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       </head>
       <body>
+        {/* site banners sit at the very top, above the split auth layout */}
+        <SiteBanners />
         <QueryProvider><ToastProvider>{children}</ToastProvider></QueryProvider>
         <ServiceStatusGate />
         {/* the consent panel is always mounted («Налаштування файлів cookie»); GA loads only when configured */}
