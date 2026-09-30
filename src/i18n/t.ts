@@ -9,6 +9,7 @@
 import en from "../../messages/en.json"
 import uk from "../../messages/uk.json"
 import { createElement, Fragment, type ReactNode } from "react"
+import { keepBrand } from "./brand"
 
 // `en` defines the canonical key set; `uk` is what users see.
 const active = uk
@@ -27,8 +28,8 @@ type MessageKey = keyof typeof en
  */
 export function t(key: MessageKey | string, vars?: Record<string, string | number>): string {
   const msg = (active as Record<string, string>)[key] ?? (fallback as Record<string, string>)[key] ?? key
-  if (!vars) return msg
-  return msg.replace(/\{(\w+)\}/g, (m, name: string) => (name in vars ? String(vars[name]) : m))
+  if (!vars) return keepBrand(msg)
+  return keepBrand(msg.replace(/\{(\w+)\}/g, (m, name: string) => (name in vars ? String(vars[name]) : m)))
 }
 
 /**

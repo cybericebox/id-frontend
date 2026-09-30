@@ -15,6 +15,7 @@ import { ThemeSwitch } from "@/components/ThemeToggle"
 import { CookieSettingsLink } from "@/components/CookieSettingsLink"
 import { Tooltip } from "@/components/ui/tooltip"
 import { cn } from "@/utils/cn"
+import { BRAND_HEAD, BRAND_TAIL } from "@/i18n/brand"
 import { t, tSegments } from "@/i18n/t"
 import "./auth-panel.css"
 
@@ -101,8 +102,8 @@ export function AuthSidePanel({
       <div className="mx-auto flex h-full max-w-xl flex-col px-12 py-14">
         <div className="flex flex-col items-start gap-4">
           <Logo size={104} />
-          <span className="text-lg font-semibold tracking-tight text-on-brand">
-            Cyber <span className="text-ice-on-brand">ICE</span> Box
+          <span className="whitespace-nowrap text-lg font-semibold tracking-tight text-on-brand">
+            {BRAND_HEAD}<span className="text-ice-on-brand">ICE</span>{BRAND_TAIL}
           </span>
         </div>
 

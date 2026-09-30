@@ -16,6 +16,7 @@ import { LoadingArea } from "@/components/ui/spinner"
 import { EmptyState } from "@/components/ui/empty-state"
 import { LoadError } from "@/components/ui/load-error"
 import { apiGet, apiDelete } from "@/api/client"
+import { BRAND } from "@/i18n/brand"
 import { t, locale } from "@/i18n/t"
 import type { SessionInfo } from "./types"
 import { extractError } from "./ProfileTab"
@@ -36,7 +37,7 @@ function osFromUA(ua: string): string {
 // browserFromUA derives a human browser label from a user-agent string.
 function browserFromUA(ua: string): string {
   if (!ua) return t("profile.sessions.unknownBrowser")
-  if (/cybericebox/i.test(ua)) return "Cyber ICE Box CLI"
+  if (/cybericebox/i.test(ua)) return `${BRAND} CLI`
   const edge = ua.match(/Edg\/(\d+)/)
   if (edge) return `Edge ${edge[1]}`
   const opera = ua.match(/OPR\/(\d+)/)

@@ -7,6 +7,7 @@ import DOMPurify from "isomorphic-dompurify"
 import { X } from "lucide-react"
 import { t } from "@/i18n/t"
 import { NotificationMessageCard, notificationAccent } from "./NotificationMessageCard"
+import { keepBrand } from "@/i18n/brand"
 
 export type PopInMessage = {
   ID: string
@@ -56,7 +57,7 @@ export function NotificationPopIn({ message, onClose, onAction }: {
     <div className="pr-5">
       <NotificationMessageCard
         icon={message.Icon} tone={message.Tone} accentColor={message.AccentColor} title={message.Title}
-        body={message.Body && <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(message.Body) }} />}
+        body={message.Body && <div dangerouslySetInnerHTML={{ __html: keepBrand(DOMPurify.sanitize(message.Body)) }} />}
         actions={action && <button type="button" onClick={() => onAction(action.href)} className="text-sm font-medium text-action hover:underline">{action.label}</button>}
       />
     </div>
