@@ -15,3 +15,4 @@ export function siteBannerDismissedKey(id: string | number, version: string | nu
 export function setupDraftKey(token: string): string {
   return `${SETUP_DRAFT}_${token}`
 }
+export const COOKIE_RETURN_TO = "cib_return_to"
