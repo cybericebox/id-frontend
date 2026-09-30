@@ -1,45 +1,52 @@
 # id-frontend
 
-The identity app of Cyber ICE Box, served on `id.<domain>`. Every other app sends people here to sign in, and they come back to where they started.
+The sign-in and account app of the Cyber ICE Box platform: login, registration, password reset and profile. Other apps redirect here to authenticate.
 
-## What you can do
+## Stack
 
-- Sign in with email and password or with Google.
-- Sign up, confirm your email and finish the account setup.
-- Reset a forgotten password.
-- Edit your profile and change your password.
-- Sign out of the platform.
+Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Radix UI, TanStack Query, react-hook-form with Zod, ECharts, reCAPTCHA v3. Tests: Vitest and Playwright. Lint: ESLint 10.
 
-## Environment variables
+## Prerequisites
 
-Static builds (`npm run build`, GitHub Pages) read these at build time. The Docker image reads them at container start.
-
-| Variable | Required | Default | Description |
-| --- | --- | --- | --- |
-| `NEXT_PUBLIC_DOMAIN` | yes | — | Platform apex domain, e.g. `cybericebox.com`. |
-| `NEXT_PUBLIC_API_DOMAIN` | no | `api.<domain>` | API host (bare host, no scheme). |
-| `NEXT_PUBLIC_ADMIN_DOMAIN` | no | `admin.<domain>` | Admin app host. |
-| `NEXT_PUBLIC_EXERCISES_DOMAIN` | no | `exercises.<domain>` | Exercises app host. |
-| `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | yes | — | reCAPTCHA site key; the backend checks reCAPTCHA on sign-in, sign-up and password reset. |
-| `NEXT_PUBLIC_RECAPTCHA_ENTERPRISE` | no | `false` | `true` for reCAPTCHA Enterprise; must match the backend mode. |
-| `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` | no | analytics off | Google Analytics 4 measurement id (`G-…`). |
+Node.js 26 or newer (see `.nvmrc`).
 
 ## Commands
 
 ```bash
 npm install
-npm run dev          # http://localhost:3001
-npm run build        # static export → out/
+npm run dev          # dev server on http://localhost:3001
+npm run build        # production build (static export to out/)
 npm run lint
 npm run typecheck
+npm test             # Vitest
 npm run test:e2e     # Playwright
-
-docker build -f deploy/Dockerfile -t cybericebox/id-frontend .
-docker run --rm -p 3000:3000 -e NEXT_PUBLIC_DOMAIN=cybericebox.local -e NEXT_PUBLIC_RECAPTCHA_SITE_KEY=<site key> cybericebox/id-frontend
 ```
+
+## Static export
+
+Production builds are a **static export** (`output: "export"`, written to `out/`) and need no Node server at runtime; `npm run dev` runs the regular Next.js dev server. `npm start` is `next start` and is only meaningful outside the static build.
+
+## Configuration
+
+`NEXT_PUBLIC_*` values are inlined at build time; the container image substitutes them at start-up, so one image serves any environment.
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `NEXT_PUBLIC_DOMAIN` | yes | Platform apex domain; the other hosts derive from it. |
+| `NEXT_PUBLIC_API_DOMAIN` | no | API host (bare host, no scheme). Defaults to `api.<domain>`. |
+| `NEXT_PUBLIC_ID_DOMAIN` | no | ID app host. Defaults to `id.<domain>`. |
+| `NEXT_PUBLIC_ADMIN_DOMAIN` | no | Admin app host. Defaults to `admin.<domain>`. |
+| `NEXT_PUBLIC_EXERCISES_DOMAIN` | no | Exercises app host. Defaults to `exercises.<domain>`. |
+| `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` | no | Google Analytics 4 measurement id. Analytics is off when unset. |
+| `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | in production | reCAPTCHA site key. reCAPTCHA is skipped when unset (local development). |
+| `NEXT_PUBLIC_RECAPTCHA_ENTERPRISE` | no | `true` to use reCAPTCHA Enterprise; must match the backend mode. |
+
+Test-only: `E2E_BASE_URL`, `E2E_CHROME_PATH`.
+
+## i18n
+
+All user-facing text lives in `messages/uk.json` and `messages/en.json` and is rendered through the translate function `t("key", { vars })`. Ukrainian is the default language. Every key must exist in both files.
 
 ## Deployment
 
-- **GitHub Pages** — publishing a release runs `.github/workflows/pages.yml`, which builds the static export and deploys it. Set the variables above (and secrets) on the `github-pages` environment (Settings → Environments); the custom domain is set in Settings → Pages.
-- **Docker images** — a push to `develop` builds `cybericebox/id-frontend:<commit sha>` (`develop-image.yml`); a published release builds `cybericebox/id-frontend:latest` and `:<release tag>` (`publish-image.yml`).
-- **Kubernetes** — manifests are in `deploy/manifests`. Put the values in `config.yaml`; an empty key uses the default.
+Deployment and cluster configuration: see the infrastructure repository.
