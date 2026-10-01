@@ -2,7 +2,7 @@ name: Deploy ID to GitHub Pages
 
 # Static export (out/) → GitHub Pages. Runs on every published release (same as publish-image.yml) and on demand.
 # Custom domain is set in Settings → Pages (Actions deployments ignore a CNAME file).
-# The app needs the API at runtime (api.<domain> or NEXT_PUBLIC_API_DOMAIN).
+# Every host comes from repository/environment variables (vars.*); the build fails when one is empty.
 on:
   release:
     types: [ published ]
@@ -34,19 +34,37 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Check required variables
-        # the backend enforces reCAPTCHA: a build without the site key cannot sign anyone in
-        run: test -n "${{ vars.NEXT_PUBLIC_RECAPTCHA_SITE_KEY }}" || (echo "Set the NEXT_PUBLIC_RECAPTCHA_SITE_KEY repository variable." && exit 1)
+        # no fallbacks: every operator value must be set; the backend enforces reCAPTCHA, so the site key is required too
+        run: |
+          missing=""
+          for name in NEXT_PUBLIC_MAIN_HOST NEXT_PUBLIC_API_HOST NEXT_PUBLIC_ID_HOST NEXT_PUBLIC_ADMIN_HOST NEXT_PUBLIC_EXERCISES_HOST NEXT_PUBLIC_EVENT_DOMAIN NEXT_PUBLIC_PARTNER_URL NEXT_PUBLIC_PARTNER_SITE_URL NEXT_PUBLIC_RECAPTCHA_SITE_KEY NEXT_PUBLIC_RECAPTCHA_ENTERPRISE; do
+            eval "value=\"\$$name\""
+            [ -n "$value" ] || missing="$missing $name"
+          done
+          if [ -n "$missing" ]; then echo "Set the repository variables:$missing" && exit 1; fi
+        env:
+          NEXT_PUBLIC_MAIN_HOST: ${{ vars.NEXT_PUBLIC_MAIN_HOST }}
+          NEXT_PUBLIC_API_HOST: ${{ vars.NEXT_PUBLIC_API_HOST }}
+          NEXT_PUBLIC_ID_HOST: ${{ vars.NEXT_PUBLIC_ID_HOST }}
+          NEXT_PUBLIC_ADMIN_HOST: ${{ vars.NEXT_PUBLIC_ADMIN_HOST }}
+          NEXT_PUBLIC_EXERCISES_HOST: ${{ vars.NEXT_PUBLIC_EXERCISES_HOST }}
+          NEXT_PUBLIC_EVENT_DOMAIN: ${{ vars.NEXT_PUBLIC_EVENT_DOMAIN }}
+          NEXT_PUBLIC_PARTNER_URL: ${{ vars.NEXT_PUBLIC_PARTNER_URL }}
+          NEXT_PUBLIC_PARTNER_SITE_URL: ${{ vars.NEXT_PUBLIC_PARTNER_SITE_URL }}
+          NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ vars.NEXT_PUBLIC_RECAPTCHA_SITE_KEY }}
+          NEXT_PUBLIC_RECAPTCHA_ENTERPRISE: ${{ vars.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE }}
       - name: Build static export
         run: npm run build
         env:
-          # repository variables; domain defaults to the production apex
-          NEXT_PUBLIC_DOMAIN: ${{ vars.NEXT_PUBLIC_DOMAIN || 'cybericebox.com' }}
-          # optional host overrides (bare host, no scheme); empty → <service>.<domain>
-          NEXT_PUBLIC_API_DOMAIN: ${{ vars.NEXT_PUBLIC_API_DOMAIN }}
-          NEXT_PUBLIC_ADMIN_DOMAIN: ${{ vars.NEXT_PUBLIC_ADMIN_DOMAIN }}
-          NEXT_PUBLIC_EXERCISES_DOMAIN: ${{ vars.NEXT_PUBLIC_EXERCISES_DOMAIN }}
+          NEXT_PUBLIC_MAIN_HOST: ${{ vars.NEXT_PUBLIC_MAIN_HOST }}
+          NEXT_PUBLIC_API_HOST: ${{ vars.NEXT_PUBLIC_API_HOST }}
+          NEXT_PUBLIC_ID_HOST: ${{ vars.NEXT_PUBLIC_ID_HOST }}
+          NEXT_PUBLIC_ADMIN_HOST: ${{ vars.NEXT_PUBLIC_ADMIN_HOST }}
+          NEXT_PUBLIC_EXERCISES_HOST: ${{ vars.NEXT_PUBLIC_EXERCISES_HOST }}
+          NEXT_PUBLIC_EVENT_DOMAIN: ${{ vars.NEXT_PUBLIC_EVENT_DOMAIN }}
+          NEXT_PUBLIC_PARTNER_URL: ${{ vars.NEXT_PUBLIC_PARTNER_URL }}
+          NEXT_PUBLIC_PARTNER_SITE_URL: ${{ vars.NEXT_PUBLIC_PARTNER_SITE_URL }}
           NEXT_PUBLIC_GOOGLE_ANALYTICS_ID: ${{ vars.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID }}
-          # reCAPTCHA (site key is public, required; Enterprise must match the backend mode)
           NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ vars.NEXT_PUBLIC_RECAPTCHA_SITE_KEY }}
           NEXT_PUBLIC_RECAPTCHA_ENTERPRISE: ${{ vars.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE }}
       - name: Configure Pages

@@ -4,11 +4,17 @@ metadata:
   name: id-frontend-config
   namespace: cybericebox
 data:
-  DOMAIN: "cybericebox.com"
-  # Optional host overrides (bare host, no scheme). Empty → <service>.<DOMAIN>.
-  API_DOMAIN: ""
-  ADMIN_DOMAIN: ""
-  EXERCISES_DOMAIN: ""
+  # REQUIRED hosts (bare host, no scheme), copied from platform.env.
+  MAIN_HOST: ""
+  API_HOST: ""
+  ID_HOST: ""
+  ADMIN_HOST: ""
+  EXERCISES_HOST: ""
+  # REQUIRED: event sites are <tag>.<EVENT_DOMAIN>; also the parent domain of the theme/consent cookies.
+  EVENT_DOMAIN: ""
+  # REQUIRED partner links shown in the sign-in panel footer.
+  PARTNER_URL: "https://ice.nure.ua/ua/"
+  PARTNER_SITE_URL: "https://nure.ua"
   # REQUIRED: reCAPTCHA site key (public). The backend enforces reCAPTCHA, so an
   # empty or wrong key breaks sign-in; the container refuses to start without it.
   RECAPTCHA_SITE_KEY: ""

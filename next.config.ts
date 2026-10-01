@@ -4,10 +4,31 @@ import type { NextConfig } from "next"
 // - output: 'export' (production builds only) produces the `out/` directory for static hosting (nginx);
 //   `next dev` runs as a normal Next app.
 // - images.unoptimized: true is required when using static export (no server-side image optimization).
-// Dev-only: served through the nginx edge on the real domain (not localhost),
-// so Next's dev resources (fonts, HMR) are cross-origin and blocked by default.
-// Allow the platform domain + subdomains, derived from NEXT_PUBLIC_DOMAIN.
-const DOMAIN = process.env.NEXT_PUBLIC_DOMAIN
+
+// Every operator value comes from env; a missing one fails the build (no fallbacks).
+const REQUIRED = [
+  "NEXT_PUBLIC_MAIN_HOST",
+  "NEXT_PUBLIC_API_HOST",
+  "NEXT_PUBLIC_ID_HOST",
+  "NEXT_PUBLIC_ADMIN_HOST",
+  "NEXT_PUBLIC_EXERCISES_HOST",
+  "NEXT_PUBLIC_EVENT_DOMAIN",
+  "NEXT_PUBLIC_PARTNER_URL",
+  "NEXT_PUBLIC_PARTNER_SITE_URL",
+]
+const missing = REQUIRED.filter((name) => !process.env[name]?.trim())
+if (missing.length > 0) {
+  throw new Error(`Missing required environment variables: ${missing.join(", ")}`)
+}
+
+// Dev-only: the app is served through a proxy on the real hosts (not localhost), so Next's dev
+// resources (fonts, HMR) are cross-origin and blocked by default. DEV_ALLOWED_ORIGINS (comma
+// list) overrides; otherwise the configured hosts and every event site are allowed.
+const hosts = REQUIRED.filter((name) => name.endsWith("_HOST")).map((name) => process.env[name]!.trim())
+const eventDomain = process.env.NEXT_PUBLIC_EVENT_DOMAIN!.trim()
+const devOrigins = process.env.DEV_ALLOWED_ORIGINS?.trim()
+  ? process.env.DEV_ALLOWED_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
+  : [...new Set([...hosts, eventDomain, `*.${eventDomain}`])]
 
 const nextConfig: NextConfig = {
   output: process.env.NODE_ENV === "production" ? "export" : undefined,
@@ -18,9 +39,7 @@ const nextConfig: NextConfig = {
   // them forever; an old cached /x → /x/ (from when trailingSlash was on) plus a
   // live /x/ → /x makes ERR_TOO_MANY_REDIRECTS. Static hosting never redirects.
   skipTrailingSlashRedirect: true,
-  // Dev-only: platform domains are always allowed, so `next dev` works behind the
-  // local proxy/tunnel even when NEXT_PUBLIC_DOMAIN is not set.
-  allowedDevOrigins: [...new Set([...(DOMAIN ? [DOMAIN] : []), "cybericebox.com", "cybericebox-dev.pp.ua", "cybericebox.pp.ua"])].flatMap((d) => [d, `*.${d}`]),
+  allowedDevOrigins: devOrigins,
 }
 
 export default nextConfig

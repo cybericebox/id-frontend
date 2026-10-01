@@ -24,26 +24,46 @@ spec:
         - name: id-frontend
           image: cybericebox/id-frontend:latest
           env:
-            - name: NEXT_PUBLIC_DOMAIN
+            - name: NEXT_PUBLIC_MAIN_HOST
               valueFrom:
                 configMapKeyRef:
                   name: id-frontend-config
-                  key: DOMAIN
-            - name: NEXT_PUBLIC_API_DOMAIN
+                  key: MAIN_HOST
+            - name: NEXT_PUBLIC_API_HOST
               valueFrom:
                 configMapKeyRef:
                   name: id-frontend-config
-                  key: API_DOMAIN
-            - name: NEXT_PUBLIC_ADMIN_DOMAIN
+                  key: API_HOST
+            - name: NEXT_PUBLIC_ID_HOST
               valueFrom:
                 configMapKeyRef:
                   name: id-frontend-config
-                  key: ADMIN_DOMAIN
-            - name: NEXT_PUBLIC_EXERCISES_DOMAIN
+                  key: ID_HOST
+            - name: NEXT_PUBLIC_ADMIN_HOST
               valueFrom:
                 configMapKeyRef:
                   name: id-frontend-config
-                  key: EXERCISES_DOMAIN
+                  key: ADMIN_HOST
+            - name: NEXT_PUBLIC_EXERCISES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: id-frontend-config
+                  key: EXERCISES_HOST
+            - name: NEXT_PUBLIC_EVENT_DOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  name: id-frontend-config
+                  key: EVENT_DOMAIN
+            - name: NEXT_PUBLIC_PARTNER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: id-frontend-config
+                  key: PARTNER_URL
+            - name: NEXT_PUBLIC_PARTNER_SITE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: id-frontend-config
+                  key: PARTNER_SITE_URL
             - name: NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
               valueFrom:
                 configMapKeyRef:

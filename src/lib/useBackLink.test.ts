@@ -5,7 +5,9 @@ import { backLabel } from "./backLink"
 import { resolveIdBack } from "./useBackLink"
 
 vi.mock("@/lib/origins", () => ({
-  publicDomain: "cybericebox.local",
+  mainHost: "cybericebox.local",
+  eventDomain: "cybericebox.local",
+  idOrigin: "https://id.cybericebox.local",
   adminOrigin: "https://admin.cybericebox.local",
   exercisesOrigin: "https://exercises.cybericebox.local",
   apiOrigin: "https://api.cybericebox.local",

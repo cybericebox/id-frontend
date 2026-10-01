@@ -16,6 +16,7 @@
 
 import { apiGet, ApiError } from "@/api/client"
 import { COOKIE_RETURN_TO } from "@/lib/storageKeys"
+import { eventDomain } from "@/lib/origins"
 
 // ---------------------------------------------------------------------------
 // /me — identity object returned by the RP's /api/me endpoint.
@@ -67,6 +68,19 @@ export function redirectToSignIn(signInUrl?: string, returnTo?: string): void {
   window.location.href = url.toString()
 }
 
+/** A configured app host, or any host under NEXT_PUBLIC_EVENT_DOMAIN. */
+function isPlatformHost(host: string): boolean {
+  const h = host.toLowerCase()
+  const apps = [
+    process.env.NEXT_PUBLIC_MAIN_HOST,
+    process.env.NEXT_PUBLIC_ID_HOST,
+    process.env.NEXT_PUBLIC_ADMIN_HOST,
+    process.env.NEXT_PUBLIC_EXERCISES_HOST,
+  ]
+  if (apps.some((a) => a?.trim().toLowerCase() === h)) return true
+  return !!eventDomain && (h === eventDomain.toLowerCase() || h.endsWith("." + eventDomain.toLowerCase()))
+}
+
 /**
  * safeReturnTo — open-redirect guard. Accepts a return_to only within the
  * platform domain (any subdomain), mirroring the backend's buildCallbackURL
@@ -74,18 +88,14 @@ export function redirectToSignIn(signInUrl?: string, returnTo?: string): void {
  * back to /profile. This prevents an attacker-supplied ?return_to=https://evil.com
  * from bouncing an authed user off-platform.
  *
- * id is served from id.<domain>; the platform root domain is the current host
- * minus the leading "id." prefix.
+ * Platform hosts are the configured app hosts plus every event site under
+ * NEXT_PUBLIC_EVENT_DOMAIN.
  */
 export function safeReturnTo(returnTo?: string, fallback = "/profile"): string {
   if (!returnTo) return fallback
-  const root = process.env.NEXT_PUBLIC_DOMAIN?.toLowerCase()
-    || (typeof window !== "undefined" ? window.location.hostname.replace(/^id\./, "").toLowerCase() : "")
-  if (!root) return fallback
   try {
     const u = new URL(returnTo)
-    const h = u.hostname.toLowerCase()
-    if (u.protocol === "https:" && (h === root || h.endsWith("." + root))) {
+    if (u.protocol === "https:" && isPlatformHost(u.hostname)) {
       // Strip any port: the platform is always reached on its fixed external
       // port, so a redirect target must never carry one (e.g. a dev :3001).
       return `https://${u.hostname}${u.pathname}${u.search}${u.hash}`
@@ -114,11 +124,9 @@ export function safeReturnTo(returnTo?: string, fallback = "/profile"): string {
 export function rememberReturnTo(returnTo?: string): void {
   if (typeof window === "undefined") return
   if (!returnTo) return
-  const root = window.location.hostname.replace(/^id\./, "")
   try {
     const u = new URL(returnTo)
-    const h = u.hostname.toLowerCase()
-    if (u.protocol === "https:" && (h === root || h.endsWith("." + root))) {
+    if (u.protocol === "https:" && isPlatformHost(u.hostname)) {
       // Force portless https — mirrors Task 7 writeReturnToCookie convention.
       const portless = `https://${u.hostname}${u.pathname}${u.search}${u.hash}`
       document.cookie = `${COOKIE_RETURN_TO}=${encodeURIComponent(portless)}; path=/; SameSite=Lax; Secure`

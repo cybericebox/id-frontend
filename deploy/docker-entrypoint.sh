@@ -7,24 +7,17 @@ set -e
 
 ROOT=/usr/share/nginx/html
 
-if [ -z "${NEXT_PUBLIC_DOMAIN:-}" ]; then
-  echo "NEXT_PUBLIC_DOMAIN is required." >&2
-  exit 1
-fi
-# The backend rejects sign-in/sign-up without a reCAPTCHA token, so the site key is
-# required too; the Enterprise flag must match the backend mode (RECAPTCHA_PROJECT set).
-if [ -z "${NEXT_PUBLIC_RECAPTCHA_SITE_KEY:-}" ]; then
-  echo "NEXT_PUBLIC_RECAPTCHA_SITE_KEY is required (the backend enforces reCAPTCHA)." >&2
-  exit 1
-fi
-# Optional values get their defaults here (the build folded the placeholder, so the
-# code-side fallback is gone): the API host derives from the domain, analytics is empty.
-: "${NEXT_PUBLIC_API_DOMAIN:=api.$NEXT_PUBLIC_DOMAIN}"
-: "${NEXT_PUBLIC_ADMIN_DOMAIN:=admin.$NEXT_PUBLIC_DOMAIN}"
-: "${NEXT_PUBLIC_EXERCISES_DOMAIN:=exercises.$NEXT_PUBLIC_DOMAIN}"
-: "${NEXT_PUBLIC_RECAPTCHA_ENTERPRISE:=false}"
-: "${NEXT_PUBLIC_GOOGLE_ANALYTICS_ID:=}"
-export NEXT_PUBLIC_API_DOMAIN NEXT_PUBLIC_ADMIN_DOMAIN NEXT_PUBLIC_EXERCISES_DOMAIN NEXT_PUBLIC_RECAPTCHA_ENTERPRISE NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
+# Every operator value comes from env; there are no fallbacks.
+for name in NEXT_PUBLIC_MAIN_HOST NEXT_PUBLIC_API_HOST NEXT_PUBLIC_ID_HOST NEXT_PUBLIC_ADMIN_HOST NEXT_PUBLIC_EXERCISES_HOST NEXT_PUBLIC_EVENT_DOMAIN NEXT_PUBLIC_PARTNER_URL NEXT_PUBLIC_PARTNER_SITE_URL NEXT_PUBLIC_RECAPTCHA_SITE_KEY NEXT_PUBLIC_RECAPTCHA_ENTERPRISE; do
+  eval "value=\${$name:-}"
+  if [ -z "$value" ]; then
+    echo "$name is required." >&2
+    exit 1
+  fi
+done
+# NEXT_PUBLIC_GOOGLE_ANALYTICS_ID is the only optional value (empty → analytics off); the build
+# folded its placeholder, so it is exported (possibly empty) to be substituted.
+export NEXT_PUBLIC_GOOGLE_ANALYTICS_ID="${NEXT_PUBLIC_GOOGLE_ANALYTICS_ID:-}"
 
 printenv | grep '^NEXT_PUBLIC_' | while IFS='=' read -r key value; do
   # Escape sed-special chars in the replacement (| delimiter, & match-ref, \).
