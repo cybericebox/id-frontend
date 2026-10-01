@@ -10,8 +10,10 @@ data:
   ID_HOST: ""
   ADMIN_HOST: ""
   EXERCISES_HOST: ""
-  # REQUIRED: event sites are <tag>.<EVENT_DOMAIN>; also the parent domain of the theme/consent cookies.
+  # REQUIRED: event sites are <tag>.<EVENT_DOMAIN>; the event domain.
   EVENT_DOMAIN: ""
+  # REQUIRED: Domain attribute of the shared theme/consent cookies (e.g. cybericebox.com); no implicit parent.
+  COOKIE_DOMAIN: ""
   # REQUIRED partner links shown in the sign-in panel footer.
   PARTNER_URL: "https://ice.nure.ua/ua/"
   PARTNER_SITE_URL: "https://nure.ua"
