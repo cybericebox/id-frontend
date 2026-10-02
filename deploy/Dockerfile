@@ -23,11 +23,14 @@ ENV NEXT_PUBLIC_MAIN_HOST="NEXT_PUBLIC_MAIN_HOST" \
     NEXT_PUBLIC_GOOGLE_ANALYTICS_ID="NEXT_PUBLIC_GOOGLE_ANALYTICS_ID" \
     NEXT_PUBLIC_RECAPTCHA_SITE_KEY="NEXT_PUBLIC_RECAPTCHA_SITE_KEY" \
     NEXT_PUBLIC_RECAPTCHA_ENTERPRISE="NEXT_PUBLIC_RECAPTCHA_ENTERPRISE"
-RUN npm run build
+RUN npm run build && node scripts/csp-inline.mjs
 
 FROM nginx:1.30.5-alpine AS runner
 COPY --from=build /app/out /usr/share/nginx/html
 COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
 COPY deploy/docker-entrypoint.sh /docker-entrypoint.d/40-next-public-env.sh
-RUN chmod +x /docker-entrypoint.d/40-next-public-env.sh
+# 50-csp.sh runs after the env substitution: it hashes the inline scripts and writes the CSP header
+# snippet that nginx.conf includes (see the header comment in deploy/csp.sh).
+COPY deploy/csp.sh /docker-entrypoint.d/50-csp.sh
+RUN chmod +x /docker-entrypoint.d/40-next-public-env.sh /docker-entrypoint.d/50-csp.sh
 EXPOSE 3000
