@@ -26,7 +26,7 @@ export function isServiceUnavailable(err: unknown): boolean {
   return err instanceof TypeError // fetch() network failure
 }
 
-// AuthTooManyRequests (HTTP 429): the wait comes from the Retry-After header.
+// AuthTooManyRequests (HTTP 429) and the bodiless 429 of the rate limiter: the wait comes from Retry-After.
 const CODE_TOO_MANY_REQUESTS = 70428
 
 /** waitText — a wait in seconds as «N с» / «N хв» (minutes rounded up). */
@@ -38,7 +38,8 @@ export function waitText(seconds: number): string {
 
 export function localizedError(err: unknown): string {
   if (isServiceUnavailable(err)) return t("error.unavailable")
-  if (err instanceof ApiError && err.code === CODE_TOO_MANY_REQUESTS) {
+  // The general rate limiter answers 429 with an empty body (no code) and Retry-After.
+  if (err instanceof ApiError && (err.code === CODE_TOO_MANY_REQUESTS || (err.status === 429 && err.code == null))) {
     return err.retryAfter
       ? t("error.tooManyRetry", { wait: waitText(err.retryAfter) })
       : t("error.tooMany")

@@ -6,6 +6,10 @@ const apiErr = (status: number, code: number, retryAfter?: number) =>
   new ApiError(status, undefined, undefined, undefined, code, retryAfter)
 
 describe("localizedError", () => {
+  it("handles the bodiless 429 of the rate limiter", () => {
+    expect(localizedError(apiErr(429, undefined, 30))).toContain("30 с")
+  })
+
   it("shows the wait of a 429 from Retry-After", () => {
     expect(localizedError(apiErr(429, 70428, 30))).toContain("30 с")
     expect(localizedError(apiErr(429, 70428, 90))).toContain("2 хв")
