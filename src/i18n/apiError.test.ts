@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest"
 import { ApiError } from "@/api/client"
 import { localizedError, waitText } from "./apiError"
 
-const apiErr = (status: number, code: number, retryAfter?: number) =>
+const apiErr = (status: number, code: number | undefined, retryAfter?: number) =>
   new ApiError(status, undefined, undefined, undefined, code, retryAfter)
 
 describe("localizedError", () => {
