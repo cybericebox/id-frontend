@@ -348,5 +348,8 @@
   "profile.account.emailNeedsPassword": "Щоб змінити пошту, спершу встановіть пароль на вкладці «Пароль».",
   "profile.account.deletePasswordHint": "Введіть поточний пароль, щоб підтвердити видалення.",
   "profile.connections.unlinkPasswordHint": "Введіть поточний пароль, щоб підтвердити.",
-  "signUp.googleEmailNotVerified": "Google не підтверджує адресу цього акаунта. Підтвердьте її в Google або зареєструйтеся з електронною поштою."
+  "signUp.googleEmailNotVerified": "Google не підтверджує адресу цього акаунта. Підтвердьте її в Google або зареєструйтеся з електронною поштою.",
+  "feedback.link": "Надіслати відгук",
+  "feedback.subject": "Відгук: {app} {page}",
+  "feedback.app": "Cyber ICE Box ID"
 }

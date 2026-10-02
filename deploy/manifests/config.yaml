@@ -14,6 +14,8 @@ data:
   EVENT_DOMAIN: ""
   # REQUIRED: Domain attribute of the shared theme/consent cookies (e.g. cybericebox.com); no implicit parent.
   COOKIE_DOMAIN: ""
+  # REQUIRED: support mailbox of the «Надіслати відгук» (send feedback) link on every page.
+  SUPPORT_EMAIL: ""
   # REQUIRED partner links shown in the sign-in panel footer.
   PARTNER_URL: "https://ice.nure.ua/ua/"
   PARTNER_SITE_URL: "https://nure.ua"

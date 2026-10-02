@@ -348,5 +348,8 @@
   "profile.account.emailNeedsPassword": "To change your email, first set a password on the “Password” tab.",
   "profile.account.deletePasswordHint": "Enter your current password to confirm the deletion.",
   "profile.connections.unlinkPasswordHint": "Enter your current password to confirm.",
-  "signUp.googleEmailNotVerified": "Google does not verify the address of this account. Verify it in Google or sign up with email."
+  "signUp.googleEmailNotVerified": "Google does not verify the address of this account. Verify it in Google or sign up with email.",
+  "feedback.link": "Send feedback",
+  "feedback.subject": "Feedback: {app} {page}",
+  "feedback.app": "Cyber ICE Box ID"
 }

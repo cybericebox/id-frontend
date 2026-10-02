@@ -14,6 +14,7 @@ export default defineConfig({
       NEXT_PUBLIC_EXERCISES_HOST: "exercises.cybericebox.local",
       NEXT_PUBLIC_EVENT_DOMAIN: "cybericebox.local",
       NEXT_PUBLIC_COOKIE_DOMAIN: "cybericebox.local",
+      NEXT_PUBLIC_SUPPORT_EMAIL: "support@example.test",
     },
     exclude: [...configDefaults.exclude, "e2e/**", "**/.worktrees/**", "**/.claude/worktrees/**"],
   },
