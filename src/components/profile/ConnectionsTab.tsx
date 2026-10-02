@@ -18,6 +18,7 @@ import { GoogleIcon } from "@/components/auth/parts"
 import { t } from "@/i18n/t"
 import type { Account } from "./types"
 import { extractError } from "./ProfileTab"
+import { ReauthPasswordField } from "./ReauthPasswordField"
 
 export function ConnectionsTab({
   account,
@@ -34,6 +35,7 @@ export function ConnectionsTab({
   const [isBusy, setIsBusy] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmError, setConfirmError] = useState("")
+  const [password, setPassword] = useState("")
 
   const hasGoogle = account.Providers.includes("google")
   // Without a password Google is the only way in: the backend refuses too.
@@ -44,7 +46,13 @@ export function ConnectionsTab({
     setConfirmError("")
     setIsBusy(true)
     try {
-      await apiDelete("/api/auth/google/link")
+      await apiDelete(
+        "/api/auth/google/link",
+        undefined,
+        undefined,
+        account.HasPassword ? { CurrentPassword: password } : undefined
+      )
+      setPassword("")
       setConfirmOpen(false)
       onUpdated()
       toast.success(t("profile.connections.unlinked"))
@@ -87,7 +95,7 @@ export function ConnectionsTab({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => { setConfirmError(""); setConfirmOpen(true) }}
+              onClick={() => { setConfirmError(""); setPassword(""); setConfirmOpen(true) }}
               disabled={isBusy}
             >
               {t("profile.connections.unlink")}
@@ -103,13 +111,23 @@ export function ConnectionsTab({
           onCancel={() => setConfirmOpen(false)}
           tone="danger"
           busy={isBusy}
-          disabled={onlyMethod}
+          disabled={onlyMethod || (account.HasPassword && !password)}
           error={onlyMethod ? t("profile.connections.unlinkOnlyMethod") : confirmError}
           title={t("profile.connections.unlinkTitle")}
           description={t("profile.connections.unlinkBody")}
           confirmLabel={t("profile.connections.unlink")}
           onConfirm={() => void unlink()}
-        />
+        >
+          {account.HasPassword && !onlyMethod && (
+            <ReauthPasswordField
+              id="unlink-google-password"
+              hint={t("profile.connections.unlinkPasswordHint")}
+              value={password}
+              onChange={setPassword}
+              disabled={isBusy}
+            />
+          )}
+        </ConfirmDialog>
       </CardContent>
     </Card>
   )

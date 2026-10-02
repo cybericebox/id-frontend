@@ -196,6 +196,12 @@ function RegisterForm() {
 
 
 
+          {googleError === "email_not_verified" && (
+            <Alert variant="destructive">
+              <AlertDescription>{t("signUp.googleEmailNotVerified")}</AlertDescription>
+            </Alert>
+          )}
+
           {googleError === "failed" && (
             <Alert variant="destructive">
               <AlertDescription>{t("signUp.googleFailed")}</AlertDescription>

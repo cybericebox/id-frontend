@@ -20,7 +20,9 @@ export class ApiError extends Error {
     public readonly signInUrl?: string,
     // Stable numeric FullCode from the envelope (Status.Code). This — not the
     // English message — is the i18n key callers localize against (see i18n/apiError).
-    public readonly code?: number
+    public readonly code?: number,
+    // Retry-After header of a 429, in seconds (the wait the backend asks for).
+    public readonly retryAfter?: number
   ) {
     super(message ?? `API error ${status}`)
     this.name = "ApiError"
@@ -69,6 +71,12 @@ function writeReturnToCookie(): void {
 function redirectToSignInPage(signInUrl: string | null): void {
   if (typeof window === "undefined") return
   window.location.replace(signInUrl || portless(window.location.origin) + "/sign-in")
+}
+
+function parseRetryAfter(raw: string | null): number | undefined {
+  if (!raw) return undefined
+  const n = Number(raw)
+  return Number.isFinite(n) && n > 0 ? Math.ceil(n) : undefined
 }
 
 async function request<T>(
@@ -133,7 +141,8 @@ async function request<T>(
       parsed,
       envelope?.Status?.Message,
       res.headers.get("X-Sign-In-URL") ?? undefined,
-      envelope?.Status?.Code
+      envelope?.Status?.Code,
+      parseRetryAfter(res.headers.get("Retry-After"))
     )
   }
 
@@ -191,6 +200,15 @@ export function apiPatch<T>(
   return request<T>(path, { ...init, method: "PATCH", body: JSON.stringify(body) }, opts)
 }
 
-export function apiDelete<T>(path: string, init?: RequestInit, opts?: ApiOptions): Promise<T> {
-  return request<T>(path, { ...init, method: "DELETE" }, opts)
+export function apiDelete<T>(
+  path: string,
+  init?: RequestInit,
+  opts?: ApiOptions,
+  body?: unknown
+): Promise<T> {
+  return request<T>(
+    path,
+    { ...init, method: "DELETE", ...(body === undefined ? {} : { body: JSON.stringify(body) }) },
+    opts
+  )
 }

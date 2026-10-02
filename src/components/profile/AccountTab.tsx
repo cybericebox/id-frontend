@@ -22,6 +22,9 @@ import {
 } from "@/components/ui/form"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { ReauthPasswordField } from "./ReauthPasswordField"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/toast"
 import { apiPost, apiDelete } from "@/api/client"
@@ -31,8 +34,10 @@ import { extractError } from "./ProfileTab"
 import { STORAGE_DRAFT_ACCOUNT_EMAIL } from "@/lib/storageKeys"
 
 
+// The account password re-confirms the change; the draft keeps the address only.
 const EmailSchema = z.object({
   Email: z.string().email({ message: t("validation.invalidEmail") }),
+  CurrentPassword: z.string().min(1, { message: t("validation.required") }),
 })
 type EmailValues = z.infer<typeof EmailSchema>
 
@@ -41,11 +46,12 @@ export function AccountTab({ account }: { account: Account }) {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState("")
+  const [deletePassword, setDeletePassword] = useState("")
 
   const form = useForm<EmailValues>({
     resolver: zodResolver(EmailSchema),
     mode: "onBlur",
-    defaultValues: { Email: "" },
+    defaultValues: { Email: "", CurrentPassword: "" },
   })
 
   // Draft persistence: restore on mount, persist edits continuously so the new
@@ -53,13 +59,13 @@ export function AccountTab({ account }: { account: Account }) {
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem(STORAGE_DRAFT_ACCOUNT_EMAIL)
-      if (raw) form.reset(JSON.parse(raw))
+      if (raw) form.reset({ Email: (JSON.parse(raw) as { Email?: string }).Email ?? "", CurrentPassword: "" })
     } catch {
       /* ignore */
     }
     const sub = form.watch((values) => {
       try {
-        sessionStorage.setItem(STORAGE_DRAFT_ACCOUNT_EMAIL, JSON.stringify(values))
+        sessionStorage.setItem(STORAGE_DRAFT_ACCOUNT_EMAIL, JSON.stringify({ Email: values.Email ?? "" }))
       } catch {
         /* ignore */
       }
@@ -71,10 +77,10 @@ export function AccountTab({ account }: { account: Account }) {
   const onSubmit: SubmitHandler<EmailValues> = async (data) => {
     setIsSubmitting(true)
     try {
-      await apiPost("/api/auth/account/email", { Email: data.Email })
+      await apiPost("/api/auth/account/email", { Email: data.Email, CurrentPassword: data.CurrentPassword })
       sessionStorage.removeItem(STORAGE_DRAFT_ACCOUNT_EMAIL) // sent — drop the draft
       toast.success(t("profile.account.emailSent"))
-      form.reset({ Email: "" })
+      form.reset({ Email: "", CurrentPassword: "" })
     } catch (err) {
       toast.error(extractError(err))
     } finally {
@@ -86,7 +92,12 @@ export function AccountTab({ account }: { account: Account }) {
     setIsDeleting(true)
     setDeleteError("")
     try {
-      await apiDelete("/api/auth/account")
+      await apiDelete(
+        "/api/auth/account",
+        undefined,
+        undefined,
+        account.HasPassword ? { CurrentPassword: deletePassword } : undefined
+      )
       toast.success(t("profile.account.deleted"))
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Reload after account deletion to discard authenticated client state.
       window.location.href = "/sign-in"
@@ -143,10 +154,32 @@ export function AccountTab({ account }: { account: Account }) {
                   </FormItem>
                 )}
               />
+              {account.HasPassword && (
+                <FormField
+                  control={form.control}
+                  name="CurrentPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("profile.security.currentPassword")}</FormLabel>
+                      <FormControl>
+                        <PasswordInput autoComplete="current-password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              <p className="text-sm text-dim">{t("profile.account.emailGoogleNote")}</p>
+              {!account.HasPassword && (
+                <Alert variant="warn">
+                  <AlertDescription>{t("profile.account.emailNeedsPassword")}</AlertDescription>
+                </Alert>
+              )}
               <div className="flex gap-2">
                 <Button
                   type="submit"
                   disabled={
+                    !account.HasPassword ||
                     isSubmitting ||
                     !form.formState.isDirty ||
                     !form.formState.isValid
@@ -182,7 +215,7 @@ export function AccountTab({ account }: { account: Account }) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button variant="destructive" onClick={() => { setDeleteError(""); setDeleteOpen(true) }}>
+          <Button variant="destructive" onClick={() => { setDeleteError(""); setDeletePassword(""); setDeleteOpen(true) }}>
             {t("profile.account.deleteButton")}
           </Button>
         </CardContent>
@@ -197,8 +230,19 @@ export function AccountTab({ account }: { account: Account }) {
         title={t("profile.account.deleteConfirmTitle")}
         description={t("profile.account.deleteConfirmBody")}
         confirmLabel={t("profile.account.deleteConfirmButton")}
+        disabled={account.HasPassword && !deletePassword}
         onConfirm={() => void onDelete()}
-      />
+      >
+        {account.HasPassword && (
+          <ReauthPasswordField
+            id="delete-account-password"
+            hint={t("profile.account.deletePasswordHint")}
+            value={deletePassword}
+            onChange={setDeletePassword}
+            disabled={isDeleting}
+          />
+        )}
+      </ConfirmDialog>
     </div>
   )
 }

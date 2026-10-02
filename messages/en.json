@@ -339,5 +339,14 @@
   "back.toCatalog": "Back to task catalog",
   "siteBanner.label": "Announcements",
   "siteBanner.dismiss": "Dismiss announcement",
-  "siteBanner.more": "Learn more"
+  "siteBanner.more": "Learn more",
+  "error.tooMany": "Too many attempts. Try again later.",
+  "error.tooManyRetry": "Too many attempts. Try again in {wait}.",
+  "error.wait.seconds": "{n} s",
+  "error.wait.minutes": "{n} min",
+  "profile.account.emailGoogleNote": "Changing your email also disconnects Google from your account. Afterwards sign in with the new address and your password.",
+  "profile.account.emailNeedsPassword": "To change your email, first set a password on the “Password” tab.",
+  "profile.account.deletePasswordHint": "Enter your current password to confirm the deletion.",
+  "profile.connections.unlinkPasswordHint": "Enter your current password to confirm.",
+  "signUp.googleEmailNotVerified": "Google does not verify the address of this account. Verify it in Google or sign up with email."
 }

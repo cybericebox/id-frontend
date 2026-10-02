@@ -339,5 +339,14 @@
   "back.toCatalog": "Повернутися до каталогу завдань",
   "siteBanner.label": "Оголошення",
   "siteBanner.dismiss": "Закрити оголошення",
-  "siteBanner.more": "Докладніше"
+  "siteBanner.more": "Докладніше",
+  "error.tooMany": "Забагато спроб. Спробуйте пізніше.",
+  "error.tooManyRetry": "Забагато спроб. Спробуйте ще раз через {wait}.",
+  "error.wait.seconds": "{n} с",
+  "error.wait.minutes": "{n} хв",
+  "profile.account.emailGoogleNote": "Після зміни пошти Google буде від’єднано від облікового запису. Далі входьте з новою адресою та паролем.",
+  "profile.account.emailNeedsPassword": "Щоб змінити пошту, спершу встановіть пароль на вкладці «Пароль».",
+  "profile.account.deletePasswordHint": "Введіть поточний пароль, щоб підтвердити видалення.",
+  "profile.connections.unlinkPasswordHint": "Введіть поточний пароль, щоб підтвердити.",
+  "signUp.googleEmailNotVerified": "Google не підтверджує адресу цього акаунта. Підтвердьте її в Google або зареєструйтеся з електронною поштою."
 }
