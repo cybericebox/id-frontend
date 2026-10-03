@@ -22,7 +22,8 @@ spec:
     spec:
       containers:
         - name: id-frontend
-          image: cybericebox/id-frontend:latest
+          image: cybericebox/id-frontend:v0.1.0 # the release tag: an exact version, never latest
+          imagePullPolicy: IfNotPresent
           env:
             - name: NEXT_PUBLIC_MAIN_HOST
               valueFrom:
