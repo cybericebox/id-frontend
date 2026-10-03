@@ -6,7 +6,7 @@ import Link from "next/link"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { useReCaptcha } from "next-recaptcha-v3"
+import { executeCaptcha } from "@/lib/captcha"
 
 import {
   Form,
@@ -78,7 +78,6 @@ function RegisterForm() {
     // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, [])
 
-  const { executeRecaptcha } = useReCaptcha()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submittedEmail, setSubmittedEmail] = useState<string | null>(null)
 
@@ -95,11 +94,10 @@ function RegisterForm() {
     setIsSubmitting(true)
 
     try {
-      // reCAPTCHA is mandatory on the backend. Always obtain a token; the provider
-      // only loads the script when NEXT_PUBLIC_RECAPTCHA_SITE_KEY is configured.
+      // The bot check is mandatory on the backend. Always obtain a token (provider none yields a fixed one).
       let recaptchaToken: string | undefined
       try {
-        recaptchaToken = await executeRecaptcha("signUp")
+        recaptchaToken = await executeCaptcha("signUp")
       } catch {
         recaptchaToken = undefined
       }
