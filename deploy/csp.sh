@@ -108,7 +108,7 @@ if [ -n "${NEXT_PUBLIC_GOOGLE_ANALYTICS_ID:-}" ]; then
   script_src="$script_src https://www.googletagmanager.com"
   connect_src="$connect_src https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://www.google.com/ccm/ https://*.doubleclick.net"
 fi
-# Only the chosen bot-check provider's hosts (the sign-in forms and the client token use it).
+# Only the chosen bot-check provider's hosts (the sign-in forms use it).
 case "${NEXT_PUBLIC_CAPTCHA_PROVIDER:-none}" in
   recaptcha)
     script_src="$script_src https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/"

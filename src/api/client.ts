@@ -5,7 +5,6 @@
 // bootstrap — a plain credentialed fetch is authoritative.
 
 import { apiOrigin } from "@/lib/origins"
-import { ensureClientToken, needsClientToken } from "@/lib/clientToken"
 import { isNetworkOutage, isUnavailableStatus, reportServiceUnavailable } from "@/lib/serviceStatus"
 import { COOKIE_RETURN_TO } from "@/lib/storageKeys"
 
@@ -87,8 +86,9 @@ async function request<T>(
 ): Promise<T> {
   const url = `${BASE_URL}${path}`
 
-  const send = () =>
-    fetch(url, {
+  let res: Response
+  try {
+    res = await fetch(url, {
       ...init,
       credentials: "include",
       headers: {
@@ -96,17 +96,6 @@ async function request<T>(
         ...(init.headers ?? {}),
       },
     })
-
-  let res: Response
-  try {
-    await ensureClientToken()
-    res = await send()
-    // DoS protection: the client token is missing or expired. Refresh it and retry ONCE;
-    // a plain 429 (no X-Client-Token header) is an ordinary rate limit and is not retried.
-    if (needsClientToken(res)) {
-      await ensureClientToken({ force: true })
-      res = await send()
-    }
   } catch (err) {
     // Network failure (backend down, DNS, offline) → app-wide outage modal; a
     // caller abort or timeout is not an outage.

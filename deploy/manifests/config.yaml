@@ -26,7 +26,5 @@ data:
   CAPTCHA_SITE_KEY: ""
   # recaptcha only: "true" when the backend uses reCAPTCHA Enterprise (RECAPTCHA_PROJECT is set).
   RECAPTCHA_ENTERPRISE: "false"
-  # REQUIRED: on | off. Must match the backend DOS_PROTECTION. on = the first visit passes an invisible check and gets a client token.
-  DOS_PROTECTION: "off"
   # Optional Google Analytics 4 measurement id (G-…). Empty → analytics off.
   GOOGLE_ANALYTICS_ID: ""
