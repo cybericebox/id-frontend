@@ -3,7 +3,6 @@
 
 export const STORAGE_INBOX_READ = "cib_inbox_read"
 export const STORAGE_BACK = "cib_back"
-export const STORAGE_CLIENT_TOKEN_EXPIRES = "cib_client_token_expires"
 export const STORAGE_DRAFT_ACCOUNT_EMAIL = "cib_draft_account_email"
 export const STORAGE_DRAFT_PROFILE_NAME = "cib_draft_profile_name"
 const SITE_BANNER_DISMISSED = "cib_site_banner_dismissed"

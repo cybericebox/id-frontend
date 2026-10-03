@@ -90,11 +90,6 @@ spec:
                 configMapKeyRef:
                   name: id-frontend-config
                   key: CAPTCHA_SITE_KEY
-            - name: NEXT_PUBLIC_DOS_PROTECTION
-              valueFrom:
-                configMapKeyRef:
-                  name: id-frontend-config
-                  key: DOS_PROTECTION
             - name: NEXT_PUBLIC_RECAPTCHA_ENTERPRISE
               valueFrom:
                 configMapKeyRef:

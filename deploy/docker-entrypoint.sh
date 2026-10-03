@@ -8,7 +8,7 @@ set -e
 ROOT=/usr/share/nginx/html
 
 # Every operator value comes from env; there are no fallbacks.
-for name in NEXT_PUBLIC_MAIN_HOST NEXT_PUBLIC_API_HOST NEXT_PUBLIC_ID_HOST NEXT_PUBLIC_ADMIN_HOST NEXT_PUBLIC_EXERCISES_HOST NEXT_PUBLIC_EVENT_DOMAIN NEXT_PUBLIC_COOKIE_DOMAIN NEXT_PUBLIC_SUPPORT_EMAIL NEXT_PUBLIC_PARTNER_URL NEXT_PUBLIC_PARTNER_SITE_URL NEXT_PUBLIC_CAPTCHA_PROVIDER NEXT_PUBLIC_DOS_PROTECTION; do
+for name in NEXT_PUBLIC_MAIN_HOST NEXT_PUBLIC_API_HOST NEXT_PUBLIC_ID_HOST NEXT_PUBLIC_ADMIN_HOST NEXT_PUBLIC_EXERCISES_HOST NEXT_PUBLIC_EVENT_DOMAIN NEXT_PUBLIC_COOKIE_DOMAIN NEXT_PUBLIC_SUPPORT_EMAIL NEXT_PUBLIC_PARTNER_URL NEXT_PUBLIC_PARTNER_SITE_URL NEXT_PUBLIC_CAPTCHA_PROVIDER; do
   eval "value=\${$name:-}"
   if [ -z "$value" ]; then
     echo "$name is required." >&2
@@ -19,14 +19,9 @@ done
 # folded its placeholder, so it is exported (possibly empty) to be substituted.
 export NEXT_PUBLIC_GOOGLE_ANALYTICS_ID="${NEXT_PUBLIC_GOOGLE_ANALYTICS_ID:-}"
 
-# Bot check: the provider is turnstile, recaptcha or none (local development); DoS protection is on or off.
+# Bot check: the provider is turnstile, recaptcha or none (local development).
 case "$NEXT_PUBLIC_CAPTCHA_PROVIDER" in turnstile | recaptcha | none) ;; *)
   echo "NEXT_PUBLIC_CAPTCHA_PROVIDER must be turnstile, recaptcha or none." >&2
-  exit 1
-  ;;
-esac
-case "$NEXT_PUBLIC_DOS_PROTECTION" in on | off) ;; *)
-  echo "NEXT_PUBLIC_DOS_PROTECTION must be on or off." >&2
   exit 1
   ;;
 esac

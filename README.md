@@ -46,7 +46,6 @@ Production builds are a **static export** (`output: "export"`, written to `out/`
 | `NEXT_PUBLIC_CAPTCHA_PROVIDER` | yes | Bot-check provider: `turnstile`, `recaptcha` or `none` (local development, nothing is loaded). Must match the backend. |
 | `NEXT_PUBLIC_CAPTCHA_SITE_KEY` | when the provider is not `none` | Public site key of the provider. |
 | `NEXT_PUBLIC_RECAPTCHA_ENTERPRISE` | no (default `false`) | `true` to use reCAPTCHA Enterprise (only for `recaptcha`); must match the backend mode. |
-| `NEXT_PUBLIC_DOS_PROTECTION` | yes | `on` or `off`; must match the backend. On: the first visit fetches an invisible client token (`POST /api/client-token`) before the first public API call. |
 | `DEV_ALLOWED_ORIGINS` | no | Dev only: comma list for `allowedDevOrigins`; default is the configured hosts and `*.<event domain>`. |
 
 There are no fallbacks: a missing host fails the build (`next.config.ts`), the container start (entrypoint) and the Pages workflow. See `.env.example`.
