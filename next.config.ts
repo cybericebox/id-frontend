@@ -46,10 +46,15 @@ function devContentSecurityPolicy(): string {
     script.push("https://www.googletagmanager.com")
     connect.push("https://*.google-analytics.com", "https://*.analytics.google.com", "https://*.googletagmanager.com", "https://www.google.com/ccm/", "https://*.doubleclick.net")
   }
-  if (process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY?.trim()) {
+  const captcha = process.env.NEXT_PUBLIC_CAPTCHA_PROVIDER?.trim()
+  if (captcha === "recaptcha") {
     script.push("https://www.google.com/recaptcha/", "https://www.gstatic.com/recaptcha/")
     connect.push("https://www.google.com/recaptcha/")
     frame = "https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/"
+  } else if (captcha === "turnstile") {
+    script.push("https://challenges.cloudflare.com")
+    connect.push("https://challenges.cloudflare.com")
+    frame = "https://challenges.cloudflare.com"
   }
   return [
     "default-src 'self'",
