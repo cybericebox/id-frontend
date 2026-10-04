@@ -5,15 +5,9 @@ import path from "node:path"
 export default defineConfig({
   test: {
     environment: "node",
-    // Sample hosts (next.config.ts is not loaded by vitest).
+    // Sample base domain (next.config.ts is not loaded by vitest).
     env: {
-      NEXT_PUBLIC_MAIN_HOST: "cybericebox.local",
-      NEXT_PUBLIC_API_HOST: "api.cybericebox.local",
-      NEXT_PUBLIC_ID_HOST: "id.cybericebox.local",
-      NEXT_PUBLIC_ADMIN_HOST: "admin.cybericebox.local",
-      NEXT_PUBLIC_EXERCISES_HOST: "exercises.cybericebox.local",
-      NEXT_PUBLIC_EVENT_DOMAIN: "cybericebox.local",
-      NEXT_PUBLIC_COOKIE_DOMAIN: "cybericebox.local",
+      NEXT_PUBLIC_DOMAIN: "cybericebox.local",
       NEXT_PUBLIC_SUPPORT_EMAIL: "support@example.test",
     },
     exclude: [...configDefaults.exclude, "e2e/**", "**/.worktrees/**", "**/.claude/worktrees/**"],

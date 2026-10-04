@@ -14,6 +14,7 @@
  * No JSX — plain TypeScript; safe to import without 'use client' propagation issues.
  */
 
+import { hosts } from "@/lib/hosts"
 import { apiGet, ApiError } from "@/api/client"
 import { COOKIE_RETURN_TO } from "@/lib/storageKeys"
 import { eventDomain } from "@/lib/origins"
@@ -68,16 +69,11 @@ export function redirectToSignIn(signInUrl?: string, returnTo?: string): void {
   window.location.href = url.toString()
 }
 
-/** A configured app host, or any host under NEXT_PUBLIC_EVENT_DOMAIN. */
+/** A platform app host, or any host under the base domain (event sites). */
 function isPlatformHost(host: string): boolean {
   const h = host.toLowerCase()
-  const apps = [
-    process.env.NEXT_PUBLIC_MAIN_HOST,
-    process.env.NEXT_PUBLIC_ID_HOST,
-    process.env.NEXT_PUBLIC_ADMIN_HOST,
-    process.env.NEXT_PUBLIC_EXERCISES_HOST,
-  ]
-  if (apps.some((a) => a?.trim().toLowerCase() === h)) return true
+  const { main, id, admin, exercises } = hosts()
+  if ([main, id, admin, exercises].includes(h)) return true
   return !!eventDomain && (h === eventDomain.toLowerCase() || h.endsWith("." + eventDomain.toLowerCase()))
 }
 
@@ -89,7 +85,7 @@ function isPlatformHost(host: string): boolean {
  * from bouncing an authed user off-platform.
  *
  * Platform hosts are the configured app hosts plus every event site under
- * NEXT_PUBLIC_EVENT_DOMAIN.
+ * the base domain.
  */
 export function safeReturnTo(returnTo?: string, fallback = "/profile"): string {
   if (!returnTo) return fallback
