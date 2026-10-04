@@ -57,7 +57,7 @@ spec:
                   key: RECAPTCHA_PROJECT
                   optional: true
           ports:
-            - containerPort: 3000
+            - containerPort: 8080
               protocol: TCP
           resources:
             requests:
@@ -68,12 +68,12 @@ spec:
               cpu: "200m"
           readinessProbe:
             httpGet:
-              port: 3000
+              port: 8080
               path: /healthz
             initialDelaySeconds: 20
           livenessProbe:
             httpGet:
-              port: 3000
+              port: 8080
               path: /healthz
             initialDelaySeconds: 20
             periodSeconds: 30
