@@ -22,45 +22,42 @@ spec:
     spec:
       containers:
         - name: id-frontend
-          image: cybericebox/id-frontend:latest
+          image: cybericebox/id-frontend:v0.1.0 # the release tag: an exact version, never latest
+          imagePullPolicy: IfNotPresent
           env:
             - name: NEXT_PUBLIC_DOMAIN
               valueFrom:
                 configMapKeyRef:
                   name: id-frontend-config
                   key: DOMAIN
-            - name: NEXT_PUBLIC_API_DOMAIN
+            - name: NEXT_PUBLIC_SUPPORT_EMAIL
               valueFrom:
                 configMapKeyRef:
                   name: id-frontend-config
-                  key: API_DOMAIN
-            - name: NEXT_PUBLIC_ADMIN_DOMAIN
-              valueFrom:
-                configMapKeyRef:
-                  name: id-frontend-config
-                  key: ADMIN_DOMAIN
-            - name: NEXT_PUBLIC_EXERCISES_DOMAIN
-              valueFrom:
-                configMapKeyRef:
-                  name: id-frontend-config
-                  key: EXERCISES_DOMAIN
+                  key: SUPPORT_EMAIL
             - name: NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
               valueFrom:
                 configMapKeyRef:
                   name: id-frontend-config
                   key: GOOGLE_ANALYTICS_ID
-            - name: NEXT_PUBLIC_RECAPTCHA_SITE_KEY
+            - name: NEXT_PUBLIC_CAPTCHA_PROVIDER
               valueFrom:
                 configMapKeyRef:
                   name: id-frontend-config
-                  key: RECAPTCHA_SITE_KEY
-            - name: NEXT_PUBLIC_RECAPTCHA_ENTERPRISE
+                  key: CAPTCHA_PROVIDER
+            - name: NEXT_PUBLIC_CAPTCHA_SITE_KEY
               valueFrom:
                 configMapKeyRef:
                   name: id-frontend-config
-                  key: RECAPTCHA_ENTERPRISE
+                  key: CAPTCHA_SITE_KEY
+            - name: NEXT_PUBLIC_RECAPTCHA_PROJECT
+              valueFrom:
+                configMapKeyRef:
+                  name: id-frontend-config
+                  key: RECAPTCHA_PROJECT
+                  optional: true
           ports:
-            - containerPort: 3000
+            - containerPort: 8080
               protocol: TCP
           resources:
             requests:
@@ -71,12 +68,12 @@ spec:
               cpu: "200m"
           readinessProbe:
             httpGet:
-              port: 3000
+              port: 8080
               path: /healthz
             initialDelaySeconds: 20
           livenessProbe:
             httpGet:
-              port: 3000
+              port: 8080
               path: /healthz
             initialDelaySeconds: 20
             periodSeconds: 30

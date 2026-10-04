@@ -15,6 +15,7 @@ import { ThemeSwitch } from "@/components/ThemeToggle"
 import { CookieSettingsLink } from "@/components/CookieSettingsLink"
 import { Tooltip } from "@/components/ui/tooltip"
 import { cn } from "@/utils/cn"
+import { BRAND_HEAD, BRAND_TAIL } from "@/i18n/brand"
 import { t, tSegments } from "@/i18n/t"
 import "./auth-panel.css"
 
@@ -24,6 +25,11 @@ export type AuthVariant =
   | "recover"
   | "reset"
   | "setup"
+
+// Partner links are fixed; NEXT_PUBLIC_SHOW_PARTNERS=false hides the partner block. The container entrypoint defaults it to true.
+const PARTNER_ICE_NURE_URL = "https://ice.nure.ua/ua/"
+const PARTNER_NURE_URL = "https://nure.ua"
+const SHOW_PARTNERS = process.env.NEXT_PUBLIC_SHOW_PARTNERS !== "false"
 
 type Item = { icon: React.ComponentType<{ size?: number; className?: string }>; key: string }
 
@@ -101,8 +107,8 @@ export function AuthSidePanel({
       <div className="mx-auto flex h-full max-w-xl flex-col px-12 py-14">
         <div className="flex flex-col items-start gap-4">
           <Logo size={104} />
-          <span className="text-lg font-semibold tracking-tight text-on-brand">
-            Cyber <span className="text-ice-on-brand">ICE</span> Box
+          <span className="whitespace-nowrap text-lg font-semibold tracking-tight text-on-brand">
+            {BRAND_HEAD}<span className="text-ice-on-brand">ICE</span>{BRAND_TAIL}
           </span>
         </div>
 
@@ -124,18 +130,18 @@ export function AuthSidePanel({
 
         <footer className="flex flex-col items-start gap-3 border-t border-brand-line pt-5 text-[13px] leading-relaxed text-on-brand-3">
           <p className="auth-legal text-[12px] xl:text-[13px]">
-            {tSegments("authPanel.legal", {
+            {!SHOW_PARTNERS ? t("authPanel.legalPlain", { year: YEAR }) : tSegments("authPanel.legal", {
               year: YEAR,
               department: (
                 <Tooltip content={t("authPanel.departmentFull")} align="start">
-                  <a href="https://ice.nure.ua/ua/" target="_blank" rel="noopener noreferrer" className="rounded-xs font-medium whitespace-nowrap text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand">
+                  <a href={PARTNER_ICE_NURE_URL} target="_blank" rel="noopener noreferrer" className="rounded-xs font-medium whitespace-nowrap text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand">
                     {t("authPanel.legalLink")}
                   </a>
                 </Tooltip>
               ),
               nure: (
                 <Tooltip content={t("authPanel.nureFull")} align="start">
-                  <a href="https://nure.ua" target="_blank" rel="noopener noreferrer" className="rounded-xs font-medium whitespace-nowrap text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand">
+                  <a href={PARTNER_NURE_URL} target="_blank" rel="noopener noreferrer" className="rounded-xs font-medium whitespace-nowrap text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand">
                     {t("authPanel.nure")}
                   </a>
                 </Tooltip>

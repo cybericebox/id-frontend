@@ -5,6 +5,11 @@ import path from "node:path"
 export default defineConfig({
   test: {
     environment: "node",
+    // Sample base domain (next.config.ts is not loaded by vitest).
+    env: {
+      NEXT_PUBLIC_DOMAIN: "cybericebox.local",
+      NEXT_PUBLIC_SUPPORT_EMAIL: "support@example.test",
+    },
     exclude: [...configDefaults.exclude, "e2e/**", "**/.worktrees/**", "**/.claude/worktrees/**"],
   },
   resolve: { alias: { "@": path.resolve(import.meta.dirname, "src") } },

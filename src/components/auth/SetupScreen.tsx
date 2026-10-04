@@ -27,11 +27,12 @@ import { Spinner } from "@/components/ui/spinner"
 import { ErrorScreen } from "@/components/ErrorScreen"
 import { AuthLayout } from "./AuthLayout"
 import { useOneShotParam } from "@/lib/useOneShotParam"
-import { mainOrigin, publicDomain } from "@/lib/origins"
+import { mainOrigin } from "@/lib/origins"
 import { AuthHeading, AuthPane, AuthSwitch, GoogleIcon } from "./parts"
 import { t } from "@/i18n/t"
 import { apiPost, apiUrl } from "@/api/client"
 import { localizedError } from "@/i18n/apiError"
+import { setupDraftKey } from "@/lib/storageKeys"
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -189,8 +190,8 @@ function SetupForm() {
   const returnTo = searchParams.get("return_to") ?? ""
 
   // Terms of Service live on the apex (main) frontend, not the id subdomain.
-  const termsUrl = publicDomain ? `${mainOrigin}/terms` : "/terms"
-  const privacyUrl = publicDomain ? `${mainOrigin}/privacy` : "/privacy"
+  const termsUrl = `${mainOrigin}/terms`
+  const privacyUrl = `${mainOrigin}/privacy`
   const legalLink = (href: string, label: string) => (
     <a href={href} target="_blank" rel="noopener noreferrer" className="font-medium text-action underline-offset-3 hover:underline">
       {label}
@@ -209,7 +210,7 @@ function SetupForm() {
   // form. Persist the non-secret fields to sessionStorage (per-tab, cleared on
   // close) keyed by token, so they're restored when the user returns. Passwords
   // are intentionally NOT persisted (avoid writing secrets to web storage).
-  const draftKey = token ? `setup-draft:${token}` : ""
+  const draftKey = token ? setupDraftKey(token) : ""
 
   // Fetch state
   const [setupInfo, setSetupInfo] = useState<SetupInfo | null>(null)
@@ -267,7 +268,7 @@ function SetupForm() {
     // instead of hitting a server that isn't there.
     if (token === "preview-token-DEMO1234") {
       setSetupInfo({
-        Email: "hacker@cybericebox.com",
+        Email: "hacker@example.com",
         FirstName: "Ігор",
         LastName: "Морозенко",
         HasProvider: false,

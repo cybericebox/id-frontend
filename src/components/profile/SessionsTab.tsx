@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useCallback, useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 
 import {
   Card,
@@ -16,9 +16,11 @@ import { LoadingArea } from "@/components/ui/spinner"
 import { EmptyState } from "@/components/ui/empty-state"
 import { LoadError } from "@/components/ui/load-error"
 import { apiGet, apiDelete } from "@/api/client"
+import { BRAND } from "@/i18n/brand"
 import { t, locale } from "@/i18n/t"
 import type { SessionInfo } from "./types"
 import { extractError } from "./ProfileTab"
+import { createSessionsStore, type SessionsState } from "./sessionsStore"
 
 // osFromUA derives a human OS/platform label from a user-agent string. The raw
 // UA is noise to users; the OS is what they recognize a session by.
@@ -36,7 +38,7 @@ function osFromUA(ua: string): string {
 // browserFromUA derives a human browser label from a user-agent string.
 function browserFromUA(ua: string): string {
   if (!ua) return t("profile.sessions.unknownBrowser")
-  if (/cybericebox/i.test(ua)) return "Cyber ICE Box CLI"
+  if (/cybericebox/i.test(ua)) return `${BRAND} CLI`
   const edge = ua.match(/Edg\/(\d+)/)
   if (edge) return `Edge ${edge[1]}`
   const opera = ua.match(/OPR\/(\d+)/)
@@ -59,55 +61,48 @@ function formatDate(dateStr: string): string {
 }
 
 export function SessionsTab() {
-  const [sessions, setSessions] = useState<SessionInfo[]>([])
-  const [loadError, setLoadError] = useState<unknown>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [busyId, setBusyId] = useState<string | null>(null)
+  const [state, setState] = useState<SessionsState>({ sessions: [], loading: true, loadError: null })
+  const [confirmBusy, setConfirmBusy] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmError, setConfirmError] = useState("")
-
-  const load = useCallback(async () => {
-    setLoadError(null)
-    setIsLoading(true)
-    try {
-      const data = await apiGet<SessionInfo[]>("/api/auth/sessions")
-      setSessions(data ?? [])
-    } catch (err) {
-      setLoadError(err)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+  const storeRef = useRef<ReturnType<typeof createSessionsStore> | null>(null)
+  if (!storeRef.current) {
+    storeRef.current = createSessionsStore(
+      {
+        list: () => apiGet<SessionInfo[]>("/api/auth/sessions"),
+        revokeOne: (id) => apiDelete(`/api/auth/sessions/${encodeURIComponent(id)}`),
+        revokeAll: () => apiDelete("/api/auth/sessions"),
+      },
+      setState,
+    )
+  }
+  const store = storeRef.current
+  const { sessions, loading: isLoading, loadError } = state
 
   useEffect(() => {
-    void load()
-  }, [load])
+    void store.load()
+  }, [store])
 
   const revokeOne = async (id: string) => {
-    setBusyId(id)
     try {
-      await apiDelete(`/api/auth/sessions/${encodeURIComponent(id)}`)
-      await load()
+      await store.revokeOne(id)
       toast.success(t("profile.sessions.revoked"))
     } catch (err) {
       toast.error(extractError(err))
-    } finally {
-      setBusyId(null)
     }
   }
 
   const revokeAll = async () => {
-    setBusyId("__all__")
+    setConfirmBusy(true)
     setConfirmError("")
     try {
-      await apiDelete("/api/auth/sessions")
+      await store.revokeAll()
       setConfirmOpen(false)
-      await load()
       toast.success(t("profile.sessions.revokedOthers"))
     } catch (err) {
       setConfirmError(extractError(err))
     } finally {
-      setBusyId(null)
+      setConfirmBusy(false)
     }
   }
 
@@ -124,7 +119,7 @@ export function SessionsTab() {
         {isLoading ? (
           <LoadingArea label={t("common.loading")} />
         ) : loadError ? (
-          <LoadError message={t("profile.sessions.loadError")} error={loadError} onRetry={() => { void load() }} />
+          <LoadError message={t("profile.sessions.loadError")} error={loadError} onRetry={() => { void store.load() }} />
         ) : sessions.length === 0 ? (
           <EmptyState message={t("profile.sessions.empty")} />
         ) : (
@@ -147,7 +142,6 @@ export function SessionsTab() {
                       variant="outline"
                       size="sm"
                       onClick={() => revokeOne(s.ID)}
-                      disabled={busyId === s.ID}
                     >
                       {t("profile.sessions.revoke")}
                     </Button>
@@ -170,7 +164,6 @@ export function SessionsTab() {
           <Button
             variant="outline"
             onClick={() => { setConfirmError(""); setConfirmOpen(true) }}
-            disabled={busyId === "__all__"}
           >
             {t("profile.sessions.revokeAll")}
           </Button>
@@ -179,7 +172,7 @@ export function SessionsTab() {
           open={confirmOpen}
           onCancel={() => setConfirmOpen(false)}
           tone="danger"
-          busy={busyId === "__all__"}
+          busy={confirmBusy}
           error={confirmError}
           title={t("profile.sessions.revokeAllTitle")}
           description={t("profile.sessions.revokeAllBody")}

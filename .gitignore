@@ -17,3 +17,6 @@ out
 /graphify-out/
 /.graphify/
 /.superpowers/
+
+# vitest cache
+.vitest/

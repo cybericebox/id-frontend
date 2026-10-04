@@ -1,13 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { adminOrigin, apiOrigin, exercisesOrigin, publicDomain } from "@/lib/origins"
+import { adminOrigin, apiOrigin, eventDomain, exercisesOrigin, idOrigin, mainHost } from "@/lib/origins"
 import { backHosts, resolveBack, type BackLink } from "@/lib/backLink"
 
-const HOSTS = backHosts(publicDomain, {
+const HOSTS = backHosts({ main: mainHost, eventDomain }, {
   admin: adminOrigin,
   exercises: exercisesOrigin,
-  id: process.env.NEXT_PUBLIC_ID_DOMAIN?.trim() ? `https://${process.env.NEXT_PUBLIC_ID_DOMAIN.trim()}` : publicDomain && `https://id.${publicDomain}`,
+  id: idOrigin,
   api: apiOrigin,
 })
 

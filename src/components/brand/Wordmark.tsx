@@ -1,6 +1,7 @@
 import * as React from "react"
 import { mainOrigin } from "@/lib/origins"
 import { Logo } from "./Logo"
+import { BRAND_HEAD, BRAND_TAIL } from "@/i18n/brand"
 import { t } from "@/i18n/t"
 
 // The landing (apex) origin — the brand lockup links here by default so the
@@ -27,8 +28,8 @@ export function Wordmark({
   const lockup = (
     <span className={`inline-flex items-center gap-2 font-semibold tracking-tight ${text} ${className ?? ""}`}>
       {withMark && <Logo size={mark} href={null} />}
-      <span className="text-ink">
-        Cyber <span className="text-ice">ICE</span> Box
+      <span className="whitespace-nowrap text-ink">
+        {BRAND_HEAD}<span className="text-ice">ICE</span>{BRAND_TAIL}
       </span>
     </span>
   )

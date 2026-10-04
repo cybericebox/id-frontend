@@ -1,16 +1,17 @@
-// All browser-facing application origins derive from the one public domain.
-// NEXT_PUBLIC_{API,ADMIN,EXERCISES}_DOMAIN override a single host (bare host, no
-// scheme), e.g. to point this app at another backend. Empty origin intentionally means
-// same-origin during local development.
-const domain = process.env.NEXT_PUBLIC_DOMAIN?.trim() ?? ""
-export const publicDomain = domain
+// Browser-facing application origins. Every host derives from the one base domain NEXT_PUBLIC_DOMAIN (src/lib/hosts.ts); a missing
+// domain fails the build (next.config.ts) and the container start (entrypoint).
+import { hosts } from "@/lib/hosts"
 
-const origin = (override: string | undefined, fallback: string) => {
-  const host = override?.trim() || fallback
-  return host ? `https://${host}` : ""
-}
+const h = hosts()
+const origin = (host: string) => `https://${host}`
 
-export const apiOrigin = origin(process.env.NEXT_PUBLIC_API_DOMAIN, domain && `api.${domain}`)
-export const adminOrigin = origin(process.env.NEXT_PUBLIC_ADMIN_DOMAIN, domain && `admin.${domain}`)
-export const exercisesOrigin = origin(process.env.NEXT_PUBLIC_EXERCISES_DOMAIN, domain && `exercises.${domain}`)
-export const mainOrigin = domain ? `https://${domain}` : "/"
+export const mainHost = h.main
+export const idHost = h.id
+/** Event sites are <tag>.<eventDomain>; also the parent domain of the shared theme/consent cookies. */
+export const eventDomain = h.eventDomain
+
+export const mainOrigin = origin(h.main)
+export const idOrigin = origin(h.id)
+export const apiOrigin = origin(h.api)
+export const adminOrigin = origin(h.admin)
+export const exercisesOrigin = origin(h.exercises)

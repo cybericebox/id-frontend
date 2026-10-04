@@ -17,12 +17,8 @@ const SRC = path.resolve(import.meta.dirname, "..")
 const ALLOW: { file: string; text: string; reason: string }[] = [
   { file: "components/auth/SetupScreen.tsx", text: "Ігор", reason: "design-sync preview fixture: user data, not UI text" },
   { file: "components/auth/SetupScreen.tsx", text: "Морозенко", reason: "design-sync preview fixture: user data, not UI text" },
-  { file: "components/brand/Wordmark.tsx", text: "Cyber", reason: "brand wordmark lockup" },
   { file: "components/brand/Wordmark.tsx", text: "ICE", reason: "brand wordmark lockup" },
-  { file: "components/brand/Wordmark.tsx", text: "Box", reason: "brand wordmark lockup" },
-  { file: "components/auth/AuthSidePanel.tsx", text: "Cyber", reason: "brand wordmark lockup" },
   { file: "components/auth/AuthSidePanel.tsx", text: "ICE", reason: "brand wordmark lockup" },
-  { file: "components/auth/AuthSidePanel.tsx", text: "Box", reason: "brand wordmark lockup" },
 ]
 
 const TEXT_ATTRS = new Set(["aria-label", "title", "placeholder", "alt"])

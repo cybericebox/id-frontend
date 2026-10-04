@@ -1,11 +1,12 @@
 // Minimal fetch-based API client.
-// The API origin is api.<NEXT_PUBLIC_DOMAIN> or NEXT_PUBLIC_API_DOMAIN (bare host): every
+// The API origin is https://api.<NEXT_PUBLIC_DOMAIN>: every
 // frontend calls the single api host cross-origin with credentials included,
 // and the browser stores/sends the host-scoped session cookie. No silent-auth
 // bootstrap — a plain credentialed fetch is authoritative.
 
 import { apiOrigin } from "@/lib/origins"
 import { isNetworkOutage, isUnavailableStatus, reportServiceUnavailable } from "@/lib/serviceStatus"
+import { COOKIE_RETURN_TO } from "@/lib/storageKeys"
 
 const BASE_URL = apiOrigin
 
@@ -19,7 +20,9 @@ export class ApiError extends Error {
     public readonly signInUrl?: string,
     // Stable numeric FullCode from the envelope (Status.Code). This — not the
     // English message — is the i18n key callers localize against (see i18n/apiError).
-    public readonly code?: number
+    public readonly code?: number,
+    // Retry-After header of a 429, in seconds (the wait the backend asks for).
+    public readonly retryAfter?: number
   ) {
     super(message ?? `API error ${status}`)
     this.name = "ApiError"
@@ -27,7 +30,7 @@ export class ApiError extends Error {
 }
 
 // ApiOptions controls cross-cutting request behavior.
-//   required (default true) — a 401 writes the return_to cookie and redirects
+//   required (default true) — a 401 writes the cib_return_to cookie and redirects
 //       the browser to the backend-advertised sign-in page (X-Sign-In-URL).
 //       The promise never resolves (navigation is underway), so no catch/finally
 //       runs on the caller.
@@ -52,11 +55,11 @@ function portless(href: string): string {
 }
 
 // writeReturnToCookie writes the current page URL (portless, https) as the
-// return_to cookie the backend consumes at session creation. The backend rejects
+// cib_return_to cookie the backend consumes at session creation. The backend rejects
 // URLs with a port and requires https, so the value must be portless https.
 function writeReturnToCookie(): void {
   if (typeof window === "undefined") return
-  document.cookie = `return_to=${encodeURIComponent(portless(window.location.href))}; path=/; SameSite=Lax; Secure`
+  document.cookie = `${COOKIE_RETURN_TO}=${encodeURIComponent(portless(window.location.href))}; path=/; SameSite=Lax; Secure`
 }
 
 // redirectToSignInPage is inlined here (no import of lib/auth) to avoid a
@@ -68,6 +71,12 @@ function writeReturnToCookie(): void {
 function redirectToSignInPage(signInUrl: string | null): void {
   if (typeof window === "undefined") return
   window.location.replace(signInUrl || portless(window.location.origin) + "/sign-in")
+}
+
+function parseRetryAfter(raw: string | null): number | undefined {
+  if (!raw) return undefined
+  const n = Number(raw)
+  return Number.isFinite(n) && n > 0 ? Math.ceil(n) : undefined
 }
 
 async function request<T>(
@@ -96,7 +105,7 @@ async function request<T>(
   // Keep the modal until its session-aware recovery probe succeeds.
   if (isUnavailableStatus(res.status)) reportServiceUnavailable()
 
-  // Centralized auth handling: required (default true) → write return_to cookie
+  // Centralized auth handling: required (default true) → write cib_return_to cookie
   // and redirect to sign-in. Returning a never-resolving promise stops the
   // caller's success/catch paths from running while the browser navigates away.
   // required:false → fall through to throw ApiError so callers treat it as anon.
@@ -132,7 +141,8 @@ async function request<T>(
       parsed,
       envelope?.Status?.Message,
       res.headers.get("X-Sign-In-URL") ?? undefined,
-      envelope?.Status?.Code
+      envelope?.Status?.Code,
+      parseRetryAfter(res.headers.get("Retry-After"))
     )
   }
 
@@ -190,6 +200,15 @@ export function apiPatch<T>(
   return request<T>(path, { ...init, method: "PATCH", body: JSON.stringify(body) }, opts)
 }
 
-export function apiDelete<T>(path: string, init?: RequestInit, opts?: ApiOptions): Promise<T> {
-  return request<T>(path, { ...init, method: "DELETE" }, opts)
+export function apiDelete<T>(
+  path: string,
+  init?: RequestInit,
+  opts?: ApiOptions,
+  body?: unknown
+): Promise<T> {
+  return request<T>(
+    path,
+    { ...init, method: "DELETE", ...(body === undefined ? {} : { body: JSON.stringify(body) }) },
+    opts
+  )
 }

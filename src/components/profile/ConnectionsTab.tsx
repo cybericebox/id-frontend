@@ -13,11 +13,13 @@ import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { toast } from "@/components/ui/toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { apiDelete, apiUrl } from "@/api/client"
+import { apiDelete } from "@/api/client"
+import { startGoogleLink } from "@/api/googleLink"
 import { GoogleIcon } from "@/components/auth/parts"
 import { t } from "@/i18n/t"
 import type { Account } from "./types"
 import { extractError } from "./ProfileTab"
+import { ReauthPasswordField } from "./ReauthPasswordField"
 
 export function ConnectionsTab({
   account,
@@ -34,6 +36,11 @@ export function ConnectionsTab({
   const [isBusy, setIsBusy] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmError, setConfirmError] = useState("")
+  const [password, setPassword] = useState("")
+  const [connectOpen, setConnectOpen] = useState(false)
+  const [connectError, setConnectError] = useState("")
+  const [connectPassword, setConnectPassword] = useState("")
+  const [isConnecting, setIsConnecting] = useState(false)
 
   const hasGoogle = account.Providers.includes("google")
   // Without a password Google is the only way in: the backend refuses too.
@@ -44,7 +51,13 @@ export function ConnectionsTab({
     setConfirmError("")
     setIsBusy(true)
     try {
-      await apiDelete("/api/auth/google/link")
+      await apiDelete(
+        "/api/auth/google/link",
+        undefined,
+        undefined,
+        account.HasPassword ? { CurrentPassword: password } : undefined
+      )
+      setPassword("")
       setConfirmOpen(false)
       onUpdated()
       toast.success(t("profile.connections.unlinked"))
@@ -56,9 +69,21 @@ export function ConnectionsTab({
     }
   }
 
-  const connect = () => {
-    // GET endpoint sets the intent cookie, runs OAuth, and returns to /profile.
-    window.location.href = apiUrl("/api/auth/google/link")
+  // The backend confirms the owner first, then returns the Google URL; it sets the OAuth cookies and the
+  // callback returns to /profile.
+  const connect = async () => {
+    setErrorMsg(null)
+    setConnectError("")
+    setIsConnecting(true)
+    try {
+      const url = await startGoogleLink(account.HasPassword ? connectPassword : undefined)
+      window.location.href = url
+    } catch (err) {
+      // A wrong password stays in the dialog; the "sign in again" answer of a password-less account shows here.
+      if (account.HasPassword) setConnectError(extractError(err))
+      else setErrorMsg(extractError(err))
+      setIsConnecting(false)
+    }
   }
 
   return (
@@ -87,29 +112,72 @@ export function ConnectionsTab({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => { setConfirmError(""); setConfirmOpen(true) }}
+              onClick={() => { setConfirmError(""); setPassword(""); setConfirmOpen(true) }}
               disabled={isBusy}
             >
               {t("profile.connections.unlink")}
             </Button>
           ) : (
-            <Button variant="outline" size="sm" onClick={connect}>
+            <Button
+              variant="outline"
+              size="sm"
+              busy={isConnecting && !account.HasPassword}
+              disabled={isConnecting}
+              onClick={() => {
+                if (account.HasPassword) {
+                  setConnectError("")
+                  setConnectPassword("")
+                  setConnectOpen(true)
+                } else {
+                  void connect()
+                }
+              }}
+            >
               {t("profile.connections.connect")}
             </Button>
           )}
         </div>
         <ConfirmDialog
+          open={connectOpen}
+          onCancel={() => setConnectOpen(false)}
+          busy={isConnecting}
+          disabled={!connectPassword}
+          error={connectError}
+          title={t("profile.connections.connectTitle")}
+          description={t("profile.connections.connectBody")}
+          confirmLabel={t("profile.connections.connect")}
+          onConfirm={() => void connect()}
+        >
+          <ReauthPasswordField
+            id="connect-google-password"
+            hint={t("profile.connections.connectPasswordHint")}
+            value={connectPassword}
+            onChange={setConnectPassword}
+            disabled={isConnecting}
+          />
+        </ConfirmDialog>
+        <ConfirmDialog
           open={confirmOpen}
           onCancel={() => setConfirmOpen(false)}
           tone="danger"
           busy={isBusy}
-          disabled={onlyMethod}
+          disabled={onlyMethod || (account.HasPassword && !password)}
           error={onlyMethod ? t("profile.connections.unlinkOnlyMethod") : confirmError}
           title={t("profile.connections.unlinkTitle")}
           description={t("profile.connections.unlinkBody")}
           confirmLabel={t("profile.connections.unlink")}
           onConfirm={() => void unlink()}
-        />
+        >
+          {account.HasPassword && !onlyMethod && (
+            <ReauthPasswordField
+              id="unlink-google-password"
+              hint={t("profile.connections.unlinkPasswordHint")}
+              value={password}
+              onChange={setPassword}
+              disabled={isBusy}
+            />
+          )}
+        </ConfirmDialog>
       </CardContent>
     </Card>
   )

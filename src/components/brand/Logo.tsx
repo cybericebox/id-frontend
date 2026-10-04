@@ -20,7 +20,7 @@ export interface LogoProps {
   href?: string | null
 }
 
-// The landing (apex) origin; "/" when NEXT_PUBLIC_DOMAIN is unset (dev/SSR).
+// The landing origin (the base domain).
 const LANDING_HREF = mainOrigin
 
 export function Logo({ size = 64, className, href }: LogoProps) {
