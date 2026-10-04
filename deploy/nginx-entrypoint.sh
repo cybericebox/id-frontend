@@ -5,10 +5,11 @@
 # with envsubst (a fixed variable list) into /tmp/nginx-gen and writes an empty file for each inactive one. It then
 # runs `nginx -t`, so a bad combination stops the container at start, and starts the certificate reload loop.
 #
-#   HTTP_PORT            3000   plain HTTP listener; set but empty = off
-#   HTTPS_PORT           8443   TLS listener, on only when TLS_CERT_FILE and TLS_KEY_FILE are set
-#   TLS_CERT_FILE, TLS_KEY_FILE   PEM server certificate chain and key; both = TLS on, exactly one = error.
-#                        Unset: /tls/tls.crt and /tls/tls.key when both files exist (TLS on), else TLS off; set empty = off
+#   HTTP_PORT            8080   plain HTTP listener; set but empty = off
+#   HTTPS_PORT           8443   TLS listener, on only when the certificate and key files exist
+#   TLS_CERT_FILE, TLS_KEY_FILE   PEM server certificate chain and key (defaults /tls/tls.crt, /tls/tls.key). TLS is on when both
+#                        files exist; with no files the service runs plain HTTP. A path given in the env that does not exist
+#                        is a start error; set empty = off
 #   TLS_MIN_VERSION      1.2    1.2 or 1.3
 #   TLS_CLIENT_CA_FILE          PEM bundle of the CA(s) that signed the client certificates. Unset: /aop/ca.crt when it exists
 #   TLS_CLIENT_AUTH      off    off | optional (verify when presented) | require; optional/require need the CA file and TLS.
@@ -25,25 +26,40 @@ die() { echo "[nginx] $*" >&2; exit 1; }
 is_port() { case "$1" in '' | *[!0-9]*) return 1 ;; esac; [ "$1" -ge 1 ] && [ "$1" -le 65535 ]; }
 is_path() { printf '%s' "$1" | grep -Eq '^/[A-Za-z0-9._/+=@-]+$'; }
 
-# Unset means the default; set but empty means off (HTTP_PORT) or unset (the others).
-HTTP_PORT=${HTTP_PORT-3000}
+# Unset means the default; set but empty means off (HTTP_PORT, HEALTH_PORT, TLS files).
+HTTP_PORT=${HTTP_PORT-8080}
 HTTPS_PORT=${HTTPS_PORT:-8443}
-# Baked file locations (the deploy mounts the server certificate at /tls and the client CA at /aop): used only while the variables are unset.
-if [ -z "${TLS_CERT_FILE+x}" ] && [ -z "${TLS_KEY_FILE+x}" ] && [ -f /tls/tls.crt ] && [ -f /tls/tls.key ]; then
-  TLS_CERT_FILE=/tls/tls.crt
-  TLS_KEY_FILE=/tls/tls.key
-fi
+# Baked file locations (the deploy mounts the server certificate at /tls and the client CA at /aop), used while the variables are unset.
+cert_given=false; key_given=false; ca_given=false
+[ -z "${TLS_CERT_FILE:-}" ] || cert_given=true
+[ -z "${TLS_KEY_FILE:-}" ] || key_given=true
+[ -z "${TLS_CLIENT_CA_FILE:-}" ] || ca_given=true
+TLS_CERT_FILE=${TLS_CERT_FILE-/tls/tls.crt}
+TLS_KEY_FILE=${TLS_KEY_FILE-/tls/tls.key}
 default_ca=false
-if [ -z "${TLS_CLIENT_CA_FILE+x}" ] && [ -f /aop/ca.crt ]; then
+if [ -z "${TLS_CLIENT_CA_FILE+x}" ]; then
   TLS_CLIENT_CA_FILE=/aop/ca.crt
   default_ca=true
 fi
+# Files given explicitly must exist: a typo must not silently fall back to plain HTTP.
+check_given() { # check_given <name> <path> <given>
+  [ "$3" = true ] || return 0
+  is_path "$2" || die "'$2' ($1) is not a usable file path."
+  [ -f "$2" ] || die "$1=$2 does not exist."
+}
+check_given TLS_CERT_FILE "$TLS_CERT_FILE" "$cert_given"
+check_given TLS_KEY_FILE "$TLS_KEY_FILE" "$key_given"
+tls=false
+if [ -n "$TLS_CERT_FILE" ] && [ -n "$TLS_KEY_FILE" ] && [ -f "$TLS_CERT_FILE" ] && [ -f "$TLS_KEY_FILE" ]; then
+  tls=true
+elif [ "$cert_given" = true ] || [ "$key_given" = true ]; then
+  die "TLS_CERT_FILE and TLS_KEY_FILE must be set together."
+fi
 if [ -z "${TLS_CLIENT_AUTH+x}" ]; then
   TLS_CLIENT_AUTH=off
-  if [ "$default_ca" = true ] && [ -n "${TLS_CERT_FILE:-}" ]; then TLS_CLIENT_AUTH=require; fi
+  if [ "$default_ca" = true ] && [ "$tls" = true ] && [ -f "$TLS_CLIENT_CA_FILE" ]; then TLS_CLIENT_AUTH=require; fi
 fi
-TLS_CERT_FILE=${TLS_CERT_FILE:-}
-TLS_KEY_FILE=${TLS_KEY_FILE:-}
+if [ "$tls" != true ]; then TLS_CERT_FILE=; TLS_KEY_FILE=; fi
 TLS_MIN_VERSION=${TLS_MIN_VERSION:-1.2}
 TLS_CLIENT_CA_FILE=${TLS_CLIENT_CA_FILE:-}
 TLS_CLIENT_AUTH=${TLS_CLIENT_AUTH:-off}
@@ -68,19 +84,14 @@ case "$TLS_CLIENT_AUTH" in
   *) die "TLS_CLIENT_AUTH must be off, optional or require (got '$TLS_CLIENT_AUTH')." ;;
 esac
 
-tls=false
-if [ -n "$TLS_CERT_FILE" ] || [ -n "$TLS_KEY_FILE" ]; then
-  [ -n "$TLS_CERT_FILE" ] && [ -n "$TLS_KEY_FILE" ] || die "TLS_CERT_FILE and TLS_KEY_FILE must be set together."
-  tls=true
-  for f in "$TLS_CERT_FILE" "$TLS_KEY_FILE"; do
-    is_path "$f" || die "'$f' is not a usable file path."
-    [ -r "$f" ] || die "$f is not readable."
-  done
-fi
+for f in "$TLS_CERT_FILE" "$TLS_KEY_FILE"; do
+  [ -z "$f" ] || [ -r "$f" ] || die "$f is not readable."
+done
 if [ "$TLS_CLIENT_AUTH" != off ]; then
   [ "$tls" = true ] || die "TLS_CLIENT_AUTH=$TLS_CLIENT_AUTH needs TLS (TLS_CERT_FILE and TLS_KEY_FILE)."
   [ -n "$TLS_CLIENT_CA_FILE" ] || die "TLS_CLIENT_AUTH=$TLS_CLIENT_AUTH needs TLS_CLIENT_CA_FILE."
   is_path "$TLS_CLIENT_CA_FILE" || die "'$TLS_CLIENT_CA_FILE' is not a usable file path."
+  [ -f "$TLS_CLIENT_CA_FILE" ] || die "TLS_CLIENT_AUTH=$TLS_CLIENT_AUTH needs the CA file, $TLS_CLIENT_CA_FILE does not exist."
   [ -r "$TLS_CLIENT_CA_FILE" ] || die "$TLS_CLIENT_CA_FILE is not readable."
 else
   TLS_CLIENT_CA_FILE=
@@ -108,6 +119,8 @@ render listen-https "$([ "$tls" = true ] && echo on || echo off)"
 render client-auth "$([ "$TLS_CLIENT_AUTH" != off ] && echo on || echo off)"
 render health "$([ -n "$HEALTH_PORT" ] && echo on || echo off)"
 
+if [ "$tls" != true ]; then mode=http; elif [ "$TLS_CLIENT_AUTH" = off ]; then mode=https; else mode="https+client-auth"; fi
+echo "[nginx] mode: $mode"
 echo "[nginx] http=${HTTP_PORT:-off} https=$([ "$tls" = true ] && echo "$HTTPS_PORT (tls>=$TLS_MIN_VERSION, client auth $TLS_CLIENT_AUTH)" || echo off) health=${HEALTH_PORT:-off}"
 if [ "$TLS_CLIENT_AUTH" = require ] && [ -n "$HTTP_PORT" ]; then
   echo "[nginx] warning: the plain HTTP listener on $HTTP_PORT is open next to client auth on $HTTPS_PORT; set HTTP_PORT= (empty) to serve only TLS." >&2

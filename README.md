@@ -51,13 +51,13 @@ All user-facing text lives in `messages/uk.json` and `messages/en.json` and is r
 
 ## Listeners and TLS (container)
 
-The nginx image has baked defaults, so the deploy passes none of these: plain HTTP on 3000, a health listener on 8081, TLS on 8443 when `/tls/tls.crt` and `/tls/tls.key` exist, client certificates required when `/aop/ca.crt` exists. Every default can be overridden by env, read at container start by `deploy/nginx-entrypoint.sh`. The nginx config is in files under `deploy/nginx/` (`nginx.conf`, `server.conf`, and the snippets `listen-http.conf`, `listen-https.conf`, `client-auth.conf`, `health.conf`); the entrypoint only validates the env, renders the active snippets with `envsubst` into `/tmp/nginx-gen` (an empty file for each inactive one), and runs `nginx -t`, so a bad combination stops the container at start.
+The nginx image has baked defaults, so the deploy passes none of these: plain HTTP on 8080, a health listener on 8081, TLS on 8443 when the certificate and key files (default `/tls/tls.crt`, `/tls/tls.key`) exist, otherwise plain HTTP only; a certificate or key path given in the env that does not exist is a start error, and `TLS_CLIENT_AUTH=optional|require` without the CA file (default `/aop/ca.crt`) is a start error; the entrypoint logs `mode: http`, `mode: https` or `mode: https+client-auth`, client certificates required when `/aop/ca.crt` exists. Every default can be overridden by env, read at container start by `deploy/nginx-entrypoint.sh`. The nginx config is in files under `deploy/nginx/` (`nginx.conf`, `server.conf`, and the snippets `listen-http.conf`, `listen-https.conf`, `client-auth.conf`, `health.conf`); the entrypoint only validates the env, renders the active snippets with `envsubst` into `/tmp/nginx-gen` (an empty file for each inactive one), and runs `nginx -t`, so a bad combination stops the container at start.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `HTTP_PORT` | `3000` | Plain HTTP listener. Set but empty turns it off. |
+| `HTTP_PORT` | `8080` | Plain HTTP listener. Set but empty turns it off. |
 | `HTTPS_PORT` | `8443` | TLS listener (HTTP/2); on only when the certificate and key are set (by default when `/tls/tls.crt` and `/tls/tls.key` exist). |
-| `TLS_CERT_FILE`, `TLS_KEY_FILE` | `/tls/tls.crt`, `/tls/tls.key` when both files exist, else empty | PEM server certificate chain and key. Both set = TLS on; exactly one set = start error; set empty = TLS off. |
+| `TLS_CERT_FILE`, `TLS_KEY_FILE` | `/tls/tls.crt`, `/tls/tls.key` | PEM server certificate chain and key. TLS is on when both files exist, otherwise plain HTTP. A path set in the env that does not exist, or only one of the two present, is a start error; set empty = TLS off. |
 | `TLS_MIN_VERSION` | `1.2` | `1.2` or `1.3`. |
 | `TLS_CLIENT_CA_FILE` | `/aop/ca.crt` when it exists, else empty | PEM bundle of the root (and intermediate) CAs that signed the client certificates. |
 | `TLS_CLIENT_AUTH` | `require` when the CA file is the default `/aop/ca.crt` and TLS is on, else `off` | `off`, `optional` (verify when presented, the result is `$ssl_client_verify`) or `require`. `optional` and `require` need the CA file and TLS, else start error. A missing or invalid certificate gets the connection dropped (nginx 444). |
