@@ -34,15 +34,14 @@ Production builds are a **static export** (`output: "export"`, written to `out/`
 | --- | --- | --- |
 | `NEXT_PUBLIC_DOMAIN` | yes | The one base domain, a bare lowercase host name (no scheme, port or path). Every host derives from it: `<DOMAIN>` (landing), `api.`, `id.`, `admin.`, `exercises.<DOMAIN>`, event sites `<tag>.<DOMAIN>`, the shared theme and consent cookies on `.<DOMAIN>`. There are no per-host settings. |
 | `NEXT_PUBLIC_SUPPORT_EMAIL` | yes | Support mailbox of the «Send feedback» `mailto:` link shown on every page (the subject carries the app and page path only). |
-| `NEXT_PUBLIC_PARTNER_ICE_NURE_URL` | yes | Partner department link in the sign-in panel footer. |
-| `NEXT_PUBLIC_PARTNER_NURE_URL` | yes | Partner site link in the sign-in panel footer. |
+| `NEXT_PUBLIC_SHOW_PARTNERS` | no (default `true`) | `false` hides the partner links in the sign-in panel footer. |
 | `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` | no | Google Analytics 4 measurement id. Analytics is off when unset. |
 | `NEXT_PUBLIC_CAPTCHA_PROVIDER` | yes | Bot-check provider: `turnstile`, `recaptcha` or `none` (local development, nothing is loaded). Must match the backend. |
 | `NEXT_PUBLIC_CAPTCHA_SITE_KEY` | when the provider is not `none` | Public site key of the provider. |
 | `NEXT_PUBLIC_RECAPTCHA_PROJECT` | no (default empty) | Google Cloud project id (not secret). Non-empty switches `recaptcha` to Enterprise, empty means classic v3; must match the backend mode. |
 | `DEV_ALLOWED_ORIGINS` | no | Dev only: comma list for `allowedDevOrigins`; default is the configured hosts and `*.<event domain>`. |
 
-There are no fallbacks: a missing host fails the build (`next.config.ts`), the container start (entrypoint) and the Pages workflow. See `.env.example`.
+Required: `NEXT_PUBLIC_DOMAIN`, `NEXT_PUBLIC_SUPPORT_EMAIL`, `NEXT_PUBLIC_CAPTCHA_PROVIDER` (and the site key unless `none`). Everything else is optional. A missing required value fails the build (`next.config.ts`), the container start (entrypoint) and the Pages workflow. See `.env.example`.
 
 Test-only: `E2E_BASE_URL`, `E2E_CHROME_PATH`.
 
@@ -52,20 +51,20 @@ All user-facing text lives in `messages/uk.json` and `messages/en.json` and is r
 
 ## Listeners and TLS (container)
 
-The nginx image serves plain HTTP by default, exactly as before (`HTTP_PORT` 3000, `/healthz`). TLS and client certificate validation are optional and switched on by env, read at container start by `deploy/nginx-entrypoint.sh`. The nginx config is in files under `deploy/nginx/` (`nginx.conf`, `server.conf`, and the snippets `listen-http.conf`, `listen-https.conf`, `client-auth.conf`, `health.conf`); the entrypoint only validates the env, renders the active snippets with `envsubst` into `/tmp/nginx-gen` (an empty file for each inactive one), and runs `nginx -t`, so a bad combination stops the container at start.
+The nginx image has baked defaults, so the deploy passes none of these: plain HTTP on 3000, a health listener on 8081, TLS on 8443 when `/tls/tls.crt` and `/tls/tls.key` exist, client certificates required when `/aop/ca.crt` exists. Every default can be overridden by env, read at container start by `deploy/nginx-entrypoint.sh`. The nginx config is in files under `deploy/nginx/` (`nginx.conf`, `server.conf`, and the snippets `listen-http.conf`, `listen-https.conf`, `client-auth.conf`, `health.conf`); the entrypoint only validates the env, renders the active snippets with `envsubst` into `/tmp/nginx-gen` (an empty file for each inactive one), and runs `nginx -t`, so a bad combination stops the container at start.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `HTTP_PORT` | `3000` | Plain HTTP listener. Set but empty turns it off. |
-| `HTTPS_PORT` | `8443` | TLS listener (HTTP/2); on only when the certificate and key are set. |
-| `TLS_CERT_FILE`, `TLS_KEY_FILE` | empty | PEM server certificate chain and key. Both set = TLS on; exactly one set = start error. |
+| `HTTPS_PORT` | `8443` | TLS listener (HTTP/2); on only when the certificate and key are set (by default when `/tls/tls.crt` and `/tls/tls.key` exist). |
+| `TLS_CERT_FILE`, `TLS_KEY_FILE` | `/tls/tls.crt`, `/tls/tls.key` when both files exist, else empty | PEM server certificate chain and key. Both set = TLS on; exactly one set = start error; set empty = TLS off. |
 | `TLS_MIN_VERSION` | `1.2` | `1.2` or `1.3`. |
-| `TLS_CLIENT_CA_FILE` | empty | PEM bundle of the root (and intermediate) CAs that signed the client certificates. |
-| `TLS_CLIENT_AUTH` | `off` | `off`, `optional` (verify when presented, the result is `$ssl_client_verify`) or `require`. `optional` and `require` need the CA file and TLS, else start error. A missing or invalid certificate gets the connection dropped (nginx 444). |
-| `HEALTH_PORT` | empty | When set: an extra plain-HTTP listener on `HEALTH_BIND` (default `0.0.0.0`) that serves only `/healthz` (everything else 404), for kubelet probes that cannot present a client certificate. When empty, probes use `HTTP_PORT`. |
+| `TLS_CLIENT_CA_FILE` | `/aop/ca.crt` when it exists, else empty | PEM bundle of the root (and intermediate) CAs that signed the client certificates. |
+| `TLS_CLIENT_AUTH` | `require` when the CA file is the default `/aop/ca.crt` and TLS is on, else `off` | `off`, `optional` (verify when presented, the result is `$ssl_client_verify`) or `require`. `optional` and `require` need the CA file and TLS, else start error. A missing or invalid certificate gets the connection dropped (nginx 444). |
+| `HEALTH_PORT` | `8081` | An extra plain-HTTP listener on `HEALTH_BIND` (default `0.0.0.0`) that serves only `/healthz` (everything else 404), for kubelet probes that cannot present a client certificate. Set empty = off. |
 | `TLS_RELOAD_INTERVAL` | `60` | Seconds between checksum checks of the certificate, key and CA files. A change runs `nginx -t` and `nginx -s reload`, no restart; a config that fails the test keeps the running one and logs it. It polls (no inotify) because Kubernetes swaps a Secret mount through the `..data` symlink. |
 
-`HTTP_PORT` empty with no TLS is a start error. With TLS on, the plain listener stays on unless `HTTP_PORT` is set empty; with `TLS_CLIENT_AUTH=require` the entrypoint warns about it, because the plain port is not protected by client certificates: set `HTTP_PORT=` and use `HEALTH_PORT` for probes. Removed (no aliases): `ORIGIN_TLS`, `ORIGIN_MTLS`, `ORIGIN_RELOAD_INTERVAL`, the fixed `/tls` and `/aop` paths and the fixed port 8081. `scripts/test-nginx-tls.sh` (Docker) tests the whole matrix, including a live certificate replacement.
+`HTTP_PORT` empty with no TLS is a start error. With TLS on, the plain listener stays on unless `HTTP_PORT` is set empty; with `TLS_CLIENT_AUTH=require` the entrypoint warns about it, because the plain port is not protected by client certificates: set `HTTP_PORT=` and use `HEALTH_PORT` for probes. `scripts/test-nginx-tls.sh` (Docker) tests the whole matrix, including a live certificate replacement.
 
 ## Content Security Policy
 
