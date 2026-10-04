@@ -11,7 +11,7 @@ import tseslint from "typescript-eslint"
 
 /** @type {import("eslint").Linter.Config[]} */
 const eslintConfig = tseslint.config(
-  { ignores: [".next/**", "out/**", "node_modules/**", "next-env.d.ts", "test-results/**", "playwright-report/**"] },
+  { ignores: [".next/**", "out/**", "node_modules/**", "next-env.d.ts", ".worktrees/**", ".claude/worktrees/**", "test-results/**", "playwright-report/**"] },
   js.configs.recommended,
   tseslint.configs.recommended,
   {
