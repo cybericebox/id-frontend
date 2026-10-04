@@ -8,7 +8,7 @@ set -e
 ROOT=/usr/share/nginx/html
 
 # Every operator value comes from env; there are no fallbacks.
-for name in NEXT_PUBLIC_MAIN_HOST NEXT_PUBLIC_API_HOST NEXT_PUBLIC_ID_HOST NEXT_PUBLIC_ADMIN_HOST NEXT_PUBLIC_EXERCISES_HOST NEXT_PUBLIC_EVENT_DOMAIN NEXT_PUBLIC_COOKIE_DOMAIN NEXT_PUBLIC_SUPPORT_EMAIL NEXT_PUBLIC_PARTNER_URL NEXT_PUBLIC_PARTNER_SITE_URL NEXT_PUBLIC_CAPTCHA_PROVIDER; do
+for name in NEXT_PUBLIC_MAIN_HOST NEXT_PUBLIC_API_HOST NEXT_PUBLIC_ID_HOST NEXT_PUBLIC_ADMIN_HOST NEXT_PUBLIC_EXERCISES_HOST NEXT_PUBLIC_EVENT_DOMAIN NEXT_PUBLIC_COOKIE_DOMAIN NEXT_PUBLIC_SUPPORT_EMAIL NEXT_PUBLIC_PARTNER_ICE_NURE_URL NEXT_PUBLIC_PARTNER_NURE_URL NEXT_PUBLIC_CAPTCHA_PROVIDER; do
   eval "value=\${$name:-}"
   if [ -z "$value" ]; then
     echo "$name is required." >&2
@@ -25,13 +25,13 @@ case "$NEXT_PUBLIC_CAPTCHA_PROVIDER" in turnstile | recaptcha | none) ;; *)
   exit 1
   ;;
 esac
-# The site key is required unless the provider is none; the enterprise flag only matters for recaptcha.
+# The site key is required unless the provider is none; the reCAPTCHA project id (optional, non-empty = Enterprise) only matters for recaptcha.
 if [ "$NEXT_PUBLIC_CAPTCHA_PROVIDER" != "none" ] && [ -z "${NEXT_PUBLIC_CAPTCHA_SITE_KEY:-}" ]; then
   echo "NEXT_PUBLIC_CAPTCHA_SITE_KEY is required when NEXT_PUBLIC_CAPTCHA_PROVIDER is $NEXT_PUBLIC_CAPTCHA_PROVIDER." >&2
   exit 1
 fi
 export NEXT_PUBLIC_CAPTCHA_SITE_KEY="${NEXT_PUBLIC_CAPTCHA_SITE_KEY:-}"
-export NEXT_PUBLIC_RECAPTCHA_ENTERPRISE="${NEXT_PUBLIC_RECAPTCHA_ENTERPRISE:-false}"
+export NEXT_PUBLIC_RECAPTCHA_PROJECT="${NEXT_PUBLIC_RECAPTCHA_PROJECT:-}"
 
 # One pass: a single sed script with an expression per NEXT_PUBLIC_* variable, run once over each
 # file that holds a placeholder (in parallel: busybox sed is slow on the minified bundles). Only the

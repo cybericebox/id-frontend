@@ -38,6 +38,21 @@ describe("captcha provider", () => {
     expect(execute).toHaveBeenCalledWith("KEY", { action: "signUp" })
   })
 
+  it("recaptcha: a non-empty NEXT_PUBLIC_RECAPTCHA_PROJECT switches to Enterprise", async () => {
+    vi.stubEnv("NEXT_PUBLIC_CAPTCHA_PROVIDER", "recaptcha")
+    vi.stubEnv("NEXT_PUBLIC_CAPTCHA_SITE_KEY", "KEY")
+    vi.stubEnv("NEXT_PUBLIC_RECAPTCHA_PROJECT", "my-project")
+    const execute = vi.fn().mockResolvedValue("etok")
+    ;(window as unknown as { grecaptcha: unknown }).grecaptcha = { enterprise: { ready: (cb: () => void) => cb(), execute } }
+    const p = executeCaptcha("signIn")
+    await vi.waitFor(() => expect(document.head.querySelectorAll("script")).toHaveLength(1))
+    const el = document.head.querySelector("script")!
+    expect(el.src).toBe("https://www.google.com/recaptcha/enterprise.js?render=KEY")
+    el.onload?.(new Event("load"))
+    await expect(p).resolves.toBe("etok")
+    expect(execute).toHaveBeenCalledWith("KEY", { action: "signIn" })
+  })
+
   it("turnstile: renders an interaction-only widget, resolves the token, removes it", async () => {
     vi.stubEnv("NEXT_PUBLIC_CAPTCHA_PROVIDER", "turnstile")
     vi.stubEnv("NEXT_PUBLIC_CAPTCHA_SITE_KEY", "TKEY")

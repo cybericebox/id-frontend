@@ -2,6 +2,7 @@
 // Provider: NEXT_PUBLIC_CAPTCHA_PROVIDER = turnstile | recaptcha | none (default none).
 // The values are placeholders baked at build and substituted at container start, so they are never
 // compared with `===` against a literal (that would be folded at build): includes() keeps them runtime.
+// reCAPTCHA mode is derived: Enterprise iff NEXT_PUBLIC_RECAPTCHA_PROJECT (Google Cloud project id) is non-empty.
 // Each env var is read as a plain `process.env.NEXT_PUBLIC_X` expression so Next inlines it.
 
 export type CaptchaProvider = "turnstile" | "recaptcha" | "none"
@@ -36,7 +37,7 @@ function siteKey(): string {
 }
 
 function enterpriseOn(): boolean {
-  return ["true"].includes(process.env.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE ?? "")
+  return (process.env.NEXT_PUBLIC_RECAPTCHA_PROJECT ?? "").trim() !== ""
 }
 
 const scripts = new Map<string, Promise<void>>()
