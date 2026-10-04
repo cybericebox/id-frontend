@@ -15,8 +15,8 @@ const REQUIRED = [
   "NEXT_PUBLIC_EVENT_DOMAIN",
   "NEXT_PUBLIC_COOKIE_DOMAIN",
   "NEXT_PUBLIC_SUPPORT_EMAIL",
-  "NEXT_PUBLIC_PARTNER_URL",
-  "NEXT_PUBLIC_PARTNER_SITE_URL",
+  "NEXT_PUBLIC_PARTNER_ICE_NURE_URL",
+  "NEXT_PUBLIC_PARTNER_NURE_URL",
 ]
 const missing = REQUIRED.filter((name) => !process.env[name]?.trim())
 if (missing.length > 0) {

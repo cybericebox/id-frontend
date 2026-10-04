@@ -17,14 +17,14 @@ data:
   # REQUIRED: support mailbox of the «Надіслати відгук» (send feedback) link on every page.
   SUPPORT_EMAIL: ""
   # REQUIRED partner links shown in the sign-in panel footer.
-  PARTNER_URL: "https://ice.nure.ua/ua/"
-  PARTNER_SITE_URL: "https://nure.ua"
+  PARTNER_ICE_NURE_URL: "https://ice.nure.ua/ua/"
+  PARTNER_NURE_URL: "https://nure.ua"
   # REQUIRED: bot-check provider, one for the whole platform: turnstile | recaptcha | none (none = local development).
   # Must match the backend CAPTCHA_PROVIDER.
   CAPTCHA_PROVIDER: "none"
   # Public site key of the provider; REQUIRED when CAPTCHA_PROVIDER is not none (the container refuses to start without it).
   CAPTCHA_SITE_KEY: ""
-  # recaptcha only: "true" when the backend uses reCAPTCHA Enterprise (RECAPTCHA_PROJECT is set).
-  RECAPTCHA_ENTERPRISE: "false"
+  # Optional, recaptcha only: Google Cloud project id (not secret). Non-empty = reCAPTCHA Enterprise, empty = classic v3.
+  RECAPTCHA_PROJECT: ""
   # Optional Google Analytics 4 measurement id (G-…). Empty → analytics off.
   GOOGLE_ANALYTICS_ID: ""

@@ -40,12 +40,12 @@ Production builds are a **static export** (`output: "export"`, written to `out/`
 | `NEXT_PUBLIC_EVENT_DOMAIN` | yes | Event sites are `<tag>.<domain>`. |
 | `NEXT_PUBLIC_COOKIE_DOMAIN` | yes | `Domain` attribute of the shared theme/consent cookies (e.g. `cybericebox.com`); no implicit parent. |
 | `NEXT_PUBLIC_SUPPORT_EMAIL` | yes | Support mailbox of the «Send feedback» `mailto:` link shown on every page (the subject carries the app and page path only). |
-| `NEXT_PUBLIC_PARTNER_URL` | yes | Partner department link in the sign-in panel footer. |
-| `NEXT_PUBLIC_PARTNER_SITE_URL` | yes | Partner site link in the sign-in panel footer. |
+| `NEXT_PUBLIC_PARTNER_ICE_NURE_URL` | yes | Partner department link in the sign-in panel footer. |
+| `NEXT_PUBLIC_PARTNER_NURE_URL` | yes | Partner site link in the sign-in panel footer. |
 | `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` | no | Google Analytics 4 measurement id. Analytics is off when unset. |
 | `NEXT_PUBLIC_CAPTCHA_PROVIDER` | yes | Bot-check provider: `turnstile`, `recaptcha` or `none` (local development, nothing is loaded). Must match the backend. |
 | `NEXT_PUBLIC_CAPTCHA_SITE_KEY` | when the provider is not `none` | Public site key of the provider. |
-| `NEXT_PUBLIC_RECAPTCHA_ENTERPRISE` | no (default `false`) | `true` to use reCAPTCHA Enterprise (only for `recaptcha`); must match the backend mode. |
+| `NEXT_PUBLIC_RECAPTCHA_PROJECT` | no (default empty) | Google Cloud project id (not secret). Non-empty switches `recaptcha` to Enterprise, empty means classic v3; must match the backend mode. |
 | `DEV_ALLOWED_ORIGINS` | no | Dev only: comma list for `allowedDevOrigins`; default is the configured hosts and `*.<event domain>`. |
 
 There are no fallbacks: a missing host fails the build (`next.config.ts`), the container start (entrypoint) and the Pages workflow. See `.env.example`.

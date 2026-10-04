@@ -65,16 +65,16 @@ spec:
                 configMapKeyRef:
                   name: id-frontend-config
                   key: SUPPORT_EMAIL
-            - name: NEXT_PUBLIC_PARTNER_URL
+            - name: NEXT_PUBLIC_PARTNER_ICE_NURE_URL
               valueFrom:
                 configMapKeyRef:
                   name: id-frontend-config
-                  key: PARTNER_URL
-            - name: NEXT_PUBLIC_PARTNER_SITE_URL
+                  key: PARTNER_ICE_NURE_URL
+            - name: NEXT_PUBLIC_PARTNER_NURE_URL
               valueFrom:
                 configMapKeyRef:
                   name: id-frontend-config
-                  key: PARTNER_SITE_URL
+                  key: PARTNER_NURE_URL
             - name: NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
               valueFrom:
                 configMapKeyRef:
@@ -90,11 +90,12 @@ spec:
                 configMapKeyRef:
                   name: id-frontend-config
                   key: CAPTCHA_SITE_KEY
-            - name: NEXT_PUBLIC_RECAPTCHA_ENTERPRISE
+            - name: NEXT_PUBLIC_RECAPTCHA_PROJECT
               valueFrom:
                 configMapKeyRef:
                   name: id-frontend-config
-                  key: RECAPTCHA_ENTERPRISE
+                  key: RECAPTCHA_PROJECT
+                  optional: true
           ports:
             - containerPort: 3000
               protocol: TCP
