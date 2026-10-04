@@ -45,7 +45,7 @@ jobs:
           . ./deploy/base-domain.sh
           base_domain_check || { echo "::error::Set the repository variable NEXT_PUBLIC_DOMAIN"; exit 1; }
           missing=""
-          for name in NEXT_PUBLIC_SUPPORT_EMAIL NEXT_PUBLIC_PARTNER_ICE_NURE_URL NEXT_PUBLIC_PARTNER_NURE_URL NEXT_PUBLIC_CAPTCHA_PROVIDER; do
+          for name in NEXT_PUBLIC_SUPPORT_EMAIL NEXT_PUBLIC_CAPTCHA_PROVIDER; do
             eval "value=\"\${$name:-}\""
             [ -n "$value" ] || missing="$missing $name"
           done
@@ -54,8 +54,6 @@ jobs:
         env:
           NEXT_PUBLIC_DOMAIN: ${{ vars.NEXT_PUBLIC_DOMAIN }}
           NEXT_PUBLIC_SUPPORT_EMAIL: ${{ vars.NEXT_PUBLIC_SUPPORT_EMAIL }}
-          NEXT_PUBLIC_PARTNER_ICE_NURE_URL: ${{ vars.NEXT_PUBLIC_PARTNER_ICE_NURE_URL }}
-          NEXT_PUBLIC_PARTNER_NURE_URL: ${{ vars.NEXT_PUBLIC_PARTNER_NURE_URL }}
           NEXT_PUBLIC_CAPTCHA_PROVIDER: ${{ vars.NEXT_PUBLIC_CAPTCHA_PROVIDER }}
           NEXT_PUBLIC_CAPTCHA_SITE_KEY: ${{ vars.NEXT_PUBLIC_CAPTCHA_SITE_KEY }}
       - name: Build static export
@@ -64,10 +62,9 @@ jobs:
           # repository / environment variables: the base domain and the per-site values
           NEXT_PUBLIC_DOMAIN: ${{ vars.NEXT_PUBLIC_DOMAIN }}
           NEXT_PUBLIC_SUPPORT_EMAIL: ${{ vars.NEXT_PUBLIC_SUPPORT_EMAIL }}
-          NEXT_PUBLIC_PARTNER_ICE_NURE_URL: ${{ vars.NEXT_PUBLIC_PARTNER_ICE_NURE_URL }}
-          NEXT_PUBLIC_PARTNER_NURE_URL: ${{ vars.NEXT_PUBLIC_PARTNER_NURE_URL }}
           NEXT_PUBLIC_CAPTCHA_PROVIDER: ${{ vars.NEXT_PUBLIC_CAPTCHA_PROVIDER }}
           NEXT_PUBLIC_GOOGLE_ANALYTICS_ID: ${{ vars.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID }}
+          NEXT_PUBLIC_SHOW_PARTNERS: ${{ vars.NEXT_PUBLIC_SHOW_PARTNERS }}
           NEXT_PUBLIC_CAPTCHA_SITE_KEY: ${{ vars.NEXT_PUBLIC_CAPTCHA_SITE_KEY }}
           NEXT_PUBLIC_RECAPTCHA_PROJECT: ${{ vars.NEXT_PUBLIC_RECAPTCHA_PROJECT }}
       - name: Configure Pages

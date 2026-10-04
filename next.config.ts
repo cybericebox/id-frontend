@@ -17,8 +17,6 @@ const PLATFORM_HOSTS = [DOMAIN, `api.${DOMAIN}`, `id.${DOMAIN}`, `admin.${DOMAIN
 // Every operator value comes from env; a missing one fails the build (no fallbacks).
 const REQUIRED = [
   "NEXT_PUBLIC_SUPPORT_EMAIL",
-  "NEXT_PUBLIC_PARTNER_ICE_NURE_URL",
-  "NEXT_PUBLIC_PARTNER_NURE_URL",
 ]
 const missing = REQUIRED.filter((name) => !process.env[name]?.trim())
 if (missing.length > 0) {

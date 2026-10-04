@@ -35,16 +35,6 @@ spec:
                 configMapKeyRef:
                   name: id-frontend-config
                   key: SUPPORT_EMAIL
-            - name: NEXT_PUBLIC_PARTNER_ICE_NURE_URL
-              valueFrom:
-                configMapKeyRef:
-                  name: id-frontend-config
-                  key: PARTNER_ICE_NURE_URL
-            - name: NEXT_PUBLIC_PARTNER_NURE_URL
-              valueFrom:
-                configMapKeyRef:
-                  name: id-frontend-config
-                  key: PARTNER_NURE_URL
             - name: NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
               valueFrom:
                 configMapKeyRef:

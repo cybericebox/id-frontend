@@ -26,6 +26,11 @@ export type AuthVariant =
   | "reset"
   | "setup"
 
+// Partner links are fixed; NEXT_PUBLIC_SHOW_PARTNERS=false hides the partner block. The container entrypoint defaults it to true.
+const PARTNER_ICE_NURE_URL = "https://ice.nure.ua/ua/"
+const PARTNER_NURE_URL = "https://nure.ua"
+const SHOW_PARTNERS = process.env.NEXT_PUBLIC_SHOW_PARTNERS !== "false"
+
 type Item = { icon: React.ComponentType<{ size?: number; className?: string }>; key: string }
 
 // Each auth page gets its own copy — platform-specific, not generic.
@@ -125,18 +130,18 @@ export function AuthSidePanel({
 
         <footer className="flex flex-col items-start gap-3 border-t border-brand-line pt-5 text-[13px] leading-relaxed text-on-brand-3">
           <p className="auth-legal text-[12px] xl:text-[13px]">
-            {tSegments("authPanel.legal", {
+            {!SHOW_PARTNERS ? t("authPanel.legalPlain", { year: YEAR }) : tSegments("authPanel.legal", {
               year: YEAR,
               department: (
                 <Tooltip content={t("authPanel.departmentFull")} align="start">
-                  <a href={process.env.NEXT_PUBLIC_PARTNER_ICE_NURE_URL} target="_blank" rel="noopener noreferrer" className="rounded-xs font-medium whitespace-nowrap text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand">
+                  <a href={PARTNER_ICE_NURE_URL} target="_blank" rel="noopener noreferrer" className="rounded-xs font-medium whitespace-nowrap text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand">
                     {t("authPanel.legalLink")}
                   </a>
                 </Tooltip>
               ),
               nure: (
                 <Tooltip content={t("authPanel.nureFull")} align="start">
-                  <a href={process.env.NEXT_PUBLIC_PARTNER_NURE_URL} target="_blank" rel="noopener noreferrer" className="rounded-xs font-medium whitespace-nowrap text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand">
+                  <a href={PARTNER_NURE_URL} target="_blank" rel="noopener noreferrer" className="rounded-xs font-medium whitespace-nowrap text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand">
                     {t("authPanel.nure")}
                   </a>
                 </Tooltip>

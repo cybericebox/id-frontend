@@ -2,12 +2,13 @@
 # Docker test of the listener contract (HTTP_PORT, HTTPS_PORT, TLS_*, HEALTH_PORT) for the nginx image, the same file in
 # every nginx-based frontend repo. Builds deploy/Dockerfile (or uses IMAGE=<ref>) and runs it hardened (user 101, read-only
 # root, all caps dropped, scratch dirs on tmpfs, the html root on a seeded volume as the deploy's emptyDir):
-#   A plain only (no TLS env, the default)     B TLS only            C TLS + HTTP_PORT empty (TLS only listener)
+#   A plain + health (no TLS env, no files)    B TLS only            C TLS + HTTP_PORT empty (TLS only listener)
 #   D TLS_CLIENT_AUTH=require                  E TLS_CLIENT_AUTH=optional
 #   F TLS_MIN_VERSION=1.3                      G HEALTH_PORT serves only /healthz
 #   H start errors (one of cert/key, auth without CA / without TLS, no listener, cert/key mismatch, bad values)
 #   I live replacement of the server certificate, of the client CA, and of a broken pair, without a restart
 #   J hardening: uid 101, read-only root, no capabilities
+#   K baked defaults: files at /tls and /aop switch TLS and client auth on with no TLS_* env; explicit empty values switch them off
 set -uo pipefail
 
 cd "$(dirname "$0")/.."
@@ -66,7 +67,7 @@ chmod -R a+rX tls ca
 mkdir bad; cp server.crt bad/tls.crt; cp server2.key bad/tls.key; chmod -R a+rX bad
 
 # The runtime values the entrypoint requires: the NEXT_PUBLIC_* names in its "for ... in" list.
-ENVS=()
+ENVS=(-e "NEXT_PUBLIC_DOMAIN=test.example.com")
 for name in $(grep -E '^for [a-z]+ in NEXT_PUBLIC_' "$SRC/deploy/docker-entrypoint.sh" | grep -Eo 'NEXT_PUBLIC_[A-Z0-9_]+'); do
   ENVS+=(-e "$name=test.example.com")
 done
@@ -124,7 +125,8 @@ check "A1 /healthz on 3000 -> 200" 200 "$(code "http://127.0.0.1:$(port "$C" 300
 hdr=$(curl -s -D - -o /dev/null --max-time 10 "http://127.0.0.1:$(port "$C" 3000)/")
 grep -qi '^content-security-policy:' <<<"$hdr" && ok "A2 CSP header present" || bad "A2 CSP header missing"
 refused "A3 nothing on 8443" -k "https://localhost:$(port "$C" 8443)/"
-refused "A4 nothing on 8081" "http://127.0.0.1:$(port "$C" 8081)/healthz"
+check "A4 health port 8081 /healthz -> 200 by default" 200 "$(code "http://127.0.0.1:$(port "$C" 8081)/healthz")"
+check "A4b health port / -> 404" 404 "$(code "http://127.0.0.1:$(port "$C" 8081)/")"
 stop "$C"
 C=$(start plain-port -e HTTP_PORT=3000) || bad "A5 explicit HTTP_PORT=3000 did not start"
 check "A5 HTTP_PORT=3000 -> 200" 200 "$(code "http://127.0.0.1:$(port "$C" 3000)/healthz")"
@@ -248,6 +250,25 @@ C=$(start hard "${TLS[@]}") || { bad "container did not start"; exit 1; }
 check "J1 runs as uid 101" 101 "$(docker exec "$C" id -u)"
 docker exec "$C" sh -c 'touch /probe' 2>/dev/null && bad "J2 root filesystem is writable" || ok "J2 root filesystem is read-only"
 check "J3 effective capabilities empty" 0000000000000000 "$(docker exec "$C" sh -c 'grep CapEff /proc/1/status' | awk '{print $2}')"
+stop "$C"
+
+echo "== K baked defaults (no TLS_* env)"
+DEFTLS=(-v "$WORK/tls:/tls:ro")
+DEFCA=(-v "$WORK/ca:/aop:ro")
+C=$(start deftls "${DEFTLS[@]}") || { bad "container did not start"; exit 1; }
+check "K1 files at /tls switch TLS on (8443)" 200 "$(code "${SERVER[@]}" "https://localhost:$(port "$C" 8443)/healthz")"
+check "K2 no /aop: no client cert needed" 200 "$(code "${SERVER[@]}" "https://localhost:$(port "$C" 8443)/")"
+stop "$C"
+C=$(start defauth "${DEFTLS[@]}" "${DEFCA[@]}" -e HTTP_PORT=) || { bad "container did not start"; exit 1; }
+P=$(port "$C" 8443)
+refused "K3 /aop/ca.crt present: client cert required" "${SERVER[@]}" "https://localhost:$P/healthz"
+check "K4 valid client cert -> 200" 200 "$(code "${SERVER[@]}" "${CLIENT[@]}" "https://localhost:$P/healthz")"
+check "K5 health 8081 open without a cert" 200 "$(code "http://127.0.0.1:$(port "$C" 8081)/healthz")"
+stop "$C"
+C=$(start empty "${DEFTLS[@]}" "${DEFCA[@]}" -e TLS_CERT_FILE= -e TLS_KEY_FILE= -e TLS_CLIENT_CA_FILE= -e HEALTH_PORT=) || { bad "container did not start"; exit 1; }
+refused "K6 explicit empty TLS_CERT_FILE: TLS off" -k "https://localhost:$(port "$C" 8443)/"
+refused "K7 explicit empty HEALTH_PORT: health off" "http://127.0.0.1:$(port "$C" 8081)/healthz"
+check "K8 plain 3000 still served" 200 "$(code "http://127.0.0.1:$(port "$C" 3000)/healthz")"
 stop "$C"
 
 echo

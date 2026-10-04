@@ -11,16 +11,17 @@ ROOT=/usr/share/nginx/html
 # The other operator values are required.
 . /usr/local/lib/base-domain.sh
 base_domain_check || exit 1
-for name in NEXT_PUBLIC_SUPPORT_EMAIL NEXT_PUBLIC_PARTNER_ICE_NURE_URL NEXT_PUBLIC_PARTNER_NURE_URL NEXT_PUBLIC_CAPTCHA_PROVIDER; do
+for name in NEXT_PUBLIC_SUPPORT_EMAIL NEXT_PUBLIC_CAPTCHA_PROVIDER; do
   eval "value=\${$name:-}"
   if [ -z "$value" ]; then
     echo "$name is required." >&2
     exit 1
   fi
 done
-# NEXT_PUBLIC_GOOGLE_ANALYTICS_ID is the only optional value (empty → analytics off); the build
-# folded its placeholder, so it is exported (possibly empty) to be substituted.
+# Optional values: NEXT_PUBLIC_GOOGLE_ANALYTICS_ID (empty → analytics off) and NEXT_PUBLIC_SHOW_PARTNERS (default true; "false" hides the
+# partner links). The build folded their placeholders, so they are exported to be substituted.
 export NEXT_PUBLIC_GOOGLE_ANALYTICS_ID="${NEXT_PUBLIC_GOOGLE_ANALYTICS_ID:-}"
+export NEXT_PUBLIC_SHOW_PARTNERS="${NEXT_PUBLIC_SHOW_PARTNERS:-true}"
 
 # Bot check: the provider is turnstile, recaptcha or none (local development).
 case "$NEXT_PUBLIC_CAPTCHA_PROVIDER" in turnstile | recaptcha | none) ;; *)
