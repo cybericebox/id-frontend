@@ -5,15 +5,11 @@ metadata:
   namespace: cybericebox
 data:
   # REQUIRED hosts (bare host, no scheme), copied from platform.env.
-  MAIN_HOST: ""
-  API_HOST: ""
-  ID_HOST: ""
-  ADMIN_HOST: ""
-  EXERCISES_HOST: ""
+  # REQUIRED: the one base domain, a bare lowercase host name. Every host derives from it: DOMAIN, api./id./admin./exercises.DOMAIN,
+  # event sites <tag>.DOMAIN, the cookie domain DOMAIN. There are no per-host settings.
+  DOMAIN: ""
   # REQUIRED: event sites are <tag>.<EVENT_DOMAIN>; the event domain.
-  EVENT_DOMAIN: ""
   # REQUIRED: Domain attribute of the shared theme/consent cookies (e.g. cybericebox.com); no implicit parent.
-  COOKIE_DOMAIN: ""
   # REQUIRED: support mailbox of the «Надіслати відгук» (send feedback) link on every page.
   SUPPORT_EMAIL: ""
   # REQUIRED partner links shown in the sign-in panel footer.

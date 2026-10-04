@@ -20,7 +20,7 @@ export interface LogoProps {
   href?: string | null
 }
 
-// The landing origin (NEXT_PUBLIC_MAIN_HOST).
+// The landing origin (the base domain).
 const LANDING_HREF = mainOrigin
 
 export function Logo({ size = 64, className, href }: LogoProps) {
