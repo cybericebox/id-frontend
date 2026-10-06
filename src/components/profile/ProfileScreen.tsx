@@ -22,7 +22,6 @@ import { safeReturnTo } from "@/lib/auth"
 import { backLabel } from "@/lib/backLink"
 import { useBackLink } from "@/lib/useBackLink"
 import { Tooltip } from "@/components/ui/tooltip"
-import { isServiceUnavailable } from "@/i18n/apiError"
 import { ErrorScreen } from "@/components/ErrorPage"
 import { onServiceRestored } from "@/lib/serviceStatus"
 import { PageLoader } from "@/components/ui/spinner"
@@ -118,7 +117,7 @@ function ProfileShell() {
   }, [mobileDetail])
 
   const [account, setAccount] = useState<Account | null>(null)
-  const [loadError, setLoadError] = useState<{ unavailable: boolean; error: unknown } | null>(null)
+  const [loadError, setLoadError] = useState<{ error: unknown } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   const load = useCallback(async () => {
@@ -129,9 +128,7 @@ function ProfileShell() {
       setLoadError(null)
     } catch (err) {
       // A 401 is handled centrally by the api client (auto-redirect to sign-in).
-      // Backend down / gateway 5xx → "temporarily unavailable" with auto-retry;
-      // anything else is a genuine load failure.
-      setLoadError({ unavailable: isServiceUnavailable(err), error: err })
+      setLoadError({ error: err })
     } finally {
       setIsLoading(false)
     }
@@ -153,9 +150,10 @@ function ProfileShell() {
   }
 
   if (!account) {
-    // Unreachable backend is shown by the app-wide overlay (ServiceStatusGate);
-    // keep the loader underneath until it refetches on restore.
-    if (!loadError || loadError.unavailable) return <PageLoader />
+    // A failed session check (5xx, network) shows the error page with a retry, never an endless
+    // loader. The app-wide overlay (ServiceStatusGate) may come on top of it; a refetch on restore
+    // clears it. A 401 never lands here: the api client redirects to sign-in.
+    if (!loadError) return <PageLoader />
     return <ErrorScreen onRetry={load} error={loadError.error} title={t("profile.loadError")} />
   }
 
