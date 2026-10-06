@@ -5,7 +5,7 @@
 // bootstrap — a plain credentialed fetch is authoritative.
 
 import { apiOrigin } from "@/lib/origins"
-import { isNetworkOutage, isUnavailableStatus, reportServiceUnavailable } from "@/lib/serviceStatus"
+import { isNetworkOutage, isUnreachableResponse, reportServiceUnavailable } from "@/lib/serviceStatus"
 import { COOKIE_RETURN_TO } from "@/lib/storageKeys"
 
 const BASE_URL = apiOrigin
@@ -22,7 +22,10 @@ export class ApiError extends Error {
     // English message — is the i18n key callers localize against (see i18n/apiError).
     public readonly code?: number,
     // Retry-After header of a 429, in seconds (the wait the backend asks for).
-    public readonly retryAfter?: number
+    public readonly retryAfter?: number,
+    // X-Request-ID of the response: the id under which the backend journaled a 5xx
+    // (readable cross-origin only when the API exposes it in Access-Control-Expose-Headers).
+    public readonly requestId?: string
   ) {
     super(message ?? `API error ${status}`)
     this.name = "ApiError"
@@ -103,7 +106,7 @@ async function request<T>(
     throw err
   }
   // Keep the modal until its session-aware recovery probe succeeds.
-  if (isUnavailableStatus(res.status)) reportServiceUnavailable()
+  if (isUnreachableResponse(res.status, res.headers.get("X-Request-ID"))) reportServiceUnavailable()
 
   // Centralized auth handling: required (default true) → write cib_return_to cookie
   // and redirect to sign-in. Returning a never-resolving promise stops the
@@ -142,7 +145,8 @@ async function request<T>(
       envelope?.Status?.Message,
       res.headers.get("X-Sign-In-URL") ?? undefined,
       envelope?.Status?.Code,
-      parseRetryAfter(res.headers.get("Retry-After"))
+      parseRetryAfter(res.headers.get("Retry-After")),
+      res.headers.get("X-Request-ID") ?? undefined
     )
   }
 

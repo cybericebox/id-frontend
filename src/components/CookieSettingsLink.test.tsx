@@ -38,6 +38,9 @@ describe("cookie settings entry", () => {
   it("without GA mounts only the consent panel, no gtag script", () => {
     const html = renderToStaticMarkup(<Analytics />)
     expect(html).not.toContain("googletagmanager")
-    expect(src("components/Analytics.tsx")).toMatch(/if \(!gaId\) return <ConsentBanner \/>/)
+  })
+
+  it("the static HTML never carries gtag, even with an id: the id is the build placeholder there, the runtime value is known only in the browser", () => {
+    expect(renderToStaticMarkup(<Analytics gaId="__NEXT_PUBLIC_GOOGLE_ANALYTICS_ID__" />)).not.toContain("googletagmanager")
   })
 })

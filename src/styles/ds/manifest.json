@@ -1,4 +1,6 @@
 {
   "styles/ds-tokens.css": "9a92de3aa19012dcb5233d69ebc0dc010007ec1980485e10597efb9b426e3dbf",
-  "components/ui/tooltip.css": "0f678cae546bb3137f92d051c866e2c2b8bb08d1a4023b2be27e7d80be6fe909"
+  "components/ui/tooltip.css": "0f678cae546bb3137f92d051c866e2c2b8bb08d1a4023b2be27e7d80be6fe909",
+  "components/ui/error-page.css": "ae1a964aac6078729827b6625ccd0dda15818be8829d3bcc64ffec5c5dad73e0",
+  "components/ui/service-down.css": "f255e010ea4a536706772c38323d8a20067165e2c205de4b2e7b71c18d091e5c"
 }
