@@ -58,7 +58,8 @@ describe("ProfileScreen session check", () => {
     get.mockRejectedValue(make())
     await render()
     expect(host.querySelector(".ib-error")).toBeNull()
-    expect(getServiceStatus()).toBe("suspect")
+    // the overlay shows at once, no grace period
+    expect(getServiceStatus()).toBe("down")
   })
 
   it("the session check runs again when the gate sees the backend back", async () => {

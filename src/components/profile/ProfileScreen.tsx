@@ -23,7 +23,7 @@ import { backLabel } from "@/lib/backLink"
 import { useBackLink } from "@/lib/useBackLink"
 import { Tooltip } from "@/components/ui/tooltip"
 import { ErrorScreen } from "@/components/ErrorPage"
-import { isBackendUnreachable, onServiceRestored, reportServiceUnavailable } from "@/lib/serviceStatus"
+import { isBackendUnreachable, onServiceRestored, reportServiceDown } from "@/lib/serviceStatus"
 import { PageLoader } from "@/components/ui/spinner"
 import { t, locale } from "@/i18n/t"
 import type { Account } from "@/components/profile/types"
@@ -128,8 +128,8 @@ function ProfileShell() {
       setLoadError(null)
     } catch (err) {
       // A 401 is handled centrally by the api client (auto-redirect to sign-in).
-      // The backend cannot be reached: the service gate probes and shows its overlay, the loader stays, and the refetch on restore runs the check again.
-      if (isBackendUnreachable(err)) { reportServiceUnavailable(); setLoadError(null); return }
+      // The backend cannot be reached: the service gate shows its overlay at once and keeps probing, the loader stays, and the refetch on restore runs the check again.
+      if (isBackendUnreachable(err)) { reportServiceDown(); setLoadError(null); return }
       setLoadError({ error: err })
     } finally {
       setIsLoading(false)
