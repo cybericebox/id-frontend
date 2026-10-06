@@ -130,8 +130,8 @@ export function AuthSidePanel({
           </ul>
         </div>
 
-        <footer className="flex flex-col items-start gap-3 border-t border-brand-line pt-5 text-[13px] leading-relaxed text-on-brand-3">
-          <p className="auth-legal text-[12px] xl:text-[13px]">
+        <footer className="flex flex-col items-start gap-3 border-t border-brand-line pt-5 text-xs leading-relaxed text-on-brand-3">
+          <p className="auth-legal text-2xs xl:text-xs">
             {!SHOW_PARTNERS ? t("authPanel.legalPlain", { year: YEAR }) : tSegments("authPanel.legal", {
               year: YEAR,
               department: (

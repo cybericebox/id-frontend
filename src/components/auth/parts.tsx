@@ -20,7 +20,7 @@ export function AuthHeading({ title, subtitle }: { title: string; subtitle?: Rea
 // «або» separator between the Google button and the email form.
 export function AuthDivider({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-3 text-[13px] text-faint">
+    <div className="flex items-center gap-3 text-xs text-faint">
       <span className="h-px flex-1 bg-line" />
       {label}
       <span className="h-px flex-1 bg-line" />
@@ -36,7 +36,7 @@ export const inlineLinkClass =
 
 export function AuthSwitch({ text, href, action }: { text?: string; href: string; action: string }) {
   return (
-    <p className="mt-1 flex flex-wrap justify-center gap-2 text-[13px] text-dim">
+    <p className="mt-1 flex flex-wrap justify-center gap-2 text-xs text-dim">
       {text}
       <Link href={href} className={inlineLinkClass}>
         {action}
@@ -45,7 +45,7 @@ export function AuthSwitch({ text, href, action }: { text?: string; href: string
   )
 }
 
-export const authLinkClass = `text-[13px] ${inlineLinkClass}`
+export const authLinkClass = `text-xs ${inlineLinkClass}`
 
 // Google "G" mark (brand colours are Google's, not ours — allowed on its button).
 export function GoogleIcon() {

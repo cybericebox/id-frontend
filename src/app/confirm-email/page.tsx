@@ -57,7 +57,7 @@ function ConfirmEmail() {
               <CircleCheck size={32} className="text-ok" aria-hidden />
               <h1 className="text-lg font-semibold">{t("confirmEmail.doneTitle")}</h1>
               <p className="text-sm text-dim">{t("confirmEmail.doneBody")}</p>
-              <Link href="/profile" className={`text-[13px] ${inlineLinkClass}`}>
+              <Link href="/profile" className={`text-xs ${inlineLinkClass}`}>
                 {t("confirmEmail.toProfile")}
               </Link>
             </>
@@ -67,7 +67,7 @@ function ConfirmEmail() {
               <LinkIcon size={32} className="text-danger" aria-hidden />
               <h1 className="text-lg font-semibold">{t("confirmEmail.failedTitle")}</h1>
               <p className="text-sm text-dim">{state.message}</p>
-              <Link href="/profile" className={`text-[13px] ${inlineLinkClass}`}>
+              <Link href="/profile" className={`text-xs ${inlineLinkClass}`}>
                 {t("confirmEmail.toProfile")}
               </Link>
             </>
