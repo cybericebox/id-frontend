@@ -325,7 +325,7 @@ function SetupForm() {
         window.location.assign(RedirectURL)
       } else {
         // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Reload after setup so the new authentication state is read from storage.
-        window.location.assign("/profile")
+        window.location.assign("/profile/")
       }
     } catch (err) {
       toast.error(localizedError(err))
