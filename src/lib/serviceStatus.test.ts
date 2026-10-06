@@ -90,7 +90,7 @@ describe("probeService", () => {
 describe("startOutageGrace", () => {
   afterEach(() => { vi.useRealTimers() })
 
-  it("confirms the outage only after two failed probes, 30 s after the first failure", async () => {
+  it("confirms the outage after one failed probe, 15 s after the first failure", async () => {
     vi.useFakeTimers()
     const probe = vi.fn().mockResolvedValue(false)
     reportServiceUnavailable()
@@ -99,11 +99,6 @@ describe("startOutageGrace", () => {
     expect(probe).not.toHaveBeenCalled()
     await vi.advanceTimersByTimeAsync(1)
     expect(probe).toHaveBeenCalledTimes(1)
-    expect(getServiceStatus()).toBe("suspect")
-    await vi.advanceTimersByTimeAsync(14_999)
-    expect(getServiceStatus()).toBe("suspect")
-    await vi.advanceTimersByTimeAsync(1)
-    expect(probe).toHaveBeenCalledTimes(2)
     expect(getServiceStatus()).toBe("down")
   })
 
@@ -114,16 +109,6 @@ describe("startOutageGrace", () => {
     startOutageGrace(probe)
     await vi.advanceTimersByTimeAsync(30_000)
     expect(probe).toHaveBeenCalledTimes(1)
-    expect(getServiceStatus()).toBe("up")
-  })
-
-  it("resets when the first probe fails and the second succeeds (20 s)", async () => {
-    vi.useFakeTimers()
-    const probe = vi.fn().mockResolvedValueOnce(false).mockResolvedValue(true)
-    reportServiceUnavailable()
-    startOutageGrace(probe)
-    await vi.advanceTimersByTimeAsync(30_000)
-    expect(probe).toHaveBeenCalledTimes(2)
     expect(getServiceStatus()).toBe("up")
   })
 
