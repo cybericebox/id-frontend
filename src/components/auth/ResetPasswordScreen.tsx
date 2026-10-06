@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useMemo, useRef } from "react"
+import React, { useId, useState, useEffect, useMemo, useRef } from "react"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -73,6 +73,8 @@ export function ResetPasswordScreen() {
   // eslint-disable-next-line @eslint-react/exhaustive-deps
   const schema = useMemo(() => buildResetSchema(policyRef), [])
 
+  const strengthId = useId()
+  const msgId = useId()
   const form = useForm<ResetPasswordValues>({
     resolver: zodResolver(schema),
     mode: "onTouched",
@@ -162,11 +164,13 @@ export function ResetPasswordScreen() {
                       placeholder={t("resetPassword.newPasswordPlaceholder")}
                       autoComplete="new-password"
                       {...field}
+                      aria-describedby={field.value ? strengthId : form.formState.errors.NewPassword ? msgId : undefined}
                     />
                   </FormControl>
-                  {/* with text typed, the strength line names what is missing */}
-                  <PasswordStrength value={field.value} policy={policy} />
-                  <FormMessage className={field.value ? "hidden" : undefined} />
+                  {/* with text typed, the strength line names what is missing and is the field's description;
+                      the empty-field error shows only while there is no text */}
+                  <PasswordStrength id={strengthId} value={field.value} policy={policy} />
+                  {!field.value && <FormMessage id={msgId} />}
                 </FormItem>
               )}
             />

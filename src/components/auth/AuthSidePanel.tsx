@@ -115,9 +115,8 @@ export function AuthSidePanel({
         </div>
 
         <div className="my-auto flex flex-col gap-8 py-12">
-          <h2 className="text-[40px] font-semibold leading-[1.1] text-on-brand">
-            {t(`authPanel.${variant}.title1`)}
-            <br />
+          <h2 className="text-balance text-[clamp(28px,3vw,40px)] font-semibold leading-[1.1] text-on-brand">
+            {t(`authPanel.${variant}.title1`)}{" "}
             {t(`authPanel.${variant}.title2`)}
           </h2>
           <ul className="flex flex-col gap-4">
