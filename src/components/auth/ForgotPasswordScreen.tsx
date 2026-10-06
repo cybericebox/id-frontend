@@ -1,7 +1,6 @@
 "use client"
 
-import React, { Suspense, useState, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
+import React, { useState } from "react"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -17,15 +16,14 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { toast } from "@/components/ui/toast"
+import { FormError, reportFormError } from "@/components/ui/form-error"
+import { useUrlParams } from "@/lib/useUrlParams"
+import { useGuestOnly } from "@/lib/useGuestOnly"
 import { MailCheck } from "lucide-react"
 import { AuthLayout } from "./AuthLayout"
 import { AuthHeading, AuthPane, AuthSwitch } from "./parts"
 import { t } from "@/i18n/t"
-import { PageLoader } from "@/components/ui/spinner"
-import { redirectIfAuthed, rememberReturnTo } from "@/lib/auth"
 import { apiPost } from "@/api/client"
-import { localizedError } from "@/i18n/apiError"
 
 // ---------------------------------------------------------------------------
 // Zod schema — mirrors the daemon's JSON body (Email)
@@ -37,43 +35,28 @@ const ForgotPasswordSchema = z.object({
 type ForgotPasswordValues = z.infer<typeof ForgotPasswordSchema>
 
 // ---------------------------------------------------------------------------
-// Inner component — wrapped in <Suspense> for static-export compatibility.
-// useSearchParams reads an optional ?return_to for rememberReturnTo.
+// The form renders at once; an optional ?return_to comes from the URL on the client.
 // ---------------------------------------------------------------------------
-function ForgotPasswordForm() {
-  const searchParams = useSearchParams()
-  const returnTo = searchParams.get("return_to") ?? undefined
-
-  const [checking, setChecking] = useState(true)
-  useEffect(() => {
-    rememberReturnTo(returnTo)
-    let cancelled = false
-    redirectIfAuthed(undefined).then((redirecting) => {
-      if (!cancelled && !redirecting) setChecking(false)
-    }).catch(() => {
-      // On any failure (e.g. the /me probe errored), never hang the loader —
-      // reveal the form.
-      if (!cancelled) setChecking(false)
-    })
-    return () => { cancelled = true }
-    // eslint-disable-next-line @eslint-react/exhaustive-deps
-  }, [])
+export function ForgotPasswordScreen() {
+  const params = useUrlParams()
+  const returnTo = params?.get("return_to") ?? undefined
+  useGuestOnly(params !== null, returnTo, undefined)
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
 
   const form = useForm<ForgotPasswordValues>({
     resolver: zodResolver(ForgotPasswordSchema),
-    mode: "onSubmit",
+    mode: "onTouched",
     defaultValues: { Email: "" },
   })
 
   // Keep return_to on the way back to sign-in.
   const signInHref = returnTo ? `/sign-in?return_to=${encodeURIComponent(returnTo)}` : "/sign-in"
 
-  if (checking) return <PageLoader />
-
   const onSubmit: SubmitHandler<ForgotPasswordValues> = async (data) => {
+    setFormError(null)
     setIsSubmitting(true)
 
     try {
@@ -82,7 +65,8 @@ function ForgotPasswordForm() {
       try {
         recaptchaToken = await executeCaptcha("forgotPassword")
       } catch {
-        recaptchaToken = undefined
+        setFormError(t("error.captcha"))
+        return
       }
 
       const body: Record<string, string> = {
@@ -97,10 +81,9 @@ function ForgotPasswordForm() {
       // exists, so a 2xx is a neutral confirmation, NOT proof the email is registered.
       await apiPost("/api/auth/password/reset-request", body, undefined, { required: false })
       setSubmitted(true)
-      toast.success(t("forgotPassword.checkEmailTitle"))
       return
     } catch (err) {
-      toast.error(localizedError(err))
+      reportFormError(err, setFormError)
     } finally {
       setIsSubmitting(false)
     }
@@ -152,6 +135,8 @@ function ForgotPasswordForm() {
                 )}
               />
 
+              <FormError message={formError} />
+
               <Button
                 type="submit"
                 className="w-full"
@@ -166,17 +151,5 @@ function ForgotPasswordForm() {
         <AuthSwitch href={signInHref} action={t("forgotPassword.backToSignIn")} />
       </AuthPane>
     </AuthLayout>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Page export — wraps the form in Suspense for static-export consistency
-// with the other auth pages.
-// ---------------------------------------------------------------------------
-export function ForgotPasswordScreen() {
-  return (
-    <Suspense>
-      <ForgotPasswordForm />
-    </Suspense>
   )
 }

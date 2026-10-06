@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -68,6 +69,7 @@ export function AvatarCropDialog({
   const [zoom, setZoom] = useState(1)
   const [areaPixels, setAreaPixels] = useState<Area | null>(null)
   const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const onCropComplete = useCallback((_: Area, pixels: Area) => {
     setAreaPixels(pixels)
@@ -76,9 +78,13 @@ export function AvatarCropDialog({
   const handleSave = async () => {
     if (!imageSrc || !areaPixels) return
     setBusy(true)
+    setError(null)
     try {
       const blob = await cropToBlob(imageSrc, areaPixels)
       onConfirm(blob)
+    } catch {
+      // a canvas or image failure: say so inside the dialog and let the user retry or cancel
+      setError(t("profile.profile.cropFailed"))
     } finally {
       setBusy(false)
     }
@@ -89,6 +95,7 @@ export function AvatarCropDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t("profile.profile.cropTitle")}</DialogTitle>
+          <DialogDescription>{t("profile.profile.cropHint")}</DialogDescription>
         </DialogHeader>
 
         {imageSrc && (
@@ -108,10 +115,11 @@ export function AvatarCropDialog({
         )}
 
         <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">
+          <label htmlFor="avatar-crop-zoom" className="text-sm text-muted-foreground">
             {t("profile.profile.cropZoom")}
-          </span>
+          </label>
           <input
+            id="avatar-crop-zoom"
             type="range"
             min={1}
             max={3}
@@ -121,6 +129,8 @@ export function AvatarCropDialog({
             className="flex-1 accent-primary"
           />
         </div>
+
+        {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
 
         <DialogFooter>
           <Button type="button" variant="ghost" onClick={onCancel} disabled={busy}>

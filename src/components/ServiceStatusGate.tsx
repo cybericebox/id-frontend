@@ -69,7 +69,9 @@ function OutageDialog({ onCheck }: { onCheck: () => Promise<void> }) {
       <img className="service-gate__logo" src={CREST_SRC} alt="" width={48} height={48} />
       <h2 className="service-gate__title" id={titleId}>{t("serviceGate.title")}</h2>
       <p className="service-gate__desc">{t("serviceGate.body")}</p>
-      <p className="service-gate__hint" aria-live="polite">{checking ? t("serviceGate.checking") : t("serviceGate.nextTry", { seconds })}</p>
+      <p className="service-gate__hint">{checking ? t("serviceGate.checking") : t("serviceGate.nextTry", { seconds })}</p>
+      {/* the countdown changes every second and stays silent; only the check itself is announced */}
+      <span className="sr-only" role="status">{checking ? t("serviceGate.checking") : ""}</span>
     </div>
     <footer className="service-gate__foot">
       <Button type="button" variant="outline" busy={checking} onClick={() => { void check() }}>{t("serviceGate.retryNow")}</Button>

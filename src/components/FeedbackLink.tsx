@@ -7,7 +7,7 @@ import { feedbackHref } from "@/lib/feedback"
 import "./feedback-link.css"
 
 // A plain <a href="mailto:…"> that sits in the footer (or the account menu): it is part of the server-rendered /
-// static HTML, so it works without JavaScript. usePathname still renders on the static pass (the path of the page
+// static HTML, so it works without JavaScript (wrap it in <EmailOff> there, so Cloudflare does not rewrite the href). usePathname still renders on the static pass (the path of the page
 // being built). `app` overrides the app name in the subject; the rest of the props pass through, so a menu item
 // can wrap it with `asChild` (className, ref, children).
 export function FeedbackLink({ app, children, ...rest }: { app?: string } & Omit<ComponentPropsWithRef<"a">, "href">) {

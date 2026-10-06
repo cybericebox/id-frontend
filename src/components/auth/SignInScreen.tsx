@@ -1,7 +1,6 @@
 "use client"
 
-import React, { Suspense, useState, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
+import React, { useState } from "react"
 import Link from "next/link"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -20,16 +19,15 @@ import { Input } from "@/components/ui/input"
 import { PasswordInput } from "@/components/ui/password-input"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { toast } from "@/components/ui/toast"
+import { FormError, reportFormError } from "@/components/ui/form-error"
 import { AuthLayout } from "./AuthLayout"
 import { useOneShotParam } from "@/lib/useOneShotParam"
+import { useUrlParams } from "@/lib/useUrlParams"
+import { useGuestOnly } from "@/lib/useGuestOnly"
 import { AuthDivider, AuthHeading, AuthPane, AuthSwitch, GoogleIcon, authLinkClass } from "./parts"
 import { t } from "@/i18n/t"
-import { PageLoader } from "@/components/ui/spinner"
-import { redirectIfAuthed, rememberReturnTo, safeReturnTo } from "@/lib/auth"
+import { safeReturnTo } from "@/lib/auth"
 import { apiPost, apiUrl } from "@/api/client"
-import { localizedError } from "@/i18n/apiError"
-import { onServiceRestored } from "@/lib/serviceStatus"
 
 // ---------------------------------------------------------------------------
 // Zod schema — mirrors the daemon's JSON body (Email, Password)
@@ -42,34 +40,19 @@ const SignInSchema = z.object({
 type SignInValues = z.infer<typeof SignInSchema>
 
 // ---------------------------------------------------------------------------
-// Inner component — must be wrapped in <Suspense> because useSearchParams()
-// opts out of static prerendering (required for `output: 'export'`).
+// The form renders at once (heading and fields are in the static HTML); the return_to and Google flag come from the
+// URL on the client, and a signed-in visitor is redirected when `/me` answers.
 // ---------------------------------------------------------------------------
-function SignInForm() {
-  const searchParams = useSearchParams()
-  const returnTo = searchParams.get("return_to") ?? ""
-
-  const [checking, setChecking] = useState(true)
-  useEffect(() => {
-    rememberReturnTo(returnTo || undefined)
-    let cancelled = false
-    const checkSession = () => {
-      void redirectIfAuthed(returnTo || undefined).then((redirecting) => {
-        if (!cancelled && !redirecting) setChecking(false)
-      }).catch(() => {
-        // Keep the form available under the service notice while the API is down.
-        if (!cancelled) setChecking(false)
-      })
-    }
-    checkSession()
-    const unsubscribe = onServiceRestored(checkSession)
-    return () => { cancelled = true; unsubscribe() }
-    // eslint-disable-next-line @eslint-react/exhaustive-deps
-  }, [])
+export function SignInScreen() {
+  const params = useUrlParams()
+  const returnTo = params?.get("return_to") ?? ""
+  useGuestOnly(params !== null, returnTo || undefined)
 
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const [googleError, clearGoogleError] = useOneShotParam("google_error", searchParams.get("google_error"))
+  const [formError, setFormError] = useState<string | null>(null)
+
+  const [googleError, clearGoogleError] = useOneShotParam("google_error", params)
 
   const form = useForm<SignInValues>({
     resolver: zodResolver(SignInSchema),
@@ -77,10 +60,9 @@ function SignInForm() {
     defaultValues: { Email: "", Password: "" },
   })
 
-  if (checking) return <PageLoader />
-
   const onSubmit: SubmitHandler<SignInValues> = async (data) => {
     clearGoogleError()
+    setFormError(null)
     setIsSubmitting(true)
 
     try {
@@ -89,7 +71,8 @@ function SignInForm() {
       try {
         recaptchaToken = await executeCaptcha("signIn")
       } catch {
-        recaptchaToken = undefined
+        setFormError(t("error.captcha"))
+        return
       }
 
       const body: Record<string, string> = {
@@ -125,7 +108,7 @@ function SignInForm() {
       }
     } catch (err) {
       // Localized by the error's stable code (Status.Code), not the English message.
-      toast.error(localizedError(err))
+      reportFormError(err, setFormError)
     } finally {
       setIsSubmitting(false)
     }
@@ -229,12 +212,15 @@ function SignInForm() {
                 )}
               />
 
+              <FormError message={formError} />
+
               <Button
                 type="submit"
                 className="w-full"
                 disabled={isSubmitting}
+                busy={isSubmitting}
               >
-                {isSubmitting ? t("signIn.inProgress") : t("signIn.submit")}
+                {t("signIn.submit")}
               </Button>
             </form>
           </Form>
@@ -242,17 +228,5 @@ function SignInForm() {
         <AuthSwitch text={t("signIn.noAccount")} href={registerHref} action={t("signIn.createAccount")} />
       </AuthPane>
     </AuthLayout>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Page export — wraps the form in Suspense to satisfy `output: 'export'`
-// static prerendering when useSearchParams is used inside.
-// ---------------------------------------------------------------------------
-export function SignInScreen() {
-  return (
-    <Suspense>
-      <SignInForm />
-    </Suspense>
   )
 }

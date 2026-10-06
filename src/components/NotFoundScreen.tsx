@@ -19,7 +19,7 @@ const HOME = "/sign-in"
  */
 export function NotFoundScreen({ title = t("error.notFound"), body = t("error.notFoundDescription"), block = false }: { title?: string; body?: string; block?: boolean }) {
   return (
-    <main className={cn("flex flex-col items-center justify-center gap-4 px-4 py-12 text-center", block ? "min-h-64 flex-1" : "min-h-screen")}>
+    <main id="main" tabIndex={-1} className={cn("flex flex-col items-center justify-center gap-4 px-4 py-12 text-center outline-none", block ? "min-h-64 flex-1" : "min-h-dvh")}>
       <Wordmark size="lg" href={null} />
       <SearchX size={32} className="text-muted-foreground" aria-hidden />
       <h1 className="max-w-md text-balance text-2xl font-semibold tracking-tight">{title}</h1>

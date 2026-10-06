@@ -160,6 +160,24 @@
 }
 
 @layer components {
+	/* Skip link: off-screen until it takes focus, then the first thing on the page. */
+	.skip-link {
+		position: fixed;
+		left: 8px;
+		top: 8px;
+		z-index: 100;
+		transform: translateY(-200%);
+		padding: 8px 12px;
+		border-radius: var(--radius-md);
+		background: var(--ib-action);
+		color: var(--ib-on-action);
+		font-size: var(--ib-fs-14);
+		font-weight: var(--ib-w-medium);
+	}
+	.skip-link:focus-visible {
+		transform: none;
+	}
+
 	/* Legacy class kept so untouched screens still render: flat surface, no blur/shadow. */
 	.frost-panel {
 		background: var(--ib-surface);
@@ -179,6 +197,10 @@
 	* {
 		transition: none !important;
 		animation: none !important;
+	}
+	/* the crest loader keeps a slow fade (no movement): the busy state stays visible */
+	.crest-loader {
+		animation: crest-loading-fade 2.4s ease-in-out infinite !important;
 	}
 }
 

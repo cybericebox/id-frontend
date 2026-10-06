@@ -24,6 +24,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Input } from "@/components/ui/input"
 import { PasswordInput } from "@/components/ui/password-input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { FormError, reportFormError } from "@/components/ui/form-error"
 import { ReauthPasswordField } from "./ReauthPasswordField"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/toast"
@@ -43,6 +44,7 @@ type EmailValues = z.infer<typeof EmailSchema>
 
 export function AccountTab({ account }: { account: Account }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [emailError, setEmailError] = useState<string | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState("")
@@ -50,7 +52,7 @@ export function AccountTab({ account }: { account: Account }) {
 
   const form = useForm<EmailValues>({
     resolver: zodResolver(EmailSchema),
-    mode: "onBlur",
+    mode: "onTouched",
     defaultValues: { Email: "", CurrentPassword: "" },
   })
 
@@ -59,7 +61,8 @@ export function AccountTab({ account }: { account: Account }) {
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem(STORAGE_DRAFT_ACCOUNT_EMAIL)
-      if (raw) form.reset({ Email: (JSON.parse(raw) as { Email?: string }).Email ?? "", CurrentPassword: "" })
+      // keepDefaultValues: the restored address counts as a change, so «Змінити пошту» stays enabled
+      if (raw) form.reset({ Email: (JSON.parse(raw) as { Email?: string }).Email ?? "", CurrentPassword: "" }, { keepDefaultValues: true })
     } catch {
       /* ignore */
     }
@@ -75,6 +78,7 @@ export function AccountTab({ account }: { account: Account }) {
   }, [])
 
   const onSubmit: SubmitHandler<EmailValues> = async (data) => {
+    setEmailError(null)
     setIsSubmitting(true)
     try {
       await apiPost("/api/auth/account/email", { Email: data.Email, CurrentPassword: data.CurrentPassword })
@@ -82,7 +86,7 @@ export function AccountTab({ account }: { account: Account }) {
       toast.success(t("profile.account.emailSent"))
       form.reset({ Email: "", CurrentPassword: "" })
     } catch (err) {
-      toast.error(extractError(err))
+      reportFormError(err, setEmailError)
     } finally {
       setIsSubmitting(false)
     }
@@ -130,6 +134,12 @@ export function AccountTab({ account }: { account: Account }) {
           </div>
 
 
+          {!account.HasPassword && (
+            <Alert variant="warn">
+              <AlertDescription>{t("profile.account.emailNeedsPassword")}</AlertDescription>
+            </Alert>
+          )}
+
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
@@ -147,6 +157,7 @@ export function AccountTab({ account }: { account: Account }) {
                         type="email"
                         placeholder={t("profile.account.newEmailPlaceholder")}
                         autoComplete="email"
+                        disabled={!account.HasPassword}
                         {...field}
                       />
                     </FormControl>
@@ -170,24 +181,14 @@ export function AccountTab({ account }: { account: Account }) {
                 />
               )}
               <p className="text-sm text-dim">{t("profile.account.emailGoogleNote")}</p>
-              {!account.HasPassword && (
-                <Alert variant="warn">
-                  <AlertDescription>{t("profile.account.emailNeedsPassword")}</AlertDescription>
-                </Alert>
-              )}
+              <FormError message={emailError} />
               <div className="flex gap-2">
                 <Button
                   type="submit"
-                  disabled={
-                    !account.HasPassword ||
-                    isSubmitting ||
-                    !form.formState.isDirty ||
-                    !form.formState.isValid
-                  }
+                  disabled={!account.HasPassword || isSubmitting || !form.formState.isDirty}
+                  busy={isSubmitting}
                 >
-                  {isSubmitting
-                    ? t("common.loading")
-                    : t("profile.account.changeEmail")}
+                  {t("profile.account.changeEmail")}
                 </Button>
                 {form.formState.isDirty && (
                   <Button

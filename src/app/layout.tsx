@@ -31,6 +31,8 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       </head>
       <body>
+        {/* first tab stop: jumps over the banners and the page chrome to <main id="main"> */}
+        <a href="#main" className="skip-link">{t("common.skipToContent")}</a>
         {/* site banners sit at the very top, above the split auth layout */}
         <SiteBanners />
         <QueryProvider><ToastProvider>{children}</ToastProvider></QueryProvider>

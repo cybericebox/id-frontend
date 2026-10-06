@@ -23,7 +23,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/toast"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { FormError, reportFormError } from "@/components/ui/form-error"
 import { apiPatch, apiUrl, mediaUrl } from "@/api/client"
 import { localizedError, localizedResponseError } from "@/i18n/apiError"
 import { t } from "@/i18n/t"
@@ -49,13 +49,14 @@ export function ProfileTab({
 }) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isPhotoBusy, setIsPhotoBusy] = useState(false)
+  const [photoAction, setPhotoAction] = useState<"upload" | "remove" | null>(null)
+  const isPhotoBusy = photoAction !== null
   const [cropSrc, setCropSrc] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const form = useForm<ProfileValues>({
     resolver: zodResolver(ProfileSchema),
-    mode: "onBlur",
+    mode: "onTouched",
     defaultValues: { FirstName: account.FirstName, LastName: account.LastName },
   })
 
@@ -65,7 +66,8 @@ export function ProfileTab({
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem(STORAGE_DRAFT_PROFILE_NAME)
-      if (raw) form.reset(JSON.parse(raw))
+      // keepDefaultValues: the restored text counts as a change against the saved name, so Save stays enabled
+      if (raw) form.reset(JSON.parse(raw), { keepDefaultValues: true })
     } catch {
       /* ignore */
     }
@@ -110,7 +112,8 @@ export function ProfileTab({
 
   const onCropConfirm = async (blob: Blob) => {
     closeCropper()
-    setIsPhotoBusy(true)
+    setErrorMsg(null)
+    setPhotoAction("upload")
     try {
       const fd = new FormData()
       fd.append("file", blob, "avatar.jpg")
@@ -123,36 +126,36 @@ export function ProfileTab({
         body: fd,
       })
       if (!res.ok) {
-        toast.error(await localizedResponseError(res))
+        setErrorMsg(await localizedResponseError(res))
         return
       }
       toast.success(t("profile.profile.photoUpdated"))
       onUpdated()
     } catch (err) {
-      toast.error(extractError(err))
+      reportFormError(err, setErrorMsg)
     } finally {
-      setIsPhotoBusy(false)
+      setPhotoAction(null)
     }
   }
 
   const onRemovePhoto = async () => {
     setErrorMsg(null)
-    setIsPhotoBusy(true)
+    setPhotoAction("remove")
     try {
       const res = await fetch(apiUrl("/api/auth/account/avatar"), {
         method: "DELETE",
         credentials: "include",
       })
       if (!res.ok) {
-        toast.error(await localizedResponseError(res))
+        setErrorMsg(await localizedResponseError(res))
         return
       }
       toast.success(t("profile.profile.photoRemoved"))
       onUpdated()
     } catch (err) {
-      toast.error(extractError(err))
+      reportFormError(err, setErrorMsg)
     } finally {
-      setIsPhotoBusy(false)
+      setPhotoAction(null)
     }
   }
 
@@ -170,7 +173,7 @@ export function ProfileTab({
       onUpdated()
     } catch (err) {
       // A 401 is auto-redirected by the api client (the draft is already persisted).
-      toast.error(extractError(err))
+      reportFormError(err, setErrorMsg)
     } finally {
       setIsSubmitting(false)
     }
@@ -215,6 +218,7 @@ export function ProfileTab({
                 size="sm"
                 onClick={onPickPhoto}
                 disabled={isPhotoBusy}
+                busy={photoAction === "upload"}
               >
                 {account.Picture
                   ? t("profile.profile.changePhoto")
@@ -227,6 +231,7 @@ export function ProfileTab({
                   size="sm"
                   onClick={onRemovePhoto}
                   disabled={isPhotoBusy}
+                  busy={photoAction === "remove"}
                 >
                   {t("profile.profile.removePhoto")}
                 </Button>
@@ -242,11 +247,7 @@ export function ProfileTab({
           onConfirm={onCropConfirm}
         />
 
-        {errorMsg && (
-          <Alert variant="destructive">
-            <AlertDescription>{errorMsg}</AlertDescription>
-          </Alert>
-        )}
+        <FormError message={errorMsg} />
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
@@ -280,11 +281,7 @@ export function ProfileTab({
             <div className="flex gap-2">
               <Button
                 type="submit"
-                disabled={
-                  isSubmitting ||
-                  !form.formState.isDirty ||
-                  !form.formState.isValid
-                }
+                disabled={isSubmitting || !form.formState.isDirty}
                 busy={isSubmitting}
               >
                 {t("profile.profile.save")}

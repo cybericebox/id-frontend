@@ -58,7 +58,7 @@ export function NotificationPopIn({ message, onClose, onAction }: {
       <NotificationMessageCard
         icon={message.Icon} tone={message.Tone} accentColor={message.AccentColor} title={message.Title}
         body={message.Body && <div dangerouslySetInnerHTML={{ __html: keepBrand(DOMPurify.sanitize(message.Body)) }} />}
-        actions={action && <button type="button" onClick={() => onAction(action.href)} className="text-sm font-medium text-action hover:underline">{action.label}</button>}
+        actions={action && <button type="button" onClick={() => onAction(action.href)} className="inline-flex min-h-6 items-center rounded-sm px-1 text-sm font-medium text-action hover:underline">{action.label}</button>}
       />
     </div>
     <span aria-hidden="true" className="absolute bottom-2 left-4 right-4 h-1 overflow-hidden rounded-full bg-soft">
