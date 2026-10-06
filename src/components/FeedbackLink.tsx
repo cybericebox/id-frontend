@@ -4,7 +4,6 @@ import { useEffect, useRef, type ComponentPropsWithRef } from "react"
 import { usePathname } from "next/navigation"
 import { t } from "@/i18n/t"
 import { feedbackHref } from "@/lib/feedback"
-import "./feedback-link.css"
 
 // A plain <a href="mailto:…"> that sits in the footer (or the account menu): it is part of the server-rendered /
 // static HTML, so it works without JavaScript (wrap it in <EmailOff> there, so Cloudflare does not rewrite the href). usePathname still renders on the static pass (the path of the page

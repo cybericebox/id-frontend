@@ -23,6 +23,8 @@ const src = [process.env.DS_DIR, ...up, join(root, "ds-source")].filter(Boolean)
 const files = {
   "styles/ds-tokens.css": "tokens.css",
   "components/ui/tooltip.css": "components/tooltip/tooltip.css",
+  "components/ui/error-page.css": "patterns/error-page/error-page.css",
+  "components/ui/service-down.css": "patterns/service-down/service-down.css",
 }
 
 const HEADER = "/* copied from docs/design-system, do not edit: node scripts/sync-ds.mjs */\n"

@@ -16,12 +16,10 @@ describe("FeedbackLink", () => {
     expect(html).toContain("%2Fsign-in")
   })
 
-  it("passes className and children through, and the stylesheet has no fixed position", () => {
+  it("passes className and children through", () => {
     const html = renderToStaticMarkup(<FeedbackLink className="x"><b>y</b></FeedbackLink>)
     expect(html).toContain('class="x"')
     expect(html).toContain("<b>y</b>")
-    const css = readFileSync(join(__dirname, "feedback-link.css"), "utf8")
-    expect(css).not.toMatch(/position\s*:\s*fixed/)
   })
 
   it("names the app in the subject, with no no-break spaces", () => {

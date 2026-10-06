@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { t } from "@/i18n/t"
-import { NotFoundScreen } from "@/components/NotFoundScreen"
+import { NotFoundScreen } from "@/components/ErrorPage"
 
 export const metadata: Metadata = { title: t("error.notFound") }
 
