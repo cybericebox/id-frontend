@@ -28,6 +28,19 @@ describe("notification card", () => {
   })
 })
 
+describe("pop-in", () => {
+  it("does not nest a status role in the live region and never auto-dismisses an action", () => {
+    const popIn = src("./NotificationPopIn.tsx")
+    expect(popIn).not.toContain('role="status"')
+    expect(popIn).toContain("if (paused || action) return")
+    expect(popIn).toContain("onTouchStart")
+  })
+
+  it("resolving one row disables only its own button", () => {
+    expect(src("./InboxButton.tsx")).toContain("disabled={resolving === item.ID}")
+  })
+})
+
 describe("links in text and busy states", () => {
   it("inline links are underlined at rest", () => {
     expect(inlineLinkClass).toContain("underline")

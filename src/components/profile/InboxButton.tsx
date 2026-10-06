@@ -406,7 +406,7 @@ export function InboxButton({ defaultTab = "all", event }: InboxButtonProps = {}
                 </span>}
                 actions={href || unreadItem || canResolve(item) ? <>
                   {href ? <a href={href} onClick={(clickEvent) => { clickEvent.preventDefault(); void followLink(item, href) }} className={`${rowActionClass} text-sm`}>{t("inbox.open")}</a> : unreadItem ? <button type="button" onClick={() => void markRead(item)} className={`${rowActionClass} text-xs`}>{t("inbox.markRead")}</button> : null}
-                  {canResolve(item) && <button type="button" disabled={resolving !== null} aria-busy={resolving === item.ID} onClick={() => void resolve(item)} className={`${rowActionClass} gap-1 text-xs disabled:cursor-not-allowed disabled:opacity-60`}>
+                  {canResolve(item) && <button type="button" disabled={resolving === item.ID} aria-busy={resolving === item.ID} onClick={() => void resolve(item)} className={`${rowActionClass} gap-1 text-xs disabled:cursor-not-allowed disabled:opacity-60`}>
                     {resolving === item.ID ? <Spinner size="sm" label={t("common.loading")} /> : <Check size={14} aria-hidden="true" />}{t("inbox.resolve")}
                   </button>}
                 </> : undefined}
