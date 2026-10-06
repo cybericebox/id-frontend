@@ -73,9 +73,9 @@ export function ErrorPage({ status, title, body, onRetry, error, report = false,
           ? <Button onClick={onRetry}>{t("error.load.retry")}</Button>
           : <Button asChild><Link href={HOME}>{t("error.goHome")}</Link></Button>}
         <Button variant="link" onClick={goBack}>{t("error.page.back")}</Button>
-        {report && typeof window !== "undefined" && <Button asChild variant="link"><a href={reportHref(error, ref)}>{t("error.report.link")}</a></Button>}
       </div>
       {ref ? <Reference value={ref} /> : code !== undefined && <p className="ib-error__ref">{t("error.load.code", { code })}</p>}
+      {report && typeof window !== "undefined" && <Button asChild variant="link"><a href={reportHref(error, ref)}>{t("error.report.link")}</a></Button>}
     </>
   )
   if (!page) {

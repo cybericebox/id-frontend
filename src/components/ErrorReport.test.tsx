@@ -33,6 +33,10 @@ describe("500 page report", () => {
     await act(async () => { host.querySelector<HTMLButtonElement>("button[aria-label]")!.click() })
     expect(writeText).toHaveBeenCalledWith("50310-0a1b2c3d")
     expect(host.querySelector('[role="status"]')!.textContent).toBe("Скопійовано")
+    // the report link sits below the actions and the reference line, not inside the actions row
+    const actions = host.querySelector(".ib-error__actions")!
+    expect(actions.contains(link()!)).toBe(false)
+    expect(host.querySelector(".ib-error__ref")!.compareDocumentPosition(link()!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it("without a platform code the reference is the request id alone", () => {
