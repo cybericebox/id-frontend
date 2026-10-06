@@ -45,7 +45,7 @@ function SignOut() {
       if (cancelled) return
       // Fall back to /sign-in (not /profile) after a logout; the shared guard
       // strips any port and rejects off-platform return_to values.
-      window.location.href = safeReturnTo(returnTo ?? undefined, "/sign-in")
+      window.location.href = safeReturnTo(returnTo ?? undefined, "/sign-in/")
     }
     void run()
     return () => {

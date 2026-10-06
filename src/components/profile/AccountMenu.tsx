@@ -75,7 +75,7 @@ export function AccountMenu({ account }: { account: Account }) {
           const Icon = ACCOUNT_MENU_ICONS[key]
           return (
             <DropdownMenuItem key={key} asChild className="group gap-2">
-              <a href={entry.kind === "signOut" ? "/sign-out" : entry.href}>
+              <a href={entry.kind === "signOut" ? "/sign-out/" : entry.href}>
                 <Icon {...ACCOUNT_MENU_ICON_PROPS} className={ICON_CLASS} />{t(ACCOUNT_MENU_LABELS[key])}
               </a>
             </DropdownMenuItem>

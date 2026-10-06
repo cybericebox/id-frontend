@@ -77,10 +77,10 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  // No 308 slash-normalising redirects. They are "permanent", so browsers cache
-  // them forever; an old cached /x → /x/ (from when trailingSlash was on) plus a
-  // live /x/ → /x makes ERR_TOO_MANY_REDIRECTS. Static hosting never redirects.
-  skipTrailingSlashRedirect: true,
+  // trailingSlash: every page exports as /<path>/index.html and the canonical URL ends with a slash. Without it a nested
+  // route (profile, profile/sessions) exported both profile.html and a profile/ directory, which nginx answered with 403.
+  // nginx redirects a slashless page path once to the slashed one (deploy/nginx/server.conf).
+  trailingSlash: true,
   allowedDevOrigins: devOrigins,
 }
 
