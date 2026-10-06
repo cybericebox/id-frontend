@@ -4,7 +4,6 @@ import React, { Suspense, useState, useEffect, useRef, useMemo } from "react"
 import { useSearchParams } from "next/navigation"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
 
 import {
   Form,
@@ -21,8 +20,8 @@ import { toast } from "@/components/ui/toast"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Check, LinkIcon } from "lucide-react"
 import { PasswordInput } from "@/components/ui/password-input"
-import { PasswordStrength, passwordError } from "@/components/ui/password-strength"
-import { usePasswordPolicy, type PasswordPolicy } from "@/lib/passwordPolicy"
+import { PasswordStrength } from "@/components/ui/password-strength"
+import { usePasswordPolicy } from "@/lib/passwordPolicy"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorScreen } from "@/components/ErrorScreen"
 import { AuthLayout } from "./AuthLayout"
@@ -33,6 +32,7 @@ import { t } from "@/i18n/t"
 import { apiPost, apiUrl } from "@/api/client"
 import { localizedError } from "@/i18n/apiError"
 import { setupDraftKey } from "@/lib/storageKeys"
+import { buildSetupSchema, type SetupValues } from "./setupSchema"
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -85,76 +85,6 @@ function clearDraft(key: string) {
   } catch {
     // ignore
   }
-}
-
-// ---------------------------------------------------------------------------
-// Zod schema — client-side validation
-// Password and ConfirmPassword are always strings (empty = no password chosen).
-//
-// The ≥1-method rule depends on whether Google is already linked. We inject
-// this as a mutable ref so the stable schema closure can always read the
-// latest value without needing to be rebuilt on every render.
-// ---------------------------------------------------------------------------
-const BaseSetupSchema = z.object({
-  FirstName: z
-    .string()
-    .min(1, { message: t("validation.required") })
-    .max(255),
-  LastName: z
-    .string()
-    .min(1, { message: t("validation.required") })
-    .max(255),
-  Password: z.string().max(255),
-  ConfirmPassword: z.string().max(255),
-  AcceptTos: z.boolean(),
-})
-
-type SetupValues = z.infer<typeof BaseSetupSchema>
-
-/**
- * Returns a schema whose superRefine reads hasGoogle from the supplied ref.
- * Call this ONCE (e.g. with React.useMemo / outside re-renders) and update
- * the ref whenever hasGoogle changes.
- */
-function buildSchema(
-  hasGoogleRef: React.RefObject<boolean>,
-  policyRef: React.RefObject<PasswordPolicy>
-) {
-  return BaseSetupSchema.superRefine((data, ctx) => {
-    // An entered password must pass the backend policy (empty = no password).
-    if (data.Password) {
-      const msg = passwordError(data.Password, policyRef.current)
-      if (msg) ctx.addIssue({ code: "custom", message: msg, path: ["Password"] })
-    }
-
-    // Password confirmation must match if a password is entered
-    if (data.Password && data.Password !== data.ConfirmPassword) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: t("validation.passwordsNoMatch"),
-        path: ["ConfirmPassword"],
-      })
-    }
-
-    // At least one method: password or Google
-    const hasPassword = Boolean(data.Password && data.Password.length > 0)
-    if (!hasPassword && !hasGoogleRef.current) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: t("validation.methodRequired"),
-        path: ["Password"],
-      })
-    }
-
-    // ToS must be accepted
-    if (!data.AcceptTos) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: t("validation.tosRequired"),
-        path: ["AcceptTos"],
-      })
-    }
-  })
 }
 
 // ---------------------------------------------------------------------------
@@ -241,7 +171,7 @@ function SetupForm() {
   }, [policy])
 
   // eslint-disable-next-line @eslint-react/exhaustive-deps
-  const schema = useMemo(() => buildSchema(hasGoogleRef, policyRef), [])
+  const schema = useMemo(() => buildSetupSchema(hasGoogleRef, policyRef), [])
 
   const form = useForm<SetupValues>({
     resolver: zodResolver(schema),
@@ -254,6 +184,9 @@ function SetupForm() {
       AcceptTos: false,
     },
   })
+
+  // The confirmation is required whenever a password is required or typed.
+  const confirmRequired = !hasGoogle || Boolean(form.watch("Password"))
 
   // ---------------------------------------------------------------------------
   // Fetch setup info on mount (or when token changes)
@@ -487,10 +420,11 @@ function SetupForm() {
                 name="FirstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("setup.firstName")}</FormLabel>
+                    <FormLabel required>{t("setup.firstName")}</FormLabel>
                     <FormControl>
                       <Input
                         type="text"
+                        required
                         placeholder={t("setup.firstNamePlaceholder")}
                         autoComplete="given-name"
                         {...field}
@@ -507,10 +441,11 @@ function SetupForm() {
                 name="LastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("setup.lastName")}</FormLabel>
+                    <FormLabel required>{t("setup.lastName")}</FormLabel>
                     <FormControl>
                       <Input
                         type="text"
+                        required
                         placeholder={t("setup.lastNamePlaceholder")}
                         autoComplete="family-name"
                         {...field}
@@ -560,9 +495,10 @@ function SetupForm() {
                   name="Password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("setup.setPassword")}</FormLabel>
+                      <FormLabel required={!hasGoogle}>{t("setup.setPassword")}</FormLabel>
                       <FormControl>
                         <PasswordInput
+                          required={!hasGoogle}
                           placeholder={t("setup.passwordPlaceholder")}
                           autoComplete="new-password"
                           {...field}
@@ -575,16 +511,16 @@ function SetupForm() {
                   )}
                 />
 
-                {/* Confirm password — only show when a password has been entered */}
-                {form.watch("Password") && (
-                  <FormField
+                {/* Confirm password — required whenever a password is (or must be) set */}
+                <FormField
                     control={form.control}
                     name="ConfirmPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t("setup.confirmPassword")}</FormLabel>
+                        <FormLabel required={confirmRequired}>{t("setup.confirmPassword")}</FormLabel>
                         <FormControl>
                           <PasswordInput
+                            required={confirmRequired}
                             placeholder={t("setup.confirmPasswordPlaceholder")}
                             autoComplete="new-password"
                             {...field}
@@ -594,7 +530,6 @@ function SetupForm() {
                       </FormItem>
                     )}
                   />
-                )}
               </div>
 
               {/* Terms of Service */}
@@ -610,6 +545,7 @@ function SetupForm() {
                         onBlur={field.onBlur}
                         name={field.name}
                         ref={field.ref}
+                        required
                         label={<span>{tosLabel}</span>}
                       />
                     </FormControl>

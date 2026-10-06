@@ -217,10 +217,11 @@ function RegisterForm() {
                 name="Email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("common.email")}</FormLabel>
+                    <FormLabel required>{t("common.email")}</FormLabel>
                     <FormControl>
                       <Input
                         type="email"
+                        required
                         placeholder={t("register.emailPlaceholder")}
                         autoComplete="email"
                         {...field}
