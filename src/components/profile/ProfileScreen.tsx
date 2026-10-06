@@ -236,7 +236,7 @@ function ProfileShell() {
             <p className="break-all text-sm text-dim">{account.Email}</p>
             {memberSince(account.CreatedAt) && (
               <p className="text-xs text-faint">
-                {t("profile.memberSince")} {memberSince(account.CreatedAt)}
+                {t("profile.memberSinceDate", { date: memberSince(account.CreatedAt) })}
               </p>
             )}
           </div>

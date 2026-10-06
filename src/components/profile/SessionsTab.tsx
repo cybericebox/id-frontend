@@ -150,7 +150,7 @@ export function SessionsTab() {
                     <Button
                       variant="outline"
                       size="sm"
-                      aria-label={t("profile.sessions.revokeLabel", { device: `${browserFromUA(s.UserAgent)} · ${osFromUA(s.UserAgent)}` })}
+                      aria-label={t("profile.sessions.revokeLabel", { device: t("profile.sessions.deviceLabel", { browser: browserFromUA(s.UserAgent), os: osFromUA(s.UserAgent) }) })}
                       onClick={() => { setRevokeError(""); setRevokeTarget(s) }}
                     >
                       {t("profile.sessions.revoke")}
@@ -160,10 +160,10 @@ export function SessionsTab() {
 
                 {/* Meta: IP · last activity, created — full width below. */}
                 <div className="mt-1.5 text-xs text-muted-foreground">
-                  {s.IP} · {t("profile.sessions.lastActivity")}: {formatDate(s.LastSeen)}
+                  {t("profile.sessions.lastActivityLine", { ip: s.IP, date: formatDate(s.LastSeen) })}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {t("profile.sessions.createdAt")}: {formatDate(s.CreatedAt)}
+                  {t("profile.sessions.createdAtLine", { date: formatDate(s.CreatedAt) })}
                 </div>
               </li>
             ))}
