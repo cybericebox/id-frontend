@@ -65,6 +65,10 @@ export function SessionsTab() {
   const [confirmBusy, setConfirmBusy] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmError, setConfirmError] = useState("")
+  // «Завершити» on one row asks first, like «Завершити всі інші сесії»
+  const [revokeTarget, setRevokeTarget] = useState<SessionInfo | null>(null)
+  const [revokeBusy, setRevokeBusy] = useState(false)
+  const [revokeError, setRevokeError] = useState("")
   const storeRef = useRef<ReturnType<typeof createSessionsStore> | null>(null)
   if (!storeRef.current) {
     storeRef.current = createSessionsStore(
@@ -84,11 +88,16 @@ export function SessionsTab() {
   }, [store])
 
   const revokeOne = async (id: string) => {
+    setRevokeBusy(true)
+    setRevokeError("")
     try {
       await store.revokeOne(id)
+      setRevokeTarget(null)
       toast.success(t("profile.sessions.revoked"))
     } catch (err) {
-      toast.error(extractError(err))
+      setRevokeError(extractError(err))
+    } finally {
+      setRevokeBusy(false)
     }
   }
 
@@ -123,7 +132,7 @@ export function SessionsTab() {
         ) : sessions.length === 0 ? (
           <EmptyState message={t("profile.sessions.empty")} />
         ) : (
-          <ul className="max-h-96 min-h-40 space-y-3 overflow-y-auto pr-1">
+          <ul aria-label={t("profile.sessions.list")} className="min-h-40 space-y-3">
             {sessions.map((s) => (
               <li key={s.ID} className="rounded-md border p-3">
                 {/* Line 1: browser · OS (+ current badge) on the left, revoke
@@ -141,7 +150,8 @@ export function SessionsTab() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => revokeOne(s.ID)}
+                      aria-label={t("profile.sessions.revokeLabel", { device: `${browserFromUA(s.UserAgent)} · ${osFromUA(s.UserAgent)}` })}
+                      onClick={() => { setRevokeError(""); setRevokeTarget(s) }}
                     >
                       {t("profile.sessions.revoke")}
                     </Button>
@@ -168,6 +178,17 @@ export function SessionsTab() {
             {t("profile.sessions.revokeAll")}
           </Button>
         )}
+        <ConfirmDialog
+          open={revokeTarget !== null}
+          onCancel={() => setRevokeTarget(null)}
+          tone="danger"
+          busy={revokeBusy}
+          error={revokeError}
+          title={t("profile.sessions.revokeOneTitle")}
+          description={revokeTarget ? <>{t("profile.sessions.revokeOneBody")} <b className="font-medium text-ink">{browserFromUA(revokeTarget.UserAgent)} · {osFromUA(revokeTarget.UserAgent)}</b></> : undefined}
+          confirmLabel={t("profile.sessions.revokeOneConfirm")}
+          onConfirm={() => { if (revokeTarget) void revokeOne(revokeTarget.ID) }}
+        />
         <ConfirmDialog
           open={confirmOpen}
           onCancel={() => setConfirmOpen(false)}

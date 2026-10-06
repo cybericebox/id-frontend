@@ -27,7 +27,7 @@ export function Wordmark({
   const mark = size === "lg" ? 40 : size === "sm" ? 24 : 30
   const lockup = (
     <span className={`inline-flex items-center gap-2 font-semibold tracking-tight ${text} ${className ?? ""}`}>
-      {withMark && <Logo size={mark} href={null} />}
+      {withMark && <Logo size={mark} href={null} alt="" />}
       <span className="whitespace-nowrap text-ink">
         {BRAND_HEAD}<span className="text-ice">ICE</span>{BRAND_TAIL}
       </span>

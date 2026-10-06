@@ -39,7 +39,7 @@ function ConfirmEmail() {
   }, [code])
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
+    <main id="main" tabIndex={-1} className="flex min-h-dvh items-center justify-center p-4 outline-none">
       <div className="flex w-full max-w-md flex-col">
         <div className="mb-6 flex justify-center">
           <Wordmark size="lg" />

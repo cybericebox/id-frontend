@@ -29,7 +29,8 @@ export function AuthLayout({
           : "lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]"
       )}
     >
-      <AuthSidePanel variant={variant} className={reversed ? "lg:order-1" : "lg:order-2"} />
+      {/* DOM order is the reading and tab order: the form column first, the decorative panel after it.
+          lg:order-* only places them on the screen (the panel side alternates per page). */}
       <div
         className={cn(
           "flex flex-col bg-paper",
@@ -40,9 +41,9 @@ export function AuthLayout({
         <header className="px-6 pt-5 lg:hidden">
           <Wordmark size="md" />
         </header>
-        <div className="flex flex-1 items-center justify-center px-6 py-12 md:px-10">
+        <main id="main" tabIndex={-1} className="flex flex-1 items-center justify-center px-6 py-12 outline-none md:px-10">
           {children}
-        </div>
+        </main>
         {/* narrow screens: theme switch at the bottom (on wide screens it sits in the panel footer) */}
         <footer className="flex flex-col items-center gap-3 px-6 pb-5 text-[13px] text-dim lg:hidden">
           <CookieSettingsLink className="hover:text-ink" />
@@ -50,6 +51,7 @@ export function AuthLayout({
           <ThemeSwitch />
         </footer>
       </div>
+      <AuthSidePanel variant={variant} className={reversed ? "lg:order-1" : "lg:order-2"} />
     </div>
   )
 }

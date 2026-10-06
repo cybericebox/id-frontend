@@ -1,7 +1,6 @@
 "use client"
 
-import React, { Suspense, useState, useEffect, useMemo, useRef } from "react"
-import { useSearchParams } from "next/navigation"
+import React, { useState, useEffect, useMemo, useRef } from "react"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -19,14 +18,13 @@ import { PasswordInput } from "@/components/ui/password-input"
 import { PasswordStrength, passwordError } from "@/components/ui/password-strength"
 import { usePasswordPolicy, type PasswordPolicy } from "@/lib/passwordPolicy"
 import { Button } from "@/components/ui/button"
-import { toast } from "@/components/ui/toast"
+import { FormError, reportFormError } from "@/components/ui/form-error"
+import { useUrlParams } from "@/lib/useUrlParams"
+import { useGuestOnly } from "@/lib/useGuestOnly"
 import { AuthLayout } from "./AuthLayout"
 import { AuthHeading, AuthPane, AuthSwitch } from "./parts"
 import { t } from "@/i18n/t"
-import { PageLoader } from "@/components/ui/spinner"
-import { redirectIfAuthed, rememberReturnTo } from "@/lib/auth"
 import { apiPost } from "@/api/client"
-import { localizedError } from "@/i18n/apiError"
 
 // ---------------------------------------------------------------------------
 // Zod schema — NewPassword + ConfirmPassword (refine: must match).
@@ -52,32 +50,20 @@ function buildResetSchema(policyRef: React.RefObject<PasswordPolicy>) {
 type ResetPasswordValues = z.infer<ReturnType<typeof buildResetSchema>>
 
 // ---------------------------------------------------------------------------
-// Inner component (uses useSearchParams — must be inside <Suspense>).
+// The reset token comes from the URL on the client. The form itself is in the static HTML; «no link» is shown only
+// once the URL is known (params !== null).
 // ---------------------------------------------------------------------------
-function ResetPasswordForm() {
-  const searchParams = useSearchParams()
+export function ResetPasswordScreen() {
+  const params = useUrlParams()
   // The reset email links to /reset-password?token=… (backend useCase/auth/password.go);
   // ?code= is still accepted for links issued before that.
-  const code = searchParams.get("token") ?? searchParams.get("code") ?? ""
-  const returnTo = searchParams.get("return_to") ?? undefined
-
-  const [checking, setChecking] = useState(true)
-  useEffect(() => {
-    rememberReturnTo(returnTo)
-    let cancelled = false
-    redirectIfAuthed(undefined).then((redirecting) => {
-      if (!cancelled && !redirecting) setChecking(false)
-    }).catch(() => {
-      // On any failure (e.g. the /me probe errored), never hang the loader —
-      // reveal the form.
-      if (!cancelled) setChecking(false)
-    })
-    return () => { cancelled = true }
-    // eslint-disable-next-line @eslint-react/exhaustive-deps
-  }, [])
+  const code = params?.get("token") ?? params?.get("code") ?? ""
+  const returnTo = params?.get("return_to") ?? undefined
+  useGuestOnly(params !== null, returnTo, undefined)
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [succeeded, setSucceeded] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
 
   const policy = usePasswordPolicy()
   const policyRef = useRef(policy)
@@ -93,11 +79,10 @@ function ResetPasswordForm() {
     defaultValues: { NewPassword: "", ConfirmPassword: "" },
   })
 
-  if (checking) return <PageLoader />
-
   const signInHref = returnTo ? `/sign-in?return_to=${encodeURIComponent(returnTo)}` : "/sign-in"
 
   const onSubmit: SubmitHandler<ResetPasswordValues> = async (data) => {
+    setFormError(null)
     setIsSubmitting(true)
 
     try {
@@ -113,10 +98,9 @@ function ResetPasswordForm() {
         { required: false }
       )
       setSucceeded(true)
-      toast.success(t("resetPassword.successTitle"))
       return
     } catch (err) {
-      toast.error(localizedError(err))
+      reportFormError(err, setFormError)
     } finally {
       setIsSubmitting(false)
     }
@@ -125,7 +109,7 @@ function ResetPasswordForm() {
   // ---------------------------------------------------------------------------
   // Guard: no code in URL.
   // ---------------------------------------------------------------------------
-  if (!code) {
+  if (params !== null && !code) {
     return (
       <AuthLayout reversed={false} variant="reset">
         <AuthPane>
@@ -205,6 +189,10 @@ function ResetPasswordForm() {
               )}
             />
 
+            <FormError message={formError} />
+            {/* a used or expired link is only known after the submit: offer the way out next to the error */}
+            {formError && <AuthSwitch href="/forgot-password" action={t("resetPassword.requestNewLink")} />}
+
             <Button
               type="submit"
               className="w-full"
@@ -219,17 +207,5 @@ function ResetPasswordForm() {
         <AuthSwitch href={signInHref} action={t("forgotPassword.backToSignIn")} />
       </AuthPane>
     </AuthLayout>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Page export — wraps in <Suspense> for static-export compatibility
-// (useSearchParams opts out of static prerendering without it).
-// ---------------------------------------------------------------------------
-export function ResetPasswordScreen() {
-  return (
-    <Suspense>
-      <ResetPasswordForm />
-    </Suspense>
   )
 }

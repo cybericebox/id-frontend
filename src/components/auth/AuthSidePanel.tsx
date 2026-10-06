@@ -135,14 +135,14 @@ export function AuthSidePanel({
               year: YEAR,
               department: (
                 <Tooltip content={t("authPanel.departmentFull")} align="start">
-                  <a href={PARTNER_ICE_NURE_URL} target="_blank" rel="noopener noreferrer" className="rounded-xs font-medium whitespace-nowrap text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand">
+                  <a href={PARTNER_ICE_NURE_URL} target="_blank" rel="noopener noreferrer" className="rounded-xs font-medium whitespace-nowrap text-on-brand underline decoration-current/45 decoration-1 underline-offset-3 hover:text-ice-on-brand hover:decoration-current focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand">
                     {t("authPanel.legalLink")}
                   </a>
                 </Tooltip>
               ),
               nure: (
                 <Tooltip content={t("authPanel.nureFull")} align="start">
-                  <a href={PARTNER_NURE_URL} target="_blank" rel="noopener noreferrer" className="rounded-xs font-medium whitespace-nowrap text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand">
+                  <a href={PARTNER_NURE_URL} target="_blank" rel="noopener noreferrer" className="rounded-xs font-medium whitespace-nowrap text-on-brand underline decoration-current/45 decoration-1 underline-offset-3 hover:text-ice-on-brand hover:decoration-current focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand">
                     {t("authPanel.nure")}
                   </a>
                 </Tooltip>

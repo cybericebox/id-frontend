@@ -29,18 +29,23 @@ export function AuthDivider({ label }: { label: string }) {
 }
 
 // Bottom line: «Немає акаунта? Зареєструватися».
+// Links inside running text are told apart by an underline (WCAG 1.4.1), not by colour or weight alone (DS .ib-link:
+// 1 px, 45 % of the text colour at rest, full colour on hover).
+export const inlineLinkClass =
+  "rounded-xs font-medium text-action underline decoration-current/45 decoration-1 underline-offset-3 hover:decoration-current"
+
 export function AuthSwitch({ text, href, action }: { text?: string; href: string; action: string }) {
   return (
     <p className="mt-1 flex flex-wrap justify-center gap-2 text-[13px] text-dim">
       {text}
-      <Link href={href} className="font-medium text-action underline-offset-3 hover:underline">
+      <Link href={href} className={inlineLinkClass}>
         {action}
       </Link>
     </p>
   )
 }
 
-export const authLinkClass = "text-[13px] font-medium text-action underline-offset-3 hover:underline"
+export const authLinkClass = `text-[13px] ${inlineLinkClass}`
 
 // Google "G" mark (brand colours are Google's, not ours — allowed on its button).
 export function GoogleIcon() {

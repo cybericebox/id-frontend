@@ -22,7 +22,7 @@ export function goBack() {
 export function ErrorScreen({ onRetry, title = t("error.page.title"), error }: { onRetry: () => void; title?: string; error?: unknown }) {
   const code = errorCode(error)
   return (
-    <main className="flex min-h-screen items-center justify-center bg-paper p-4">
+    <main id="main" tabIndex={-1} className="flex min-h-dvh items-center justify-center bg-paper p-4 outline-none">
       <div className="flex w-full max-w-md flex-col">
         <div className="mb-6 flex justify-center">
           <Wordmark size="lg" />

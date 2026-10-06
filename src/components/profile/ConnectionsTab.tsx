@@ -113,7 +113,8 @@ export function ConnectionsTab({
               variant="outline"
               size="sm"
               onClick={() => { setConfirmError(""); setPassword(""); setConfirmOpen(true) }}
-              disabled={isBusy}
+              disabled={isBusy || onlyMethod}
+              aria-describedby={onlyMethod ? "unlink-only-method" : undefined}
             >
               {t("profile.connections.unlink")}
             </Button>
@@ -137,6 +138,9 @@ export function ConnectionsTab({
             </Button>
           )}
         </div>
+        {hasGoogle && onlyMethod && (
+          <p id="unlink-only-method" className="text-sm text-dim">{t("profile.connections.unlinkOnlyMethod")}</p>
+        )}
         <ConfirmDialog
           open={connectOpen}
           onCancel={() => setConnectOpen(false)}
@@ -161,14 +165,14 @@ export function ConnectionsTab({
           onCancel={() => setConfirmOpen(false)}
           tone="danger"
           busy={isBusy}
-          disabled={onlyMethod || (account.HasPassword && !password)}
-          error={onlyMethod ? t("profile.connections.unlinkOnlyMethod") : confirmError}
+          disabled={account.HasPassword && !password}
+          error={confirmError}
           title={t("profile.connections.unlinkTitle")}
           description={t("profile.connections.unlinkBody")}
           confirmLabel={t("profile.connections.unlink")}
           onConfirm={() => void unlink()}
         >
-          {account.HasPassword && !onlyMethod && (
+          {account.HasPassword && (
             <ReauthPasswordField
               id="unlink-google-password"
               hint={t("profile.connections.unlinkPasswordHint")}

@@ -32,12 +32,19 @@ export function ConfirmDialog({ open, onCancel, title, description, confirmLabel
         <DialogTitle>{title}</DialogTitle>
         {description && <DialogDescription>{description}</DialogDescription>}
       </DialogHeader>
-      {children}
-      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-      <DialogFooter>
-        <Button ref={cancelRef} type="button" variant="outline" disabled={busy} onClick={onCancel}>{cancelLabel ?? t("common.cancel")}</Button>
-        <Button type="button" variant={tone === "danger" ? "destructive" : "default"} busy={busy} disabled={disabled} onClick={onConfirm}>{confirmLabel}</Button>
-      </DialogFooter>
+      {/* a form, so Enter in the re-auth password field confirms; the cancel button is type="button" */}
+      <form
+        className="flex flex-col gap-4"
+        noValidate
+        onSubmit={(event) => { event.preventDefault(); if (!busy && !disabled) onConfirm() }}
+      >
+        {children}
+        {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+        <DialogFooter>
+          <Button ref={cancelRef} type="button" variant="outline" disabled={busy} onClick={onCancel}>{cancelLabel ?? t("common.cancel")}</Button>
+          <Button type="submit" variant={tone === "danger" ? "destructive" : "default"} busy={busy} disabled={disabled}>{confirmLabel}</Button>
+        </DialogFooter>
+      </form>
     </DialogContent>
   </Dialog>
 }

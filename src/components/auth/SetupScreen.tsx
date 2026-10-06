@@ -1,7 +1,6 @@
 "use client"
 
-import React, { Suspense, useState, useEffect, useRef, useMemo } from "react"
-import { useSearchParams } from "next/navigation"
+import React, { useState, useEffect, useRef, useMemo } from "react"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 
@@ -16,21 +15,21 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { toast } from "@/components/ui/toast"
+import { FormError, reportFormError } from "@/components/ui/form-error"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Check, LinkIcon } from "lucide-react"
 import { PasswordInput } from "@/components/ui/password-input"
 import { PasswordStrength } from "@/components/ui/password-strength"
 import { usePasswordPolicy } from "@/lib/passwordPolicy"
-import { Spinner } from "@/components/ui/spinner"
+import { LoadingArea } from "@/components/ui/spinner"
 import { ErrorScreen } from "@/components/ErrorScreen"
 import { AuthLayout } from "./AuthLayout"
 import { useOneShotParam } from "@/lib/useOneShotParam"
+import { useUrlParams } from "@/lib/useUrlParams"
 import { mainOrigin } from "@/lib/origins"
-import { AuthHeading, AuthPane, AuthSwitch, GoogleIcon } from "./parts"
+import { AuthHeading, AuthPane, AuthSwitch, GoogleIcon, inlineLinkClass } from "./parts"
 import { t } from "@/i18n/t"
 import { apiPost, apiUrl } from "@/api/client"
-import { localizedError } from "@/i18n/apiError"
 import { setupDraftKey } from "@/lib/storageKeys"
 import { buildSetupSchema, type SetupValues } from "./setupSchema"
 
@@ -110,20 +109,21 @@ function ErrorCard({
 }
 
 // ---------------------------------------------------------------------------
-// Inner component (uses useSearchParams — must be inside <Suspense>)
+// The invite token comes from the URL on the client (params is null until then): the layout is in the static HTML,
+// the form block shows the crest loader while the token is read and the invite is fetched.
 // ---------------------------------------------------------------------------
-function SetupForm() {
-  const searchParams = useSearchParams()
-  const token = searchParams.get("token") ?? ""
-  const [linkError] = useOneShotParam("error", searchParams.get("error"))
+export function SetupScreen() {
+  const params = useUrlParams()
+  const token = params?.get("token") ?? ""
+  const [linkError] = useOneShotParam("error", params)
   // Post-registration landing, carried from sign-up / Google (validated by the backend).
-  const returnTo = searchParams.get("return_to") ?? ""
+  const returnTo = params?.get("return_to") ?? ""
 
   // Terms of Service live on the apex (main) frontend, not the id subdomain.
   const termsUrl = `${mainOrigin}/terms`
   const privacyUrl = `${mainOrigin}/privacy`
   const legalLink = (href: string, label: string) => (
-    <a href={href} target="_blank" rel="noopener noreferrer" className="font-medium text-action underline-offset-3 hover:underline">
+    <a href={href} target="_blank" rel="noopener noreferrer" className={inlineLinkClass}>
       {label}
     </a>
   )
@@ -152,6 +152,7 @@ function SetupForm() {
 
   // Submit state
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
 
   // Derived: whether Google is currently linked (may update after page reload post-link)
   const hasGoogle = setupInfo?.HasProvider ?? false
@@ -192,20 +193,8 @@ function SetupForm() {
   // Fetch setup info on mount (or when token changes)
   // ---------------------------------------------------------------------------
   useEffect(() => {
+    if (params === null) return
     if (!token) {
-      setIsFetching(false)
-      return
-    }
-
-    // Preview short-circuit (design-sync): render the real form with demo data
-    // instead of hitting a server that isn't there.
-    if (token === "preview-token-DEMO1234") {
-      setSetupInfo({
-        Email: "hacker@example.com",
-        FirstName: "Ігор",
-        LastName: "Морозенко",
-        HasProvider: false,
-      })
       setIsFetching(false)
       return
     }
@@ -271,7 +260,7 @@ function SetupForm() {
     return () => {
       cancelled = true
     }
-  }, [token, attempt]) // eslint-disable-line @eslint-react/exhaustive-deps
+  }, [params, token, attempt]) // eslint-disable-line @eslint-react/exhaustive-deps
 
   // ---------------------------------------------------------------------------
   // Persist non-secret fields to sessionStorage as they change, so the form
@@ -293,6 +282,7 @@ function SetupForm() {
   // Submit handler
   // ---------------------------------------------------------------------------
   const onSubmit: SubmitHandler<SetupValues> = async (data) => {
+    setFormError(null)
     setIsSubmitting(true)
 
     try {
@@ -328,7 +318,7 @@ function SetupForm() {
         window.location.assign("/profile/")
       }
     } catch (err) {
-      toast.error(localizedError(err))
+      reportFormError(err, setFormError)
     } finally {
       setIsSubmitting(false)
     }
@@ -337,7 +327,7 @@ function SetupForm() {
   // ---------------------------------------------------------------------------
   // Guard: no token in URL
   // ---------------------------------------------------------------------------
-  if (!token) {
+  if (params !== null && !token) {
     return (
       <ErrorCard
         title={t("setup.missingToken")}
@@ -349,13 +339,11 @@ function SetupForm() {
   // ---------------------------------------------------------------------------
   // Loading state
   // ---------------------------------------------------------------------------
-  if (isFetching) {
+  if (params === null || isFetching) {
     return (
       <AuthLayout reversed={true} variant="setup">
         <AuthPane>
-          <div className="flex justify-center py-8">
-            <Spinner size="md" />
-          </div>
+          <LoadingArea className="min-h-64" />
         </AuthPane>
       </AuthLayout>
     )
@@ -410,7 +398,7 @@ function SetupForm() {
                   type="email"
                   value={setupInfo.Email}
                   readOnly
-                  autoComplete="email"
+                  autoComplete="username"
                 />
               </div>
 
@@ -554,6 +542,8 @@ function SetupForm() {
                 )}
               />
 
+              <FormError message={formError} />
+
               <Button
                 type="submit"
                 className="w-full"
@@ -568,17 +558,5 @@ function SetupForm() {
         <AuthSwitch text={t("register.haveAccount")} href="/sign-in" action={t("common.signIn")} />
       </AuthPane>
     </AuthLayout>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Page export — wraps in <Suspense> for static-export compatibility
-// (useSearchParams opts out of static prerendering without it)
-// ---------------------------------------------------------------------------
-export function SetupScreen() {
-  return (
-    <Suspense>
-      <SetupForm />
-    </Suspense>
   )
 }

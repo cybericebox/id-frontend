@@ -28,7 +28,8 @@ const Alert = React.forwardRef<
 >(({ className, variant, ...props }, ref) => (
   <div
     ref={ref}
-    role="alert"
+    // errors and notices that need the user interrupt the screen reader; neutral and success text only waits for it
+    role={variant === "destructive" || variant === "warn" ? "alert" : "status"}
     className={cn(alertVariants({ variant }), className)}
     {...props}
   />

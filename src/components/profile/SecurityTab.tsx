@@ -25,10 +25,10 @@ import { PasswordStrength, passwordError } from "@/components/ui/password-streng
 import { usePasswordPolicy, type PasswordPolicy } from "@/lib/passwordPolicy"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/toast"
+import { FormError, reportFormError } from "@/components/ui/form-error"
 import { apiPost } from "@/api/client"
 import { t } from "@/i18n/t"
 import type { Account } from "./types"
-import { extractError } from "./ProfileTab"
 
 // NewPassword is checked against the live backend policy (read from the ref).
 function buildSchema(hasPassword: boolean, policyRef: React.RefObject<PasswordPolicy>) {
@@ -67,6 +67,7 @@ type SecurityValues = {
 
 export function SecurityTab({ account }: { account: Account }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
 
   const policy = usePasswordPolicy()
   const policyRef = useRef(policy)
@@ -83,6 +84,7 @@ export function SecurityTab({ account }: { account: Account }) {
   })
 
   const onSubmit: SubmitHandler<SecurityValues> = async (data) => {
+    setFormError(null)
     setIsSubmitting(true)
     try {
       const body: Record<string, string> = { NewPassword: data.NewPassword }
@@ -94,7 +96,7 @@ export function SecurityTab({ account }: { account: Account }) {
       form.reset({ OldPassword: "", NewPassword: "", ConfirmPassword: "" })
     } catch (err) {
       // A 401 is auto-redirected by the api client (passwords are never persisted).
-      toast.error(extractError(err))
+      reportFormError(err, setFormError)
     } finally {
       setIsSubmitting(false)
     }
@@ -170,14 +172,11 @@ export function SecurityTab({ account }: { account: Account }) {
                 </FormItem>
               )}
             />
+            <FormError message={formError} />
             <div className="flex gap-2">
               <Button
                 type="submit"
-                disabled={
-                  isSubmitting ||
-                  !form.formState.isDirty ||
-                  !form.formState.isValid
-                }
+                disabled={isSubmitting || !form.formState.isDirty}
                 busy={isSubmitting}
               >
                 {t("profile.security.save")}

@@ -1,7 +1,6 @@
 "use client"
 
-import React, { Suspense, useState, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
+import React, { useState } from "react"
 import Link from "next/link"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -19,17 +18,15 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { toast } from "@/components/ui/toast"
+import { FormError, reportFormError } from "@/components/ui/form-error"
 import { CircleAlert, MailCheck } from "lucide-react"
 import { AuthLayout } from "./AuthLayout"
 import { useOneShotParam } from "@/lib/useOneShotParam"
-import { AuthDivider, AuthHeading, AuthPane, AuthSwitch, GoogleIcon } from "./parts"
-import { t } from "@/i18n/t"
-import { PageLoader } from "@/components/ui/spinner"
-import { redirectIfAuthed, rememberReturnTo } from "@/lib/auth"
+import { useUrlParams } from "@/lib/useUrlParams"
+import { useGuestOnly } from "@/lib/useGuestOnly"
+import { AuthDivider, AuthHeading, AuthPane, AuthSwitch, GoogleIcon, inlineLinkClass } from "./parts"
+import { t, tRich } from "@/i18n/t"
 import { apiPost, apiUrl } from "@/api/client"
-import { localizedError } from "@/i18n/apiError"
-import { onServiceRestored } from "@/lib/serviceStatus"
 
 // ---------------------------------------------------------------------------
 // Zod schema — mirrors the daemon's JSON body (Email only for registration)
@@ -53,44 +50,28 @@ function withEmail(template: string, email: string) {
 }
 
 // ---------------------------------------------------------------------------
-// Inner component — must be wrapped in <Suspense> because useSearchParams()
-// opts out of static prerendering (required for `output: 'export'`).
+// The form renders at once; return_to and the Google flag come from the URL on the client, and a signed-in visitor
+// is redirected when `/me` answers.
 // ---------------------------------------------------------------------------
-function RegisterForm() {
-  const searchParams = useSearchParams()
-  const returnTo = searchParams.get("return_to") ?? ""
-  const [googleError, clearGoogleError] = useOneShotParam("google_error", searchParams.get("google_error"))
-
-  const [checking, setChecking] = useState(true)
-  useEffect(() => {
-    rememberReturnTo(returnTo || undefined)
-    let cancelled = false
-    const checkSession = () => {
-      void redirectIfAuthed(returnTo || undefined).then((redirecting) => {
-        if (!cancelled && !redirecting) setChecking(false)
-      }).catch(() => {
-        if (!cancelled) setChecking(false)
-      })
-    }
-    checkSession()
-    const unsubscribe = onServiceRestored(checkSession)
-    return () => { cancelled = true; unsubscribe() }
-    // eslint-disable-next-line @eslint-react/exhaustive-deps
-  }, [])
+export function SignUpScreen() {
+  const params = useUrlParams()
+  const returnTo = params?.get("return_to") ?? ""
+  const [googleError, clearGoogleError] = useOneShotParam("google_error", params)
+  useGuestOnly(params !== null, returnTo || undefined)
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submittedEmail, setSubmittedEmail] = useState<string | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
 
   const form = useForm<RegisterValues>({
     resolver: zodResolver(RegisterSchema),
-    mode: "onBlur",
+    mode: "onTouched",
     defaultValues: { Email: "" },
   })
 
-  if (checking) return <PageLoader />
-
   const onSubmit: SubmitHandler<RegisterValues> = async (data) => {
     clearGoogleError()
+    setFormError(null)
     setIsSubmitting(true)
 
     try {
@@ -99,7 +80,8 @@ function RegisterForm() {
       try {
         recaptchaToken = await executeCaptcha("signUp")
       } catch {
-        recaptchaToken = undefined
+        setFormError(t("error.captcha"))
+        return
       }
 
       const body: Record<string, string> = {
@@ -122,11 +104,10 @@ function RegisterForm() {
 
       // Show "check your email" confirmation — no redirect.
       setSubmittedEmail(data.Email)
-      toast.success(t("register.checkEmailTitle"))
       return
     } catch (err) {
       // Localized by the error's stable code; falls back to a generic message.
-      toast.error(localizedError(err))
+      reportFormError(err, setFormError)
     } finally {
       setIsSubmitting(false)
     }
@@ -166,10 +147,13 @@ function RegisterForm() {
               <CircleAlert />
               <AlertTitle>{t("signUp.googleNotRegisteredTitle")}</AlertTitle>
               <AlertDescription>
-                {t("signUp.googleNotRegistered")}{" "}
-                <Link href={signInHref} className="font-medium underline underline-offset-3">
-                  {t("register.signIn")}
-                </Link>
+                {tRich("signUp.googleNotRegistered", {
+                  link: (
+                    <Link href={signInHref} className={inlineLinkClass}>
+                      {t("register.signIn")}
+                    </Link>
+                  ),
+                })}
               </AlertDescription>
             </Alert>
           )}
@@ -232,6 +216,8 @@ function RegisterForm() {
                 )}
               />
 
+              <FormError message={formError} />
+
               <Button
                 type="submit"
                 className="w-full"
@@ -246,17 +232,5 @@ function RegisterForm() {
         <AuthSwitch text={t("register.haveAccount")} href={signInHref} action={t("register.signIn")} />
       </AuthPane>
     </AuthLayout>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Page export — wraps the form in Suspense to satisfy `output: 'export'`
-// static prerendering when useSearchParams is used inside.
-// ---------------------------------------------------------------------------
-export function SignUpScreen() {
-  return (
-    <Suspense>
-      <RegisterForm />
-    </Suspense>
   )
 }
