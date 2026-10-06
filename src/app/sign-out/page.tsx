@@ -4,7 +4,7 @@ import React, { Suspense, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 
 import { Wordmark } from "@/components/brand/Wordmark"
-import { Spinner } from "@/components/ui/spinner"
+import { PageLoader, Spinner } from "@/components/ui/spinner"
 import { safeReturnTo } from "@/lib/auth"
 import { apiUrl } from "@/api/client"
 import { t } from "@/i18n/t"
@@ -73,7 +73,7 @@ function SignOut() {
 // for `output: 'export'`.
 export default function SignOutPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<PageLoader />}>
       <SignOut />
     </Suspense>
   )

@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation"
 import { CircleCheck, LinkIcon } from "lucide-react"
 
 import { Wordmark } from "@/components/brand/Wordmark"
-import { Spinner } from "@/components/ui/spinner"
+import { PageLoader, Spinner } from "@/components/ui/spinner"
 import { apiPost } from "@/api/client"
 import { localizedError } from "@/i18n/apiError"
 import { t } from "@/i18n/t"
@@ -81,7 +81,7 @@ function ConfirmEmail() {
 // Suspense — useSearchParams opts out of static prerendering (output: 'export').
 export default function ConfirmEmailPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<PageLoader />}>
       <ConfirmEmail />
     </Suspense>
   )

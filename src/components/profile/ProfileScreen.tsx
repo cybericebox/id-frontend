@@ -332,7 +332,7 @@ function ProfileShell() {
 
 export function ProfileScreen() {
   return (
-    <Suspense>
+    <Suspense fallback={<PageLoader />}>
       <ProfileShell />
     </Suspense>
   )
