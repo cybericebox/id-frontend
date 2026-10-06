@@ -109,17 +109,14 @@ const FormControl = React.forwardRef<
   React.ElementRef<typeof Slot>,
   React.ComponentPropsWithoutRef<typeof Slot>
 >(({ ...props }, ref) => {
-  const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
+  const { error, formItemId, formMessageId } = useFormField()
 
   return (
     <Slot
       ref={ref}
       id={formItemId}
-      aria-describedby={
-        !error
-          ? `${formDescriptionId}`
-          : `${formDescriptionId} ${formMessageId}`
-      }
+      // only ids that exist: the message is rendered while there is an error (FormDescription is optional)
+      aria-describedby={error ? formMessageId : undefined}
       aria-invalid={!!error}
       {...props}
     />
@@ -150,8 +147,9 @@ const FormMessage = React.forwardRef<
 >(({ className, children, ...props }, ref) => {
   const { error, formMessageId } = useFormField()
 
-  const body = error?.message ?? (error as { root?: { message?: string } })?.root?.message ?? children ?? <></>
+  const body = error?.message ?? (error as { root?: { message?: string } })?.root?.message ?? children
 
+  if (!body) return null
   return (
     <p
       ref={ref}

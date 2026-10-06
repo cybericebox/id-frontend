@@ -198,6 +198,10 @@
 		transition: none !important;
 		animation: none !important;
 	}
+	/* the crest loader keeps a slow fade (no movement): the busy state stays visible */
+	.crest-loader {
+		animation: crest-loading-fade 2.4s ease-in-out infinite !important;
+	}
 }
 
 @keyframes draw-line {

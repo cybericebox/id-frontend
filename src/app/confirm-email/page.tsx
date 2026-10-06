@@ -10,6 +10,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { apiPost } from "@/api/client"
 import { localizedError } from "@/i18n/apiError"
 import { t } from "@/i18n/t"
+import { inlineLinkClass } from "@/components/auth/parts"
 
 // ---------------------------------------------------------------------------
 // Email-change confirmation. The backend emails a link to
@@ -44,7 +45,7 @@ function ConfirmEmail() {
         <div className="mb-6 flex justify-center">
           <Wordmark size="lg" />
         </div>
-        <div className="flex flex-col items-center gap-3 rounded-lg border border-line bg-surface p-8 text-center">
+        <div role="status" className="flex flex-col items-center gap-3 rounded-lg border border-line bg-surface p-8 text-center">
           {state.kind === "loading" && (
             <>
               <Spinner size="md" />
@@ -56,7 +57,7 @@ function ConfirmEmail() {
               <CircleCheck size={32} className="text-ok" aria-hidden />
               <h1 className="text-lg font-semibold">{t("confirmEmail.doneTitle")}</h1>
               <p className="text-sm text-dim">{t("confirmEmail.doneBody")}</p>
-              <Link href="/profile" className="text-[13px] font-medium text-action underline-offset-3 hover:underline">
+              <Link href="/profile" className={`text-[13px] ${inlineLinkClass}`}>
                 {t("confirmEmail.toProfile")}
               </Link>
             </>
@@ -66,7 +67,7 @@ function ConfirmEmail() {
               <LinkIcon size={32} className="text-danger" aria-hidden />
               <h1 className="text-lg font-semibold">{t("confirmEmail.failedTitle")}</h1>
               <p className="text-sm text-dim">{state.message}</p>
-              <Link href="/profile" className="text-[13px] font-medium text-action underline-offset-3 hover:underline">
+              <Link href="/profile" className={`text-[13px] ${inlineLinkClass}`}>
                 {t("confirmEmail.toProfile")}
               </Link>
             </>
