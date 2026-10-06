@@ -5,7 +5,7 @@ import { cn } from "@/utils/cn"
 
 const alertVariants = cva(
   // ds-v2 banner look: tinted fill, no border accent, radius 6.
-  "relative w-full rounded-md px-3 py-2.5 text-[13px] font-medium [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-3 [&>svg]:top-3 [&>svg]:size-4 [&>svg~*]:pl-6",
+  "relative w-full rounded-md px-3 py-2.5 text-xs font-medium [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-3 [&>svg]:top-3 [&>svg]:size-4 [&>svg~*]:pl-6",
   {
     variants: {
       variant: {

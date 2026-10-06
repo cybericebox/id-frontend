@@ -390,7 +390,7 @@ export function SetupScreen() {
             >
               {/* Email — read-only / locked */}
               <div className="space-y-2">
-                <label htmlFor="setup-email" className="text-[13px] font-medium leading-[1.35] text-ink">
+                <label htmlFor="setup-email" className="text-sm font-medium leading-[1.35] text-ink">
                   {t("setup.email")}
                 </label>
                 <Input
@@ -450,7 +450,7 @@ export function SetupScreen() {
                   <p className="text-sm font-semibold text-ink">
                     {t("setup.loginMethodsTitle")}
                   </p>
-                  <p className="text-[13px] text-dim">
+                  <p className="text-xs text-dim">
                     {t("setup.loginMethodsSubtitle")}
                   </p>
                 </div>

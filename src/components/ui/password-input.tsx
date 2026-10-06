@@ -22,7 +22,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, Omit<InputProps, "type"
           <button
             type="button"
             onClick={() => setShown((s) => !s)}
-            className="absolute inset-y-1 right-1 inline-flex items-center rounded-sm px-2.5 text-[13px] font-medium text-dim hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-action"
+            className="absolute inset-y-1 right-1 inline-flex items-center rounded-sm px-2.5 text-xs font-medium text-dim hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-action"
           >
             {shown ? t("common.hide") : t("common.show")}
           </button>

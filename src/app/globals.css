@@ -74,6 +74,19 @@
 	--animate-accordion-down: accordion-down 0.2s ease-out;
 	--animate-accordion-up: accordion-up 0.2s ease-out;
 
+	/* type scale 12/13/14/15/16 (ds README «Хвиля 1»); nothing under 12 px */
+	--text-2xs: 12px;
+	--text-2xs--line-height: 16px;
+	--text-xs: 13px;
+	--text-xs--line-height: 18px;
+	--text-sm: 14px;
+	--text-sm--line-height: 20px;
+	--text-base: 15px;
+	--text-base--line-height: 24px;
+	/* text fields on touch screens: under 16 px iOS zooms the page */
+	--text-field: 16px;
+	--text-field--line-height: 24px;
+
 	--font-sans: var(--ib-font);
 	--font-mono: var(--ib-mono);
 }
@@ -96,7 +109,7 @@
 		--accent: var(--ib-hover);
 		--accent-foreground: var(--ib-ink);
 		--destructive: var(--ib-danger);
-		--destructive-foreground: #FFFFFF;
+		--destructive-foreground: var(--ib-btn-on-danger);
 		--border: var(--ib-line);
 		--input: var(--ib-control);
 		--ring: var(--ib-action);
@@ -110,6 +123,20 @@
 	}
 	[data-theme="dark"] {
 		--ib-ice: #7FD0FA;
+	}
+
+	/* text on a solid danger button (ds button.css): white on light, brand on the dark pink */
+	:root,
+	[data-theme="light"] {
+		--ib-btn-on-danger: #FFFFFF;
+	}
+	[data-theme="dark"] {
+		--ib-btn-on-danger: var(--ib-brand);
+	}
+
+	/* focus is not hidden under a sticky header */
+	html {
+		scroll-padding-top: calc(var(--ib-topbar-h) + 8px);
 	}
 
 	*,
