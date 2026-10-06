@@ -13,12 +13,12 @@ export function errorKind(error: unknown): ErrorKind {
   return error.status >= 500 ? "reported" : "api"
 }
 
-/** «{code}-{first 8 hex chars of the request id}», or undefined when either part is missing. */
+/** «{code}-{first 8 hex chars of the request id}»; the request id alone when there is no platform code (absent or 0); undefined without a request id. */
 export function reference(error: unknown): string | undefined {
   if (!(error instanceof ApiError) || error.status < 500 || !error.requestId) return undefined
   const rid = error.requestId.replace(/-/g, "").slice(0, 8)
-  const code = error.code ?? error.status
-  return rid ? `${code}-${rid}` : undefined
+  if (!rid) return undefined
+  return error.code ? `${error.code}-${rid}` : rid
 }
 
 /** mailto: «Повідомити деталі», prefilled with page, time and the reference (API) or the message and build (crash). */

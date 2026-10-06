@@ -35,6 +35,17 @@ describe("500 page report", () => {
     expect(host.querySelector('[role="status"]')!.textContent).toBe("Скопійовано")
   })
 
+  it("without a platform code the reference is the request id alone", () => {
+    for (const code of [0, undefined]) {
+      const error = new ApiError(500, undefined, undefined, undefined, code, undefined, "01a112da-1111-2222-3333-444455556666")
+      expect(reference(error)).toBe("01a112da")
+      draw(<ErrorScreen onRetry={() => {}} error={error} />)
+      expect(host.textContent).toContain("Номер звернення: 01a112da")
+      expect(host.textContent).not.toContain("0-01a112da")
+      expect(decodeURIComponent(link()!.getAttribute("href")!)).toContain("subject=Помилка 01a112da")
+    }
+  })
+
   it("without a readable request id it falls back to the code line", () => {
     draw(<ErrorScreen onRetry={() => {}} error={api(500)} />)
     expect(host.textContent).toContain("Код помилки: 50310")
