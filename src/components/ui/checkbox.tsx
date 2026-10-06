@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { cn } from "@/utils/cn"
+import { RequiredMark } from "@/components/ui/required-mark"
 
 export interface CheckboxProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -37,6 +38,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             className="cursor-pointer select-none text-sm leading-snug text-body"
           >
             {label}
+            {props.required && <RequiredMark />}
           </label>
         )}
       </div>
