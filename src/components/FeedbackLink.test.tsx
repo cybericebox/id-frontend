@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
 import { describe, expect, it, vi } from "vitest"
 import { renderToStaticMarkup } from "react-dom/server"
 
@@ -12,7 +14,14 @@ describe("FeedbackLink", () => {
     expect(html).toContain('href="mailto:')
     expect(html).toContain("subject=")
     expect(html).toContain("%2Fsign-in")
-    expect(html).toContain('class="feedback-link"')
+  })
+
+  it("passes className and children through, and the stylesheet has no fixed position", () => {
+    const html = renderToStaticMarkup(<FeedbackLink className="x"><b>y</b></FeedbackLink>)
+    expect(html).toContain('class="x"')
+    expect(html).toContain("<b>y</b>")
+    const css = readFileSync(join(__dirname, "feedback-link.css"), "utf8")
+    expect(css).not.toMatch(/position\s*:\s*fixed/)
   })
 
   it("names the app in the subject, with no no-break spaces", () => {
@@ -29,5 +38,13 @@ describe("FeedbackLink", () => {
     } finally {
       process.env.NEXT_PUBLIC_SUPPORT_EMAIL = prev
     }
+  })
+
+  it("lives in both auth footers and the account menu, not in the root layout", () => {
+    const read = (f: string) => readFileSync(join(__dirname, "..", f), "utf8")
+    for (const f of ["components/auth/AuthLayout.tsx", "components/auth/AuthSidePanel.tsx", "components/profile/AccountMenu.tsx"]) {
+      expect(read(f)).toContain("<FeedbackLink")
+    }
+    expect(read("app/layout.tsx")).not.toContain("FeedbackLink")
   })
 })

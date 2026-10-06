@@ -2,6 +2,7 @@ import * as React from "react"
 import { AuthSidePanel, type AuthVariant } from "./AuthSidePanel"
 import { cn } from "@/utils/cn"
 import { ThemeSwitch } from "@/components/ThemeToggle"
+import { FeedbackLink } from "@/components/FeedbackLink"
 import { CookieSettingsLink } from "@/components/CookieSettingsLink"
 import { Wordmark } from "@/components/brand/Wordmark"
 
@@ -45,6 +46,7 @@ export function AuthLayout({
         {/* narrow screens: theme switch at the bottom (on wide screens it sits in the panel footer) */}
         <footer className="flex flex-col items-center gap-3 px-6 pb-5 text-[13px] text-dim lg:hidden">
           <CookieSettingsLink className="hover:text-ink" />
+          <FeedbackLink className="hover:text-ink" />
           <ThemeSwitch />
         </footer>
       </div>
