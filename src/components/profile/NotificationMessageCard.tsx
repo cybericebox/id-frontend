@@ -42,7 +42,7 @@ export function NotificationMessageCard({ icon = "bell", tone = "neutral", accen
     <div className="min-w-0 flex-1">
       {title && <p className={`min-w-0 break-words text-sm leading-snug ${resolved ? "text-dim" : "text-ink"} ${unread ? "font-semibold" : "font-medium"}`}>
         {/* unread = bold title (DS: no dots) plus the word for assistive technology */}
-        {unread && <span className="sr-only">{t("inbox.unreadItem")}: </span>}
+        {unread && <span className="sr-only">{t("inbox.unreadItemSr")}</span>}
         {keepBrand(title)}
       </p>}
       {body && <div className={`${title ? "mt-1" : ""} break-words text-sm leading-relaxed text-dim ${compact ? "line-clamp-2" : ""}`}>{body}</div>}

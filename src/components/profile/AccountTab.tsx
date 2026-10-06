@@ -29,7 +29,7 @@ import { ReauthPasswordField } from "./ReauthPasswordField"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/toast"
 import { apiPost, apiDelete } from "@/api/client"
-import { t } from "@/i18n/t"
+import { t, tRich } from "@/i18n/t"
 import type { Account } from "./types"
 import { extractError } from "./ProfileTab"
 import { STORAGE_DRAFT_ACCOUNT_EMAIL } from "@/lib/storageKeys"
@@ -121,15 +121,16 @@ export function AccountTab({ account }: { account: Account }) {
         <CardContent className="space-y-4">
           <div className="text-sm">
             <span className="text-dim">
-              {t("profile.account.currentEmail")}:{" "}
-            </span>
-            <span className="font-medium text-ink">{account.Email}</span>{" "}
-            <span className={account.EmailConfirmed ? "text-ok" : "text-warn"}>
-              (
-              {account.EmailConfirmed
-                ? t("profile.account.confirmed")
-                : t("profile.account.unconfirmed")}
-              )
+              {tRich("profile.account.currentEmailLine", {
+                email: <span className="font-medium text-ink">{account.Email}</span>,
+                status: (
+                  <span className={account.EmailConfirmed ? "text-ok" : "text-warn"}>
+                    {t("profile.account.statusParen", {
+                      status: account.EmailConfirmed ? t("profile.account.confirmed") : t("profile.account.unconfirmed"),
+                    })}
+                  </span>
+                ),
+              })}
             </span>
           </div>
 
