@@ -1,7 +1,7 @@
 "use client"
 
-import React, { Suspense, useCallback, useEffect, useState } from "react"
-import { useSearchParams } from "next/navigation"
+import React, { Suspense, useCallback, useEffect, useRef, useState } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import {
   ChevronLeft,
@@ -37,6 +37,8 @@ import { InboxButton } from "@/components/profile/InboxButton"
 import { AccountMenu } from "@/components/profile/AccountMenu"
 import { initials } from "@/lib/initials"
 import { roleLabel } from "@/lib/roles"
+import { useMediaQuery } from "@/lib/useMediaQuery"
+import { focusTab, nextTabIndex } from "@/lib/tablist"
 
 const BACK_ARROW_CLASS = "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-dim hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-action"
 
@@ -64,9 +66,14 @@ function memberSince(createdAt: string): string {
   })
 }
 
+const tabId = (key: TabKey) => `profile-tab-${key}`
+const panelId = (key: TabKey) => `profile-panel-${key}`
+
 function ProfileShell() {
   const searchParams = useSearchParams()
-  const initialTab = (searchParams.get("tab") as TabKey) || "profile"
+  const router = useRouter()
+  const pathname = usePathname()
+  const isDesktop = useMediaQuery("(min-width: 768px)")
   const linkError = searchParams.get("error") === "link_failed"
   // return_to: rendered as a "Back" affordance when present. Sanitized via
   // safeReturnTo (same-platform https only) to prevent open-redirect / javascript:
@@ -77,14 +84,39 @@ function ProfileShell() {
   const back = useBackLink(searchParams.get("return_to"))
   const backKey = backLabel(back)
 
-  const [active, setActive] = useState<TabKey>(
-    TABS.some((x) => x.key === initialTab) ? initialTab : "profile"
-  )
-  // Mobile master-detail: null = section list; a key = that section open (with a
-  // back arrow). Desktop ignores this and uses the side-nav + `active`.
-  const [mobileDetail, setMobileDetail] = useState<TabKey | null>(
-    searchParams.get("tab") ? initialTab : null
-  )
+  // The section lives in the URL (?tab=): reload, Back and a shared link keep the place. Without ?tab= desktop shows
+  // the first section and mobile shows the list of sections.
+  const requestedTab = searchParams.get("tab")
+  const urlTab = TABS.find((x) => x.key === requestedTab)?.key ?? null
+  // Coming back from a failed «Підключити Google» lands on the connections section.
+  const tab: TabKey | null = urlTab ?? (linkError ? "connections" : null)
+  const active: TabKey = tab ?? "profile"
+
+  const selectTab = (key: TabKey | null, mode: "push" | "replace") => {
+    const next = new URLSearchParams(searchParams.toString())
+    if (key) next.set("tab", key)
+    else next.delete("tab")
+    const query = next.toString()
+    const href = query ? `${pathname}?${query}` : pathname
+    if (mode === "push") router.push(href, { scroll: false })
+    else router.replace(href, { scroll: false })
+  }
+
+  // Mobile master-detail focus: the opened section takes focus, closing returns it to its row.
+  const detailRef = useRef<HTMLDivElement>(null)
+  const rowsRef = useRef(new Map<TabKey, HTMLButtonElement>())
+  const lastOpenedRef = useRef<TabKey | null>(null)
+  const mobileDetail = isDesktop ? null : tab
+  useEffect(() => {
+    if (mobileDetail) {
+      lastOpenedRef.current = mobileDetail
+      detailRef.current?.focus()
+    } else if (lastOpenedRef.current) {
+      rowsRef.current.get(lastOpenedRef.current)?.focus()
+      lastOpenedRef.current = null
+    }
+  }, [mobileDetail])
+
   const [account, setAccount] = useState<Account | null>(null)
   const [loadError, setLoadError] = useState<{ unavailable: boolean; error: unknown } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -111,14 +143,6 @@ function ProfileShell() {
 
   // Backend came back after an outage (the app-wide overlay handled it) → refetch.
   useEffect(() => onServiceRestored(() => void load()), [load])
-
-  // If the user just linked Google, jump them to the Connections tab.
-  useEffect(() => {
-    if (linkError) {
-      setActive("connections")
-      setMobileDetail("connections")
-    }
-  }, [linkError])
 
   // Only show the full-page loading state on the INITIAL load. A refetch (e.g.
   // after an avatar upload) keeps the rendered profile mounted, so the avatar
@@ -155,7 +179,7 @@ function ProfileShell() {
   }
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6">
+    <main id="main" tabIndex={-1} className="mx-auto max-w-4xl px-4 py-6 outline-none sm:px-6">
       <header className="mb-6">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b border-line pb-4">
           <Wordmark size="md" />
@@ -212,84 +236,103 @@ function ProfileShell() {
             <p className="break-all text-sm text-dim">{account.Email}</p>
             {memberSince(account.CreatedAt) && (
               <p className="text-xs text-faint">
-                {t("profile.memberSince")} {memberSince(account.CreatedAt)}
+                {t("profile.memberSinceDate", { date: memberSince(account.CreatedAt) })}
               </p>
             )}
           </div>
         </div>
       )}
 
-      {/* Mobile: master-detail. List of sections by default; tapping one opens
-          that section with a back arrow. */}
-      <div className="md:hidden">
-        {mobileDetail === null ? (
-          <ul className="space-y-2">
-            {TABS.map((tab) => (
-              <li key={tab.key}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActive(tab.key)
-                    setMobileDetail(tab.key)
-                  }}
-                  className="flex w-full items-center gap-3 rounded-lg border border-line bg-surface p-4 text-left transition-colors hover:bg-hover"
-                >
-                  <tab.icon className="h-5 w-5 shrink-0 text-dim" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium">{t(tab.label)}</span>
-                    <span className="block truncate text-xs text-dim">
-                      {t(tab.desc)}
-                    </span>
-                  </span>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-faint" />
-                </button>
-              </li>
+      {/* One render of the active section (no hidden twin): desktop is a vertical tablist beside the panel,
+          mobile is master-detail (the list of sections, then one section with a back button). */}
+      {isDesktop ? (
+        <div className="flex gap-6">
+          <div role="tablist" aria-orientation="vertical" aria-label={t("profile.tabs")} className="flex w-48 shrink-0 flex-col gap-1">
+            {TABS.map((item, index) => (
+              <button
+                key={item.key}
+                id={tabId(item.key)}
+                type="button"
+                role="tab"
+                aria-selected={active === item.key}
+                aria-controls={panelId(item.key)}
+                tabIndex={active === item.key ? 0 : -1}
+                onClick={() => selectTab(item.key, "replace")}
+                onKeyDown={(event) => {
+                  const to = nextTabIndex(event, index, TABS.length, "vertical")
+                  if (to === null) return
+                  event.preventDefault()
+                  selectTab(TABS[to].key, "replace")
+                  focusTab(event.currentTarget, to)
+                }}
+                className={
+                  "rounded-md px-3 py-2 text-left text-sm transition-colors " +
+                  (active === item.key
+                    ? "bg-hover font-medium text-ink"
+                    : "text-dim hover:bg-hover hover:text-ink")
+                }
+              >
+                {t(item.label)}
+              </button>
             ))}
-          </ul>
-        ) : (
-          <div className="space-y-4">
-            <button
-              type="button"
-              onClick={() => setMobileDetail(null)}
-              className="inline-flex items-center gap-1 text-sm text-dim hover:text-ink"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              {t(TABS.find((x) => x.key === mobileDetail)?.label ?? "")}
-            </button>
+          </div>
+          <div id={panelId(active)} role="tabpanel" aria-labelledby={tabId(active)} tabIndex={0} className="min-w-0 flex-1 outline-offset-4">
+            {renderTab(active)}
+          </div>
+        </div>
+      ) : mobileDetail === null ? (
+        <ul className="space-y-2">
+          {TABS.map((item) => (
+            <li key={item.key}>
+              <button
+                ref={(node) => {
+                  if (node) rowsRef.current.set(item.key, node)
+                  else rowsRef.current.delete(item.key)
+                }}
+                type="button"
+                onClick={() => selectTab(item.key, "push")}
+                className="flex w-full items-center gap-3 rounded-lg border border-line bg-surface p-4 text-left transition-colors hover:bg-hover"
+              >
+                <item.icon className="h-5 w-5 shrink-0 text-dim" aria-hidden="true" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium">{t(item.label)}</span>
+                  <span className="block truncate text-xs text-dim">
+                    {t(item.desc)}
+                  </span>
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-faint" aria-hidden="true" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="space-y-4">
+          <button
+            type="button"
+            onClick={() => selectTab(null, "push")}
+            className="inline-flex min-h-10 items-center gap-1 text-sm text-dim hover:text-ink"
+          >
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+            {t("profile.backToSections")}
+          </button>
+          <div
+            ref={detailRef}
+            role="region"
+            aria-label={t(TABS.find((x) => x.key === mobileDetail)?.label ?? "")}
+            tabIndex={-1}
+            className="outline-none"
+          >
             {renderTab(mobileDetail)}
           </div>
-        )}
-      </div>
-
-      {/* Desktop: left vertical tab list + content. */}
-      <div className="hidden gap-6 md:flex">
-        <nav className="flex w-48 shrink-0 flex-col gap-1">
-          {TABS.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setActive(tab.key)}
-              aria-current={active === tab.key ? "page" : undefined}
-              className={
-                "rounded-md px-3 py-2 text-left text-sm transition-colors " +
-                (active === tab.key
-                  ? "bg-hover font-medium text-ink"
-                  : "text-dim hover:bg-hover hover:text-ink")
-              }
-            >
-              {t(tab.label)}
-            </button>
-          ))}
-        </nav>
-        <div className="min-w-0 flex-1">{renderTab(active)}</div>
-      </div>
+        </div>
+      )}
     </main>
   )
 }
 
 export function ProfileScreen() {
   return (
-    <Suspense>
+    <Suspense fallback={<PageLoader />}>
       <ProfileShell />
     </Suspense>
   )

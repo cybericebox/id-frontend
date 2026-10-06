@@ -15,8 +15,6 @@ const SRC = path.resolve(import.meta.dirname, "..")
 
 // Each entry needs a reason. `file` is relative to src/.
 const ALLOW: { file: string; text: string; reason: string }[] = [
-  { file: "components/auth/SetupScreen.tsx", text: "Ігор", reason: "design-sync preview fixture: user data, not UI text" },
-  { file: "components/auth/SetupScreen.tsx", text: "Морозенко", reason: "design-sync preview fixture: user data, not UI text" },
   { file: "components/brand/Wordmark.tsx", text: "ICE", reason: "brand wordmark lockup" },
   { file: "components/auth/AuthSidePanel.tsx", text: "ICE", reason: "brand wordmark lockup" },
 ]

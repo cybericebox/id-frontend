@@ -54,10 +54,13 @@ export function PasswordStrength({
   value,
   policy,
   className,
+  id,
 }: {
   value: string
   policy: PasswordPolicy
   className?: string
+  /** id of the status line, so the field can point `aria-describedby` at it */
+  id?: string
 }) {
   if (!value) return null
 
@@ -90,13 +93,15 @@ export function PasswordStrength({
   }
 
   return (
-    <div className={cn("flex flex-col gap-1.5", className)} aria-live="polite">
+    <div className={cn("flex flex-col gap-1.5", className)}>
+      {/* announced only when the strength word changes, not on every keystroke */}
+      <span className="sr-only" role="status">{label}</span>
       <div className="grid grid-cols-4 gap-1" aria-hidden>
         {[0, 1, 2, 3].map((i) => (
-          <span key={i} className={cn("h-1 rounded-full transition-colors", i < segments ? TONE_BG[tone] : "bg-line")} />
+          <span key={i} className={cn("h-1 rounded-full transition-colors", i < segments ? TONE_BG[tone] : "bg-control")} />
         ))}
       </div>
-      <p className="text-xs text-dim">
+      <p id={id} className="text-xs text-dim">
         <span className={cn("font-medium", TONE_TEXT[tone])}>{label}</span>
         {hint && <> · {hint}</>}
       </p>

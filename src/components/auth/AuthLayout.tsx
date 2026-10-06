@@ -2,6 +2,8 @@ import * as React from "react"
 import { AuthSidePanel, type AuthVariant } from "./AuthSidePanel"
 import { cn } from "@/utils/cn"
 import { ThemeSwitch } from "@/components/ThemeToggle"
+import { FeedbackLink } from "@/components/FeedbackLink"
+import { EmailOff } from "@/components/EmailOff"
 import { CookieSettingsLink } from "@/components/CookieSettingsLink"
 import { Wordmark } from "@/components/brand/Wordmark"
 
@@ -21,14 +23,15 @@ export function AuthLayout({
   return (
     <div
       className={cn(
-        // form column ≈58%, brand panel ≈42%
-        "grid min-h-dvh",
+        // form column ≈58%, brand panel ≈42%; flex-1 of the body (min-h-dvh), so a site banner above does not add a page scroll
+        "grid flex-1",
         reversed
           ? "lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]"
           : "lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]"
       )}
     >
-      <AuthSidePanel variant={variant} className={reversed ? "lg:order-1" : "lg:order-2"} />
+      {/* DOM order is the reading and tab order: the form column first, the decorative panel after it.
+          lg:order-* only places them on the screen (the panel side alternates per page). */}
       <div
         className={cn(
           "flex flex-col bg-paper",
@@ -39,15 +42,17 @@ export function AuthLayout({
         <header className="px-6 pt-5 lg:hidden">
           <Wordmark size="md" />
         </header>
-        <div className="flex flex-1 items-center justify-center px-6 py-12 md:px-10">
+        <main id="main" tabIndex={-1} className="flex flex-1 items-center justify-center px-6 py-12 outline-none md:px-10">
           {children}
-        </div>
+        </main>
         {/* narrow screens: theme switch at the bottom (on wide screens it sits in the panel footer) */}
-        <footer className="flex flex-col items-center gap-3 px-6 pb-5 text-[13px] text-dim lg:hidden">
+        <footer className="flex flex-col items-center gap-3 px-6 pb-5 text-xs text-dim lg:hidden">
           <CookieSettingsLink className="hover:text-ink" />
+          <EmailOff><FeedbackLink className="hover:text-ink" /></EmailOff>
           <ThemeSwitch />
         </footer>
       </div>
+      <AuthSidePanel variant={variant} className={reversed ? "lg:order-1" : "lg:order-2"} />
     </div>
   )
 }

@@ -63,7 +63,7 @@ export async function fetchMe(): Promise<Me | null> {
 export function redirectToSignIn(signInUrl?: string, returnTo?: string): void {
   if (typeof window === "undefined") return
   const ret = returnTo ?? window.location.href
-  const base = signInUrl || "/sign-in"
+  const base = signInUrl || "/sign-in/"
   const url = new URL(base, window.location.origin)
   url.searchParams.set("return_to", ret)
   window.location.href = url.toString()
@@ -87,7 +87,7 @@ function isPlatformHost(host: string): boolean {
  * Platform hosts are the configured app hosts plus every event site under
  * the base domain.
  */
-export function safeReturnTo(returnTo?: string, fallback = "/profile"): string {
+export function safeReturnTo(returnTo?: string, fallback = "/profile/"): string {
   if (!returnTo) return fallback
   try {
     const u = new URL(returnTo)

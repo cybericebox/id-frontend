@@ -13,7 +13,7 @@ describe("NotFoundScreen", () => {
     expect(html).toContain("ICE")
     expect(html).toContain(">На головну<")
     expect(html).toContain(">Назад<")
-    expect(html).toContain("min-h-screen")
+    expect(html).toContain("min-h-dvh")
     expect(html).toContain(`href="/sign-in"`)
   })
 
@@ -22,7 +22,7 @@ describe("NotFoundScreen", () => {
     expect(html).toContain("Шаблон не знайдено")
     expect(html).toContain("Немає такого.")
     expect(html).toContain(">На головну<")
-    expect(html).not.toContain("min-h-screen")
+    expect(html).not.toContain("min-h-dvh")
   })
 
   it("has the texts in both catalogs", () => {

@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Fragment, useEffect, useState } from "react"
+import { MessageSquare } from "lucide-react"
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -12,6 +13,7 @@ import { adminOrigin, exercisesOrigin } from "@/lib/origins"
 import type { Account } from "@/components/profile/types"
 import { initials } from "@/lib/initials"
 import { openConsentSettings } from "@/lib/consent"
+import { FeedbackLink } from "@/components/FeedbackLink"
 import { COOKIE_POLICY_HREF } from "@/components/CookieSettingsLink"
 
 // Unified account menu (lib/accountMenu): same entries, labels and icons in every app.
@@ -64,18 +66,24 @@ export function AccountMenu({ account }: { account: Account }) {
             // A link to the cookie policy. With JS only the navigation is cancelled (on the native event,
             // so the menu still sees the select and closes); the panel opens once focus is back on the trigger.
             return (
-              <DropdownMenuItem key={i} asChild className="group gap-2" onSelect={() => { window.setTimeout(openConsentSettings, 0) }}>
-                <a href={COOKIE_POLICY_HREF} aria-label={t(ACCOUNT_MENU_LABELS.cookiesAria)} onClick={(e) => e.nativeEvent.preventDefault()}>
-                  <Icon {...ACCOUNT_MENU_ICON_PROPS} className={ICON_CLASS} />{t(ACCOUNT_MENU_LABELS.cookies)}
-                </a>
-              </DropdownMenuItem>
+              <Fragment key={i}>
+                <DropdownMenuItem asChild className="group gap-2" onSelect={() => { window.setTimeout(openConsentSettings, 0) }}>
+                  <a href={COOKIE_POLICY_HREF} aria-label={t(ACCOUNT_MENU_LABELS.cookiesAria)} onClick={(e) => e.nativeEvent.preventDefault()}>
+                    <Icon {...ACCOUNT_MENU_ICON_PROPS} className={ICON_CLASS} />{t(ACCOUNT_MENU_LABELS.cookies)}
+                  </a>
+                </DropdownMenuItem>
+                {/* the profile pages have no footer, so «Надіслати відгук» is a normal menu item here */}
+                <DropdownMenuItem asChild className="group gap-2">
+                  <FeedbackLink><MessageSquare {...ACCOUNT_MENU_ICON_PROPS} className={ICON_CLASS} />{t("feedback.link")}</FeedbackLink>
+                </DropdownMenuItem>
+              </Fragment>
             )
           }
           const key = entry.kind === "signOut" ? "signOut" : entry.key
           const Icon = ACCOUNT_MENU_ICONS[key]
           return (
             <DropdownMenuItem key={key} asChild className="group gap-2">
-              <a href={entry.kind === "signOut" ? "/sign-out" : entry.href}>
+              <a href={entry.kind === "signOut" ? "/sign-out/" : entry.href}>
                 <Icon {...ACCOUNT_MENU_ICON_PROPS} className={ICON_CLASS} />{t(ACCOUNT_MENU_LABELS[key])}
               </a>
             </DropdownMenuItem>

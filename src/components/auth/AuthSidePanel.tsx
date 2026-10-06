@@ -12,6 +12,8 @@ import {
 } from "lucide-react"
 import { Logo } from "@/components/brand/Logo"
 import { ThemeSwitch } from "@/components/ThemeToggle"
+import { FeedbackLink } from "@/components/FeedbackLink"
+import { EmailOff } from "@/components/EmailOff"
 import { CookieSettingsLink } from "@/components/CookieSettingsLink"
 import { Tooltip } from "@/components/ui/tooltip"
 import { cn } from "@/utils/cn"
@@ -113,9 +115,8 @@ export function AuthSidePanel({
         </div>
 
         <div className="my-auto flex flex-col gap-8 py-12">
-          <h2 className="text-[40px] font-semibold leading-[1.1] text-on-brand">
-            {t(`authPanel.${variant}.title1`)}
-            <br />
+          <h2 className="text-balance text-[clamp(28px,3vw,40px)] font-semibold leading-[1.1] text-on-brand">
+            {t(`authPanel.${variant}.title1`)}{" "}
             {t(`authPanel.${variant}.title2`)}
           </h2>
           <ul className="flex flex-col gap-4">
@@ -128,20 +129,20 @@ export function AuthSidePanel({
           </ul>
         </div>
 
-        <footer className="flex flex-col items-start gap-3 border-t border-brand-line pt-5 text-[13px] leading-relaxed text-on-brand-3">
-          <p className="auth-legal text-[12px] xl:text-[13px]">
+        <footer className="flex flex-col items-start gap-3 border-t border-brand-line pt-5 text-xs leading-relaxed text-on-brand-3">
+          <p className="auth-legal text-2xs xl:text-xs">
             {!SHOW_PARTNERS ? t("authPanel.legalPlain", { year: YEAR }) : tSegments("authPanel.legal", {
               year: YEAR,
               department: (
                 <Tooltip content={t("authPanel.departmentFull")} align="start">
-                  <a href={PARTNER_ICE_NURE_URL} target="_blank" rel="noopener noreferrer" className="rounded-xs font-medium whitespace-nowrap text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand">
+                  <a href={PARTNER_ICE_NURE_URL} target="_blank" rel="noopener noreferrer" className="rounded-xs font-medium whitespace-nowrap text-on-brand underline decoration-current/45 decoration-1 underline-offset-3 hover:text-ice-on-brand hover:decoration-current focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand">
                     {t("authPanel.legalLink")}
                   </a>
                 </Tooltip>
               ),
               nure: (
                 <Tooltip content={t("authPanel.nureFull")} align="start">
-                  <a href={PARTNER_NURE_URL} target="_blank" rel="noopener noreferrer" className="rounded-xs font-medium whitespace-nowrap text-on-brand no-underline hover:text-ice-on-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand">
+                  <a href={PARTNER_NURE_URL} target="_blank" rel="noopener noreferrer" className="rounded-xs font-medium whitespace-nowrap text-on-brand underline decoration-current/45 decoration-1 underline-offset-3 hover:text-ice-on-brand hover:decoration-current focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand">
                     {t("authPanel.nure")}
                   </a>
                 </Tooltip>
@@ -149,6 +150,7 @@ export function AuthSidePanel({
             }, { groupFrom: 1 })}
           </p>
           <CookieSettingsLink className="text-on-brand-2 hover:text-on-brand" />
+          <EmailOff><FeedbackLink className="text-on-brand-2 hover:text-on-brand" /></EmailOff>
           {/* bottom-left: the reCAPTCHA badge occupies the bottom-right corner */}
           <ThemeSwitch onMass className="-ml-1.5" />
         </footer>

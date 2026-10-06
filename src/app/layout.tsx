@@ -7,7 +7,6 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { THEME_BOOT_SCRIPT } from "@/lib/theme"
 import { ToastProvider } from "@/components/ui/toast"
-import { FeedbackLink } from "@/components/FeedbackLink"
 import { SiteBanners } from "@/components/SiteBanners"
 import { t } from "@/i18n/t"
 
@@ -32,11 +31,11 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       </head>
       <body>
+        {/* first tab stop: jumps over the banners and the page chrome to <main id="main"> */}
+        <a href="#main" className="skip-link">{t("common.skipToContent")}</a>
         {/* site banners sit at the very top, above the split auth layout */}
         <SiteBanners />
         <QueryProvider><ToastProvider>{children}</ToastProvider></QueryProvider>
-        {/* plain mailto link in the static HTML of every page */}
-        <FeedbackLink />
         <ServiceStatusGate />
         {/* the consent panel is always mounted («Налаштування файлів cookie»); GA loads only when configured */}
         <Analytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID} />

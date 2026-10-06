@@ -9,6 +9,7 @@
 #   I live replacement of the server certificate, of the client CA, and of a broken pair, without a restart
 #   J hardening: uid 101, read-only root, no capabilities
 #   K baked defaults: files at /tls and /aop switch TLS and client auth on with no TLS_* env; explicit empty values switch them off
+#   M trailing slash: /<nested route>/ -> 308 -> 200, a missing path is 404 (never 403), no off-site redirect
 set -uo pipefail
 
 cd "$(dirname "$0")/.."
@@ -286,6 +287,29 @@ fails "L5 explicit cert and key paths that do not exist" "does not exist" -e TLS
 fails "L6 explicit missing cert, default key present" "does not exist" "${DEFTLS[@]}" -e TLS_CERT_FILE=/nope/a.crt
 fails "L7 client auth require, default CA missing" "needs the CA file" "${DEFTLS[@]}" -e TLS_CLIENT_AUTH=require
 fails "L8 client auth optional, explicit CA missing" "needs the CA file" "${DEFTLS[@]}" -e TLS_CLIENT_AUTH=optional -e TLS_CLIENT_CA_FILE=/nope/ca.crt
+
+echo "== M trailing slash (the export has trailingSlash: every page is <route>/index.html)"
+ROUTE=profile
+C=$(start slash) || { bad "container did not start"; exit 1; }
+B=http://127.0.0.1:$(port "$C" 8080)
+loc() { curl -s -D - -o /dev/null --max-time 10 "$@" | tr -d '\r' | awk 'tolower($1)=="location:" {print $2}'; }
+check "M1 /$ROUTE -> 308" 308 "$(code "$B/$ROUTE")"
+check "M2 /$ROUTE Location is the slashed path, relative" "/$ROUTE/" "$(loc "$B/$ROUTE")"
+check "M3 query string kept" "/$ROUTE/?a=1&b=2" "$(loc "$B/$ROUTE?a=1&b=2")"
+check "M4 /$ROUTE/ -> 200, no redirect" 200 "$(code "$B/$ROUTE/")"
+check "M5 /$ROUTE followed -> 200" 200 "$(code -L "$B/$ROUTE")"
+check "M6 / -> 200" 200 "$(code "$B/")"
+check "M7 missing path -> 404, not 403" 404 "$(code "$B/no-such-page")"
+check "M8 missing path with a slash -> 404, not 403" 404 "$(code "$B/no-such-page/")"
+check "M9 a directory without a page is never listed or 403" 404 "$(code -L "$B/_next/static")"
+check "M10 double slash does not redirect off-site" "/$ROUTE/" "$(loc --path-as-is "$B//$ROUTE")"
+check "M11 /healthz is not redirected" 200 "$(code "$B/healthz")"
+NESTED=$(docker exec "$C" sh -c 'cd /usr/share/nginx/html && find . -mindepth 3 -name index.html -not -path "./_next/*" | head -1 | sed "s|^\.||; s|/index.html$||"')
+if [[ -n "$NESTED" ]]; then
+  check "M12 nested route $NESTED -> 308 -> 200" "308 200" "$(code "$B$NESTED") $(code -L "$B$NESTED")"
+  check "M13 nested route $NESTED/ -> 200" 200 "$(code "$B$NESTED/")"
+fi
+stop "$C"
 
 echo
 [[ $fail -eq 0 ]] && echo "ALL PASSED" || { echo "FAILED" >&2; exit 1; }

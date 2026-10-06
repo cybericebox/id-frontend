@@ -43,26 +43,27 @@ export function NotificationPopIn({ message, onClose, onAction }: {
 
   useEffect(() => { closeRef.current = onClose }, [onClose])
   useEffect(() => {
-    if (paused) return
+    // a pop-in with an action waits for the reader: it never dismisses itself
+    if (paused || action) return
     const started = Date.now()
     const timer = window.setTimeout(() => closeRef.current(), remainingRef.current)
     return () => {
       window.clearTimeout(timer)
       remainingRef.current = Math.max(0, remainingRef.current - (Date.now() - started))
     }
-  }, [paused, message.ID])
+  }, [paused, action, message.ID])
 
-  return <div role="status" aria-label={t("inbox.new")} onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setPaused(false) }} className="relative w-[min(22.5rem,calc(100vw-2rem))] overflow-hidden rounded-lg border border-line bg-surface px-4 pb-5 pt-4 text-ink">
+  return <div role="group" aria-label={t("inbox.new")} onTouchStart={() => setPaused(true)} onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setPaused(false) }} className="relative w-[min(22.5rem,calc(100vw-2rem))] overflow-hidden rounded-lg border border-line bg-surface px-4 pb-5 pt-4 text-ink">
     <button type="button" onClick={onClose} aria-label={t("inbox.dismiss")} className="absolute right-2 top-2 rounded-md p-1 text-dim hover:bg-hover hover:text-ink"><X size={16} /></button>
     <div className="pr-5">
       <NotificationMessageCard
         icon={message.Icon} tone={message.Tone} accentColor={message.AccentColor} title={message.Title}
         body={message.Body && <div dangerouslySetInnerHTML={{ __html: keepBrand(DOMPurify.sanitize(message.Body)) }} />}
-        actions={action && <button type="button" onClick={() => onAction(action.href)} className="text-sm font-medium text-action hover:underline">{action.label}</button>}
+        actions={action && <button type="button" onClick={() => onAction(action.href)} className="inline-flex min-h-6 items-center rounded-sm px-1 text-sm font-medium text-action hover:underline">{action.label}</button>}
       />
     </div>
     <span aria-hidden="true" className="absolute bottom-2 left-4 right-4 h-1 overflow-hidden rounded-full bg-soft">
-      <span className="block h-full w-full origin-left" style={{ backgroundColor: accent, animationName: "notification-countdown", animationDuration: `${duration}ms`, animationTimingFunction: "linear", animationFillMode: "forwards", animationPlayState: paused ? "paused" : "running" }} />
+      <span className="block h-full w-full origin-left" style={{ backgroundColor: accent, animationName: "notification-countdown", animationDuration: `${duration}ms`, animationTimingFunction: "linear", animationFillMode: "forwards", animationPlayState: paused || action ? "paused" : "running" }} />
     </span>
   </div>
 }

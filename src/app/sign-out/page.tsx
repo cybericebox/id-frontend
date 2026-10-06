@@ -4,7 +4,7 @@ import React, { Suspense, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 
 import { Wordmark } from "@/components/brand/Wordmark"
-import { Spinner } from "@/components/ui/spinner"
+import { PageLoader, Spinner } from "@/components/ui/spinner"
 import { safeReturnTo } from "@/lib/auth"
 import { apiUrl } from "@/api/client"
 import { t } from "@/i18n/t"
@@ -45,7 +45,7 @@ function SignOut() {
       if (cancelled) return
       // Fall back to /sign-in (not /profile) after a logout; the shared guard
       // strips any port and rejects off-platform return_to values.
-      window.location.href = safeReturnTo(returnTo ?? undefined, "/sign-in")
+      window.location.href = safeReturnTo(returnTo ?? undefined, "/sign-in/")
     }
     void run()
     return () => {
@@ -54,7 +54,7 @@ function SignOut() {
   }, [returnTo])
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
+    <main id="main" tabIndex={-1} className="flex min-h-dvh items-center justify-center p-4 outline-none">
       <div className="flex w-full max-w-md flex-col">
         <div className="mb-6 flex justify-center">
           <Wordmark size="lg" />
@@ -73,7 +73,7 @@ function SignOut() {
 // for `output: 'export'`.
 export default function SignOutPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<PageLoader />}>
       <SignOut />
     </Suspense>
   )

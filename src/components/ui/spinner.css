@@ -4,7 +4,7 @@
 .crest-loader {
   display: inline-block;
   height: 1em;
-  aspect-ratio: 375 / 368;
+  aspect-ratio: 128 / 125;
   line-height: 0;
   animation: crest-loading-pulse 1.8s ease-in-out infinite;
 }
@@ -22,6 +22,8 @@
 
 @keyframes crest-loading-pulse { 50% { opacity:.45; transform:scale(.94); } }
 
+/* reduced motion: no scaling, only a slow fade, so the busy state is still visible */
+@keyframes crest-loading-fade { 50% { opacity:.45; } }
 @media (prefers-reduced-motion: reduce) {
-  .crest-loader { animation:none; }
+  .crest-loader { animation:crest-loading-fade 2.4s ease-in-out infinite !important; }
 }

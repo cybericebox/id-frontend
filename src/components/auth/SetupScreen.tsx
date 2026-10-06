@@ -1,10 +1,8 @@
 "use client"
 
-import React, { Suspense, useState, useEffect, useRef, useMemo } from "react"
-import { useSearchParams } from "next/navigation"
+import React, { useId, useState, useEffect, useRef, useMemo } from "react"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
 
 import {
   Form,
@@ -17,22 +15,23 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { toast } from "@/components/ui/toast"
+import { FormError, reportFormError } from "@/components/ui/form-error"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Check, LinkIcon } from "lucide-react"
 import { PasswordInput } from "@/components/ui/password-input"
-import { PasswordStrength, passwordError } from "@/components/ui/password-strength"
-import { usePasswordPolicy, type PasswordPolicy } from "@/lib/passwordPolicy"
-import { Spinner } from "@/components/ui/spinner"
+import { PasswordStrength } from "@/components/ui/password-strength"
+import { usePasswordPolicy } from "@/lib/passwordPolicy"
+import { LoadingArea } from "@/components/ui/spinner"
 import { ErrorScreen } from "@/components/ErrorScreen"
 import { AuthLayout } from "./AuthLayout"
 import { useOneShotParam } from "@/lib/useOneShotParam"
+import { useUrlParams } from "@/lib/useUrlParams"
 import { mainOrigin } from "@/lib/origins"
-import { AuthHeading, AuthPane, AuthSwitch, GoogleIcon } from "./parts"
+import { AuthHeading, AuthPane, AuthSwitch, GoogleIcon, inlineLinkClass } from "./parts"
 import { t } from "@/i18n/t"
 import { apiPost, apiUrl } from "@/api/client"
-import { localizedError } from "@/i18n/apiError"
 import { setupDraftKey } from "@/lib/storageKeys"
+import { buildSetupSchema, type SetupValues } from "./setupSchema"
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -88,76 +87,6 @@ function clearDraft(key: string) {
 }
 
 // ---------------------------------------------------------------------------
-// Zod schema — client-side validation
-// Password and ConfirmPassword are always strings (empty = no password chosen).
-//
-// The ≥1-method rule depends on whether Google is already linked. We inject
-// this as a mutable ref so the stable schema closure can always read the
-// latest value without needing to be rebuilt on every render.
-// ---------------------------------------------------------------------------
-const BaseSetupSchema = z.object({
-  FirstName: z
-    .string()
-    .min(1, { message: t("validation.required") })
-    .max(255),
-  LastName: z
-    .string()
-    .min(1, { message: t("validation.required") })
-    .max(255),
-  Password: z.string().max(255),
-  ConfirmPassword: z.string().max(255),
-  AcceptTos: z.boolean(),
-})
-
-type SetupValues = z.infer<typeof BaseSetupSchema>
-
-/**
- * Returns a schema whose superRefine reads hasGoogle from the supplied ref.
- * Call this ONCE (e.g. with React.useMemo / outside re-renders) and update
- * the ref whenever hasGoogle changes.
- */
-function buildSchema(
-  hasGoogleRef: React.RefObject<boolean>,
-  policyRef: React.RefObject<PasswordPolicy>
-) {
-  return BaseSetupSchema.superRefine((data, ctx) => {
-    // An entered password must pass the backend policy (empty = no password).
-    if (data.Password) {
-      const msg = passwordError(data.Password, policyRef.current)
-      if (msg) ctx.addIssue({ code: "custom", message: msg, path: ["Password"] })
-    }
-
-    // Password confirmation must match if a password is entered
-    if (data.Password && data.Password !== data.ConfirmPassword) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: t("validation.passwordsNoMatch"),
-        path: ["ConfirmPassword"],
-      })
-    }
-
-    // At least one method: password or Google
-    const hasPassword = Boolean(data.Password && data.Password.length > 0)
-    if (!hasPassword && !hasGoogleRef.current) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: t("validation.methodRequired"),
-        path: ["Password"],
-      })
-    }
-
-    // ToS must be accepted
-    if (!data.AcceptTos) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: t("validation.tosRequired"),
-        path: ["AcceptTos"],
-      })
-    }
-  })
-}
-
-// ---------------------------------------------------------------------------
 // Error state card
 // ---------------------------------------------------------------------------
 function ErrorCard({
@@ -180,20 +109,21 @@ function ErrorCard({
 }
 
 // ---------------------------------------------------------------------------
-// Inner component (uses useSearchParams — must be inside <Suspense>)
+// The invite token comes from the URL on the client (params is null until then): the layout is in the static HTML,
+// the form block shows the crest loader while the token is read and the invite is fetched.
 // ---------------------------------------------------------------------------
-function SetupForm() {
-  const searchParams = useSearchParams()
-  const token = searchParams.get("token") ?? ""
-  const [linkError] = useOneShotParam("error", searchParams.get("error"))
+export function SetupScreen() {
+  const params = useUrlParams()
+  const token = params?.get("token") ?? ""
+  const [linkError] = useOneShotParam("error", params)
   // Post-registration landing, carried from sign-up / Google (validated by the backend).
-  const returnTo = searchParams.get("return_to") ?? ""
+  const returnTo = params?.get("return_to") ?? ""
 
   // Terms of Service live on the apex (main) frontend, not the id subdomain.
   const termsUrl = `${mainOrigin}/terms`
   const privacyUrl = `${mainOrigin}/privacy`
   const legalLink = (href: string, label: string) => (
-    <a href={href} target="_blank" rel="noopener noreferrer" className="font-medium text-action underline-offset-3 hover:underline">
+    <a href={href} target="_blank" rel="noopener noreferrer" className={inlineLinkClass}>
       {label}
     </a>
   )
@@ -222,6 +152,7 @@ function SetupForm() {
 
   // Submit state
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
 
   // Derived: whether Google is currently linked (may update after page reload post-link)
   const hasGoogle = setupInfo?.HasProvider ?? false
@@ -241,8 +172,10 @@ function SetupForm() {
   }, [policy])
 
   // eslint-disable-next-line @eslint-react/exhaustive-deps
-  const schema = useMemo(() => buildSchema(hasGoogleRef, policyRef), [])
+  const schema = useMemo(() => buildSetupSchema(hasGoogleRef, policyRef), [])
 
+  const strengthId = useId()
+  const passwordMsgId = useId()
   const form = useForm<SetupValues>({
     resolver: zodResolver(schema),
     mode: "onTouched",
@@ -255,24 +188,15 @@ function SetupForm() {
     },
   })
 
+  // The confirmation is required whenever a password is required or typed.
+  const confirmRequired = !hasGoogle || Boolean(form.watch("Password"))
+
   // ---------------------------------------------------------------------------
   // Fetch setup info on mount (or when token changes)
   // ---------------------------------------------------------------------------
   useEffect(() => {
+    if (params === null) return
     if (!token) {
-      setIsFetching(false)
-      return
-    }
-
-    // Preview short-circuit (design-sync): render the real form with demo data
-    // instead of hitting a server that isn't there.
-    if (token === "preview-token-DEMO1234") {
-      setSetupInfo({
-        Email: "hacker@example.com",
-        FirstName: "Ігор",
-        LastName: "Морозенко",
-        HasProvider: false,
-      })
       setIsFetching(false)
       return
     }
@@ -338,7 +262,7 @@ function SetupForm() {
     return () => {
       cancelled = true
     }
-  }, [token, attempt]) // eslint-disable-line @eslint-react/exhaustive-deps
+  }, [params, token, attempt]) // eslint-disable-line @eslint-react/exhaustive-deps
 
   // ---------------------------------------------------------------------------
   // Persist non-secret fields to sessionStorage as they change, so the form
@@ -360,6 +284,7 @@ function SetupForm() {
   // Submit handler
   // ---------------------------------------------------------------------------
   const onSubmit: SubmitHandler<SetupValues> = async (data) => {
+    setFormError(null)
     setIsSubmitting(true)
 
     try {
@@ -392,10 +317,10 @@ function SetupForm() {
         window.location.assign(RedirectURL)
       } else {
         // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Reload after setup so the new authentication state is read from storage.
-        window.location.assign("/profile")
+        window.location.assign("/profile/")
       }
     } catch (err) {
-      toast.error(localizedError(err))
+      reportFormError(err, setFormError)
     } finally {
       setIsSubmitting(false)
     }
@@ -404,7 +329,7 @@ function SetupForm() {
   // ---------------------------------------------------------------------------
   // Guard: no token in URL
   // ---------------------------------------------------------------------------
-  if (!token) {
+  if (params !== null && !token) {
     return (
       <ErrorCard
         title={t("setup.missingToken")}
@@ -416,13 +341,11 @@ function SetupForm() {
   // ---------------------------------------------------------------------------
   // Loading state
   // ---------------------------------------------------------------------------
-  if (isFetching) {
+  if (params === null || isFetching) {
     return (
       <AuthLayout reversed={true} variant="setup">
         <AuthPane>
-          <div className="flex justify-center py-8">
-            <Spinner size="md" />
-          </div>
+          <LoadingArea className="min-h-64" />
         </AuthPane>
       </AuthLayout>
     )
@@ -469,7 +392,7 @@ function SetupForm() {
             >
               {/* Email — read-only / locked */}
               <div className="space-y-2">
-                <label htmlFor="setup-email" className="text-[13px] font-medium leading-[1.35] text-ink">
+                <label htmlFor="setup-email" className="text-sm font-medium leading-[1.35] text-ink">
                   {t("setup.email")}
                 </label>
                 <Input
@@ -477,7 +400,7 @@ function SetupForm() {
                   type="email"
                   value={setupInfo.Email}
                   readOnly
-                  autoComplete="email"
+                  autoComplete="username"
                 />
               </div>
 
@@ -487,10 +410,11 @@ function SetupForm() {
                 name="FirstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("setup.firstName")}</FormLabel>
+                    <FormLabel required>{t("setup.firstName")}</FormLabel>
                     <FormControl>
                       <Input
                         type="text"
+                        required
                         placeholder={t("setup.firstNamePlaceholder")}
                         autoComplete="given-name"
                         {...field}
@@ -507,10 +431,11 @@ function SetupForm() {
                 name="LastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("setup.lastName")}</FormLabel>
+                    <FormLabel required>{t("setup.lastName")}</FormLabel>
                     <FormControl>
                       <Input
                         type="text"
+                        required
                         placeholder={t("setup.lastNamePlaceholder")}
                         autoComplete="family-name"
                         {...field}
@@ -527,7 +452,7 @@ function SetupForm() {
                   <p className="text-sm font-semibold text-ink">
                     {t("setup.loginMethodsTitle")}
                   </p>
-                  <p className="text-[13px] text-dim">
+                  <p className="text-xs text-dim">
                     {t("setup.loginMethodsSubtitle")}
                   </p>
                 </div>
@@ -560,31 +485,33 @@ function SetupForm() {
                   name="Password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("setup.setPassword")}</FormLabel>
+                      <FormLabel required={!hasGoogle}>{t("setup.setPassword")}</FormLabel>
                       <FormControl>
                         <PasswordInput
+                          required={!hasGoogle}
                           placeholder={t("setup.passwordPlaceholder")}
                           autoComplete="new-password"
                           {...field}
+                          aria-describedby={field.value ? strengthId : form.formState.errors.Password ? passwordMsgId : undefined}
                         />
                       </FormControl>
-                      {/* with text typed, the strength line names what is missing */}
-                  <PasswordStrength value={field.value} policy={policy} />
-                  <FormMessage className={field.value ? "hidden" : undefined} />
+                      {/* with text typed, the strength line names what is missing and describes the field */}
+                      <PasswordStrength id={strengthId} value={field.value} policy={policy} />
+                      {!field.value && <FormMessage id={passwordMsgId} />}
                     </FormItem>
                   )}
                 />
 
-                {/* Confirm password — only show when a password has been entered */}
-                {form.watch("Password") && (
-                  <FormField
+                {/* Confirm password — required whenever a password is (or must be) set */}
+                <FormField
                     control={form.control}
                     name="ConfirmPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t("setup.confirmPassword")}</FormLabel>
+                        <FormLabel required={confirmRequired}>{t("setup.confirmPassword")}</FormLabel>
                         <FormControl>
                           <PasswordInput
+                            required={confirmRequired}
                             placeholder={t("setup.confirmPasswordPlaceholder")}
                             autoComplete="new-password"
                             {...field}
@@ -594,7 +521,6 @@ function SetupForm() {
                       </FormItem>
                     )}
                   />
-                )}
               </div>
 
               {/* Terms of Service */}
@@ -610,6 +536,7 @@ function SetupForm() {
                         onBlur={field.onBlur}
                         name={field.name}
                         ref={field.ref}
+                        required
                         label={<span>{tosLabel}</span>}
                       />
                     </FormControl>
@@ -617,6 +544,8 @@ function SetupForm() {
                   </FormItem>
                 )}
               />
+
+              <FormError message={formError} />
 
               <Button
                 type="submit"
@@ -632,17 +561,5 @@ function SetupForm() {
         <AuthSwitch text={t("register.haveAccount")} href="/sign-in" action={t("common.signIn")} />
       </AuthPane>
     </AuthLayout>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Page export — wraps in <Suspense> for static-export compatibility
-// (useSearchParams opts out of static prerendering without it)
-// ---------------------------------------------------------------------------
-export function SetupScreen() {
-  return (
-    <Suspense>
-      <SetupForm />
-    </Suspense>
   )
 }

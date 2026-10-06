@@ -27,10 +27,11 @@ import {
   type InboxCounts, type InboxDefaultTab, type InboxMessage as Message, type InboxTab,
 } from "./inboxModel"
 import { keepBrand } from "@/i18n/brand"
+import { focusTab, nextTabIndex } from "@/lib/tablist"
 import { STORAGE_INBOX_READ } from "@/lib/storageKeys"
 
 // Dropdown height cap, the same in every app: tune it here.
-const panelMaxHeight = "max-h-[min(28rem,calc(100vh-6rem))]"
+const panelMaxHeight = "max-h-[min(28rem,calc(100dvh-6rem))]"
 
 type InboxCursor = { ID: string; CreatedAt: string }
 type InboxPoll = { Cursor: InboxCursor | null; NewInbox: Message[]; UnreadCount: number; Counts?: unknown; OtherEventsCount?: unknown }
@@ -45,9 +46,12 @@ export type InboxButtonProps = {
   event?: { id: string; otherEventsHref: string }
 }
 
+// Row actions: at least 24 px tall (WCAG 2.5.8), underline on hover and focus.
+const rowActionClass = "inline-flex min-h-6 items-center rounded-sm px-1 font-medium text-action hover:underline focus-visible:outline-2 focus-visible:outline-action"
+
 function EventLabel({ name }: { name?: string | null }) {
   if (!name) return null
-  return <span className="max-w-[60%] shrink-0 truncate rounded bg-soft px-1.5 py-0.5 text-[11px] font-medium text-dim">{name}</span>
+  return <span className="max-w-[60%] shrink-0 truncate rounded bg-soft px-1.5 py-0.5 text-2xs font-medium text-dim">{name}</span>
 }
 
 function safeHref(value: string): string | null {
@@ -346,7 +350,7 @@ export function InboxButton({ defaultTab = "all", event }: InboxButtonProps = {}
     <Popover.Trigger asChild>
       <button type="button" aria-label={label} className="relative inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-dim hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-action">
         <Bell size={17} aria-hidden="true" />
-        {badge > 0 && <span className="absolute -right-1 -top-1 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-action px-0.5 text-[10px] font-semibold leading-none text-on-action">{badge > 99 ? "99+" : badge}</span>}
+        {badge > 0 && <span className="absolute -right-1 -top-1 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-action px-0.5 text-2xs font-semibold leading-none text-on-action">{badge > 99 ? "99+" : badge}</span>}
       </button>
     </Popover.Trigger>
     <Popover.Portal>
@@ -354,19 +358,26 @@ export function InboxButton({ defaultTab = "all", event }: InboxButtonProps = {}
         <div className="flex shrink-0 items-center justify-between gap-2 px-4 pt-3 pb-2">
           <h2 className="flex text-dim"><span className="sr-only">{t("inbox.title")}</span><Bell size={19} aria-hidden="true" /></h2>
           <div className="flex shrink-0 items-center gap-2">
-            <button type="button" disabled={!tabHasUnread} onClick={() => void readAll()} className="rounded-md px-2 py-1 text-xs font-medium text-action hover:bg-hover focus-visible:outline-2 focus-visible:outline-action disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent">{t("inbox.readAll")}</button>
+            <button type="button" disabled={!tabHasUnread} onClick={() => void readAll()} className="inline-flex min-h-6 items-center rounded-md px-2 text-xs font-medium text-action hover:bg-hover focus-visible:outline-2 focus-visible:outline-action disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent">{t("inbox.readAll")}</button>
             <Popover.Close aria-label={t("inbox.close")} className="flex rounded-md p-1 text-dim hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-action"><X size={16} aria-hidden="true" /></Popover.Close>
           </div>
         </div>
         {/* The segmented control of the catalog's «Область» switch (exercises-frontend). */}
         {tabs.length > 0 && <div className="shrink-0 border-b border-line px-3 pb-3">
           <div role="tablist" aria-label={t("inbox.tabs")} className="flex h-10 w-full items-center rounded-md bg-muted p-1">
-            {tabs.map((value) => {
+            {tabs.map((value, tabIndex) => {
               const count = counts?.[value] ?? 0
               const selected = tab === value
-              return <button key={value} type="button" role="tab" id={`inbox-tab-${value}`} aria-controls="inbox-tabpanel" aria-selected={selected}
+              return <button key={value} type="button" role="tab" id={`inbox-tab-${value}`} aria-controls="inbox-tabpanel" aria-selected={selected} tabIndex={selected ? 0 : -1}
                 aria-label={count > 0 ? t("inbox.tabCount", { name: t(`inbox.tab.${value}`), count }) : undefined}
                 onClick={() => { if (!selected) selectTab(value) }}
+                onKeyDown={(keyEvent) => {
+                  const to = nextTabIndex(keyEvent, tabIndex, tabs.length, "horizontal")
+                  if (to === null) return
+                  keyEvent.preventDefault()
+                  selectTab(tabs[to])
+                  focusTab(keyEvent.currentTarget, to)
+                }}
                 className={`inline-flex h-8 min-w-0 flex-auto items-center justify-center gap-1 rounded px-2 text-sm focus-visible:outline-2 focus-visible:outline-action ${selected ? "bg-card font-medium text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
                 <span className="truncate">{t(`inbox.tab.${value}`)}</span>
                 {count > 0 && <span aria-hidden="true" className="text-xs tabular-nums text-dim">{count > 99 ? "99+" : count}</span>}
@@ -382,11 +393,11 @@ export function InboxButton({ defaultTab = "all", event }: InboxButtonProps = {}
             const href = safeHref(item.Link ?? "")
             const resolved = !!item.ResolvedAt
             const unreadItem = isUnread(item)
-            return <li key={item.ID} ref={index === items.length - 1 ? lastItemRef : undefined} className={`px-4 py-3 hover:bg-hover ${resolved ? "opacity-60" : ""}`}>
+            return <li key={item.ID} ref={index === items.length - 1 ? lastItemRef : undefined} className="px-4 py-3 hover:bg-hover">
               <NotificationMessageCard
                 icon={item.Icon} tone={item.Tone} accentColor={item.AccentColor} title={item.Title}
                 body={item.Body ? <span dangerouslySetInnerHTML={{ __html: keepBrand(DOMPurify.sanitize(item.Body, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] })) }} /> : undefined}
-                unread={unreadItem} compact
+                unread={unreadItem} resolved={resolved} compact
                 timestamp={<span className="flex min-w-0 items-center justify-between gap-2">
                   {resolved
                     ? <Tooltip content={formatInboxTime(item.CreatedAt)} align="start" className="min-w-0"><span className="min-w-0 truncate">{resolvedLine(item)}</span></Tooltip>
@@ -394,8 +405,8 @@ export function InboxButton({ defaultTab = "all", event }: InboxButtonProps = {}
                   {!event && <EventLabel name={item.EventName} />}
                 </span>}
                 actions={href || unreadItem || canResolve(item) ? <>
-                  {href ? <a href={href} onClick={(clickEvent) => { clickEvent.preventDefault(); void followLink(item, href) }} className="text-sm font-medium text-action underline-offset-2 hover:underline">{t("inbox.open")}</a> : unreadItem ? <button type="button" onClick={() => void markRead(item)} className="text-xs font-medium text-action hover:underline">{t("inbox.markRead")}</button> : null}
-                  {canResolve(item) && <button type="button" disabled={resolving !== null} aria-busy={resolving === item.ID} onClick={() => void resolve(item)} className="inline-flex items-center gap-1 text-xs font-medium text-action hover:underline disabled:cursor-not-allowed disabled:opacity-60">
+                  {href ? <a href={href} onClick={(clickEvent) => { clickEvent.preventDefault(); void followLink(item, href) }} className={`${rowActionClass} text-sm`}>{t("inbox.open")}</a> : unreadItem ? <button type="button" onClick={() => void markRead(item)} className={`${rowActionClass} text-xs`}>{t("inbox.markRead")}</button> : null}
+                  {canResolve(item) && <button type="button" disabled={resolving === item.ID} aria-busy={resolving === item.ID} onClick={() => void resolve(item)} className={`${rowActionClass} gap-1 text-xs disabled:cursor-not-allowed disabled:opacity-60`}>
                     {resolving === item.ID ? <Spinner size="sm" label={t("common.loading")} /> : <Check size={14} aria-hidden="true" />}{t("inbox.resolve")}
                   </button>}
                 </> : undefined}
@@ -410,7 +421,8 @@ export function InboxButton({ defaultTab = "all", event }: InboxButtonProps = {}
       </Popover.Content>
     </Popover.Portal>
   </Popover.Root>
-  {popIns.length > 0 && createPortal(<div className="fixed right-4 top-20 z-[70] flex max-h-[calc(100vh-6rem)] flex-col gap-3 overflow-y-auto" aria-live="polite">
+  {/* the live region is mounted before the first pop-in, so screen readers announce what arrives in it */}
+  {typeof document !== "undefined" && createPortal(<div className="fixed right-4 top-20 z-[70] flex max-h-[calc(100dvh-6rem)] flex-col gap-3 overflow-y-auto" aria-live="polite">
     {popIns.slice(0, 3).map((item) => <NotificationPopIn key={item.ID} message={item} onClose={() => setPopIns((current) => current.filter((entry) => entry.ID !== item.ID))} onAction={(href) => { const safe = safeHref(href); if (safe) void followLink(item, safe) }} />)}
   </div>, document.body)}
   </>
