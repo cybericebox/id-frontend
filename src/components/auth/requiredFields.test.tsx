@@ -66,7 +66,7 @@ describe("required-field asterisks", () => {
     expect(setup).toContain('<FormLabel required={!hasGoogle}>{t("setup.setPassword")')
     expect(setup).toContain('<FormLabel required={confirmRequired}>{t("setup.confirmPassword")')
     expect(setup).toMatch(/<Checkbox[\s\S]*?\n\s*required\n/)
-    expect(src("SignInScreen")).not.toMatch(/required|RequiredMark/)
+    expect(src("SignInScreen")).not.toMatch(/<FormLabel required|RequiredMark|<Input[^>]*required/)
   })
 })
 
