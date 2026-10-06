@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import { Logo } from "@/components/brand/Logo"
 import { ThemeSwitch } from "@/components/ThemeToggle"
+import { FeedbackLink } from "@/components/FeedbackLink"
 import { CookieSettingsLink } from "@/components/CookieSettingsLink"
 import { Tooltip } from "@/components/ui/tooltip"
 import { cn } from "@/utils/cn"
@@ -149,6 +150,7 @@ export function AuthSidePanel({
             }, { groupFrom: 1 })}
           </p>
           <CookieSettingsLink className="text-on-brand-2 hover:text-on-brand" />
+          <FeedbackLink className="text-on-brand-2 hover:text-on-brand" />
           {/* bottom-left: the reCAPTCHA badge occupies the bottom-right corner */}
           <ThemeSwitch onMass className="-ml-1.5" />
         </footer>
