@@ -10,5 +10,5 @@ export default function Error({ error, retry }: { error: Error & { digest?: stri
     if (process.env.NODE_ENV !== "production") console.error(error)
   }, [error])
 
-  return <ErrorScreen onRetry={retry} />
+  return <ErrorScreen onRetry={retry} error={error} />
 }

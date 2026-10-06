@@ -27,7 +27,7 @@ export default function GlobalError({ error, retry }: { error: Error & { digest?
         <title>{t("error.page.title")}</title>
       </head>
       <body suppressHydrationWarning>
-        <ErrorScreen onRetry={retry} />
+        <ErrorScreen onRetry={retry} error={error} />
       </body>
     </html>
   )

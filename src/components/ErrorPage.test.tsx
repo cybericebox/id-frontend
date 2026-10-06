@@ -39,12 +39,12 @@ describe("ErrorPage", () => {
     expect(html).toContain("ib-error__ref")
     expect(html).toContain("Код помилки: 50310")
     expect(html).toContain(">500<")
-    expect(html).toContain(">Оновити<")
+    expect(html).toContain(">Спробувати ще раз<")
   })
 
   it("has a retry action for errors and a home action for not-found", () => {
     expect(renderToStaticMarkup(<ErrorPage status={404} title="a" body="b" />)).toContain('href="/sign-in"')
-    expect(renderToStaticMarkup(<ErrorPage status={500} title="a" body="b" onRetry={noop} />)).toContain(">Оновити<")
+    expect(renderToStaticMarkup(<ErrorPage status={500} title="a" body="b" onRetry={noop} />)).toContain(">Спробувати ще раз<")
   })
 
   it("has the texts in both catalogs", () => {
