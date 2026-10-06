@@ -9,7 +9,7 @@ import { apiOrigin } from "@/lib/origins"
 import { getServiceStatus, probeService, reportServiceAvailable, startOutageGrace, subscribeServiceStatus } from "@/lib/serviceStatus"
 import "@/components/ui/service-down.css"
 
-// A failed call is confirmed by two probes 15 s apart (see startOutageGrace), so
+// A failed call is confirmed by one probe 15 s after the failure (see startOutageGrace), so
 // a short backend restart never flashes the overlay.
 // Seconds between automatic tries while the outage lasts.
 const BACKOFF_S = [3, 5, 10, 20, 30]

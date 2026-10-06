@@ -128,7 +128,7 @@ function ProfileShell() {
       setLoadError(null)
     } catch (err) {
       // A 401 is handled centrally by the api client (auto-redirect to sign-in).
-      // The backend cannot be reached: the service gate probes and shows its overlay, the loader stays, and the refetch on restore runs the check again.
+      // The backend cannot be reached: the service gate probes once after the grace period and shows its overlay, the loader stays, and the refetch on restore runs the check again.
       if (isBackendUnreachable(err)) { reportServiceUnavailable(); setLoadError(null); return }
       setLoadError({ error: err })
     } finally {
