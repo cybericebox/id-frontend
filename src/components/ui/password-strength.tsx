@@ -54,10 +54,13 @@ export function PasswordStrength({
   value,
   policy,
   className,
+  id,
 }: {
   value: string
   policy: PasswordPolicy
   className?: string
+  /** id of the status line, so the field can point `aria-describedby` at it */
+  id?: string
 }) {
   if (!value) return null
 
@@ -98,7 +101,7 @@ export function PasswordStrength({
           <span key={i} className={cn("h-1 rounded-full transition-colors", i < segments ? TONE_BG[tone] : "bg-control")} />
         ))}
       </div>
-      <p className="text-xs text-dim">
+      <p id={id} className="text-xs text-dim">
         <span className={cn("font-medium", TONE_TEXT[tone])}>{label}</span>
         {hint && <> · {hint}</>}
       </p>

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useRef, useMemo } from "react"
+import React, { useId, useState, useEffect, useRef, useMemo } from "react"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 
@@ -174,6 +174,8 @@ export function SetupScreen() {
   // eslint-disable-next-line @eslint-react/exhaustive-deps
   const schema = useMemo(() => buildSetupSchema(hasGoogleRef, policyRef), [])
 
+  const strengthId = useId()
+  const passwordMsgId = useId()
   const form = useForm<SetupValues>({
     resolver: zodResolver(schema),
     mode: "onTouched",
@@ -490,11 +492,12 @@ export function SetupScreen() {
                           placeholder={t("setup.passwordPlaceholder")}
                           autoComplete="new-password"
                           {...field}
+                          aria-describedby={field.value ? strengthId : form.formState.errors.Password ? passwordMsgId : undefined}
                         />
                       </FormControl>
-                      {/* with text typed, the strength line names what is missing */}
-                  <PasswordStrength value={field.value} policy={policy} />
-                  <FormMessage className={field.value ? "hidden" : undefined} />
+                      {/* with text typed, the strength line names what is missing and describes the field */}
+                      <PasswordStrength id={strengthId} value={field.value} policy={policy} />
+                      {!field.value && <FormMessage id={passwordMsgId} />}
                     </FormItem>
                   )}
                 />
