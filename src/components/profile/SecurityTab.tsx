@@ -185,13 +185,13 @@ export function SecurityTab({ account }: { account: Account }) {
             />
             <FormError message={formError} />
             <div className="flex min-h-10 gap-2">
-              {(hasNewPassword || isSubmitting) && <Button
+              <Button
                 type="submit"
                 disabled={!ready}
                 busy={isSubmitting}
               >
                 {t("profile.security.save")}
-              </Button>}
+              </Button>
               {form.formState.isDirty && (
                 <Button
                   type="button"

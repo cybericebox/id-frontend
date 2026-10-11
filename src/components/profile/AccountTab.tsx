@@ -193,12 +193,13 @@ export function AccountTab({ account }: { account: Account }) {
               <p className="text-sm text-dim">{t("profile.account.emailGoogleNote")}</p>
               <FormError message={emailError} />
               <div className="flex min-h-10 gap-2">
-                {((emailChanged && account.HasPassword) || isSubmitting) && <Button
+                <Button
                   type="submit"
+                  disabled={!emailChanged || !account.HasPassword}
                   busy={isSubmitting}
                 >
                   {t("profile.account.changeEmail")}
-                </Button>}
+                </Button>
                 {form.formState.isDirty && (
                   <Button
                     type="button"
