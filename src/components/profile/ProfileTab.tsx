@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useRef, useEffect } from "react"
-import { useForm, type SubmitHandler } from "react-hook-form"
+import { useForm, useWatch, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 
@@ -40,6 +40,9 @@ const ProfileSchema = z.object({
 
 type ProfileValues = z.infer<typeof ProfileSchema>
 
+const sameProfile = (left: ProfileValues, right: ProfileValues) =>
+  left.FirstName === right.FirstName && left.LastName === right.LastName
+
 export function ProfileTab({
   account,
   onUpdated,
@@ -53,12 +56,18 @@ export function ProfileTab({
   const isPhotoBusy = photoAction !== null
   const [cropSrc, setCropSrc] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [baseline, setBaseline] = useState<ProfileValues>({ FirstName: account.FirstName, LastName: account.LastName })
+  const baselineRef = useRef(baseline)
+  const accountNamesRef = useRef(baseline)
+  const submittingRef = useRef(false)
 
   const form = useForm<ProfileValues>({
     resolver: zodResolver(ProfileSchema),
     mode: "onTouched",
     defaultValues: { FirstName: account.FirstName, LastName: account.LastName },
   })
+  const values = useWatch({ control: form.control })
+  const dirty = values.FirstName !== baseline.FirstName || values.LastName !== baseline.LastName
 
   // Draft persistence: restore on mount, then persist edits continuously so the
   // in-progress name survives an auth redirect (the client auto-redirects on 401).
@@ -81,6 +90,17 @@ export function ProfileTab({
     return () => sub.unsubscribe()
     // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, [])
+
+  // Refreshed server names become the new baseline; a local draft survives the refresh.
+  useEffect(() => {
+    const next = { FirstName: account.FirstName, LastName: account.LastName }
+    if (sameProfile(next, accountNamesRef.current)) return
+    accountNamesRef.current = next
+    const keepValues = !sameProfile(form.getValues(), baselineRef.current)
+    baselineRef.current = next
+    setBaseline(next)
+    form.reset(next, { keepValues })
+  }, [account.FirstName, account.LastName, form])
 
   const MAX_PHOTO_BYTES = 5 * 1024 * 1024
 
@@ -160,6 +180,8 @@ export function ProfileTab({
   }
 
   const onSubmit: SubmitHandler<ProfileValues> = async (data) => {
+    if (submittingRef.current || sameProfile(data, baselineRef.current)) return
+    submittingRef.current = true
     setErrorMsg(null)
     setIsSubmitting(true)
     try {
@@ -167,14 +189,22 @@ export function ProfileTab({
         FirstName: data.FirstName,
         LastName: data.LastName,
       })
-      sessionStorage.removeItem(STORAGE_DRAFT_PROFILE_NAME) // saved — drop the draft
-      form.reset(data)
+      const keepValues = !sameProfile(form.getValues(), data)
+      baselineRef.current = data
+      setBaseline(data)
+      form.reset(data, { keepValues })
+      // A newer draft still needs to survive an auth redirect.
+      try {
+        if (keepValues) sessionStorage.setItem(STORAGE_DRAFT_PROFILE_NAME, JSON.stringify(form.getValues()))
+        else sessionStorage.removeItem(STORAGE_DRAFT_PROFILE_NAME)
+      } catch { /* storage may be unavailable */ }
       toast.success(t("profile.profile.saved"))
       onUpdated()
     } catch (err) {
       // A 401 is auto-redirected by the api client (the draft is already persisted).
       reportFormError(err, setErrorMsg)
     } finally {
+      submittingRef.current = false
       setIsSubmitting(false)
     }
   }
@@ -278,20 +308,18 @@ export function ProfileTab({
               )}
             />
 
-            <div className="flex gap-2">
-              <Button
+            <div className="flex min-h-10 gap-2">
+              {(dirty || isSubmitting) && <Button
                 type="submit"
-                disabled={isSubmitting || !form.formState.isDirty}
                 busy={isSubmitting}
               >
                 {t("profile.profile.save")}
-              </Button>
-              {form.formState.isDirty && (
+              </Button>}
+              {dirty && (
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={() => form.reset()}
-                  disabled={isSubmitting}
                 >
                   {t("common.reset")}
                 </Button>
