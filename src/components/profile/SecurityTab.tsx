@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useMemo, useRef, useState } from "react"
-import { useForm, type SubmitHandler } from "react-hook-form"
+import { useForm, useWatch, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 
@@ -68,6 +68,7 @@ type SecurityValues = {
 export function SecurityTab({ account }: { account: Account }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const submittingRef = useRef(false)
 
   const policy = usePasswordPolicy()
   const policyRef = useRef(policy)
@@ -82,8 +83,14 @@ export function SecurityTab({ account }: { account: Account }) {
     mode: "onTouched",
     defaultValues: { OldPassword: "", NewPassword: "", ConfirmPassword: "" },
   })
+  const values = useWatch({ control: form.control })
+  const hasNewPassword = Boolean(values.NewPassword)
+  const ready = hasNewPassword && !passwordError(values.NewPassword ?? "", policy) &&
+    values.NewPassword === values.ConfirmPassword && (!account.HasPassword || Boolean(values.OldPassword))
 
   const onSubmit: SubmitHandler<SecurityValues> = async (data) => {
+    if (submittingRef.current || !data.NewPassword) return
+    submittingRef.current = true
     setFormError(null)
     setIsSubmitting(true)
     try {
@@ -93,11 +100,15 @@ export function SecurityTab({ account }: { account: Account }) {
       }
       await apiPost("/api/auth/password/change", body)
       toast.success(t("profile.security.saved"))
-      form.reset({ OldPassword: "", NewPassword: "", ConfirmPassword: "" })
+      const current = form.getValues()
+      if (current.OldPassword === data.OldPassword && current.NewPassword === data.NewPassword && current.ConfirmPassword === data.ConfirmPassword) {
+        form.reset({ OldPassword: "", NewPassword: "", ConfirmPassword: "" })
+      }
     } catch (err) {
       // A 401 is auto-redirected by the api client (passwords are never persisted).
       reportFormError(err, setFormError)
     } finally {
+      submittingRef.current = false
       setIsSubmitting(false)
     }
   }
@@ -173,20 +184,19 @@ export function SecurityTab({ account }: { account: Account }) {
               )}
             />
             <FormError message={formError} />
-            <div className="flex gap-2">
-              <Button
+            <div className="flex min-h-10 gap-2">
+              {(hasNewPassword || isSubmitting) && <Button
                 type="submit"
-                disabled={isSubmitting || !form.formState.isDirty}
+                disabled={!ready}
                 busy={isSubmitting}
               >
                 {t("profile.security.save")}
-              </Button>
+              </Button>}
               {form.formState.isDirty && (
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={() => form.reset()}
-                  disabled={isSubmitting}
                 >
                   {t("common.reset")}
                 </Button>
