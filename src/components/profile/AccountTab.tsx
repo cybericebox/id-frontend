@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
-import { useForm, type SubmitHandler } from "react-hook-form"
+import React, { useState, useEffect, useRef } from "react"
+import { useForm, useWatch, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 
@@ -37,7 +37,7 @@ import { STORAGE_DRAFT_ACCOUNT_EMAIL } from "@/lib/storageKeys"
 
 // The account password re-confirms the change; the draft keeps the address only.
 const EmailSchema = z.object({
-  Email: z.string().email({ message: t("validation.invalidEmail") }),
+  Email: z.string().trim().toLowerCase().email({ message: t("validation.invalidEmail") }),
   CurrentPassword: z.string().min(1, { message: t("validation.required") }),
 })
 type EmailValues = z.infer<typeof EmailSchema>
@@ -49,12 +49,15 @@ export function AccountTab({ account }: { account: Account }) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState("")
   const [deletePassword, setDeletePassword] = useState("")
+  const submittingRef = useRef(false)
 
   const form = useForm<EmailValues>({
     resolver: zodResolver(EmailSchema),
     mode: "onTouched",
     defaultValues: { Email: "", CurrentPassword: "" },
   })
+  const email = (useWatch({ control: form.control, name: "Email" }) ?? "").trim().toLowerCase()
+  const emailChanged = Boolean(email) && email !== account.Email.trim().toLowerCase()
 
   // Draft persistence: restore on mount, persist edits continuously so the new
   // email survives an auth redirect (client auto-redirects on 401). Cleared on send.
@@ -78,16 +81,22 @@ export function AccountTab({ account }: { account: Account }) {
   }, [])
 
   const onSubmit: SubmitHandler<EmailValues> = async (data) => {
+    if (submittingRef.current || !account.HasPassword || data.Email === account.Email.trim().toLowerCase()) return
+    submittingRef.current = true
     setEmailError(null)
     setIsSubmitting(true)
     try {
       await apiPost("/api/auth/account/email", { Email: data.Email, CurrentPassword: data.CurrentPassword })
-      sessionStorage.removeItem(STORAGE_DRAFT_ACCOUNT_EMAIL) // sent — drop the draft
+      const current = form.getValues()
+      if (current.Email.trim().toLowerCase() === data.Email && current.CurrentPassword === data.CurrentPassword) {
+        form.reset({ Email: "", CurrentPassword: "" })
+        try { sessionStorage.removeItem(STORAGE_DRAFT_ACCOUNT_EMAIL) } catch { /* storage may be unavailable */ }
+      }
       toast.success(t("profile.account.emailSent"))
-      form.reset({ Email: "", CurrentPassword: "" })
     } catch (err) {
       reportFormError(err, setEmailError)
     } finally {
+      submittingRef.current = false
       setIsSubmitting(false)
     }
   }
@@ -183,20 +192,18 @@ export function AccountTab({ account }: { account: Account }) {
               )}
               <p className="text-sm text-dim">{t("profile.account.emailGoogleNote")}</p>
               <FormError message={emailError} />
-              <div className="flex gap-2">
-                <Button
+              <div className="flex min-h-10 gap-2">
+                {((emailChanged && account.HasPassword) || isSubmitting) && <Button
                   type="submit"
-                  disabled={!account.HasPassword || isSubmitting || !form.formState.isDirty}
                   busy={isSubmitting}
                 >
                   {t("profile.account.changeEmail")}
-                </Button>
+                </Button>}
                 {form.formState.isDirty && (
                   <Button
                     type="button"
                     variant="ghost"
                     onClick={() => form.reset()}
-                    disabled={isSubmitting}
                   >
                     {t("common.reset")}
                   </Button>
