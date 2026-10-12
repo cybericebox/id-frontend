@@ -47,15 +47,15 @@ describe("profile save actions", () => {
   })
   afterEach(() => { act(() => root.unmount()); host.remove() })
 
-  it("hides unchanged profile Save and rejects a keyboard no-op", async () => {
+  it("disables visible unchanged profile Save and rejects a keyboard no-op", async () => {
     await render(<ProfileTab account={account} onUpdated={vi.fn()} />)
-    expect(action("Зберегти зміни")).toBeUndefined()
+    expect(action("Зберегти зміни")?.disabled).toBe(true)
     await submit()
     expect(patch).not.toHaveBeenCalled()
     await change("FirstName", "Kateryna")
-    expect(action("Зберегти зміни")).toBeDefined()
+    expect(action("Зберегти зміни")?.disabled).toBe(false)
     await change("FirstName", "Olena")
-    expect(action("Зберегти зміни")).toBeUndefined()
+    expect(action("Зберегти зміни")?.disabled).toBe(true)
   })
 
   it("advances only the acknowledged profile baseline and retains newer edits and their draft", async () => {
@@ -77,7 +77,7 @@ describe("profile save actions", () => {
     expect(input("LastName").value).toBe("Bondar")
     await submit()
     expect(patch).toHaveBeenLastCalledWith("/api/auth/account/profile", { FirstName: "Kateryna", LastName: "Bondar" })
-    expect(action("Зберегти зміни")).toBeUndefined()
+    expect(action("Зберегти зміни")?.disabled).toBe(true)
     expect(sessionStorage.getItem(STORAGE_DRAFT_PROFILE_NAME)).toBeNull()
   })
 
@@ -86,12 +86,12 @@ describe("profile save actions", () => {
     await render(<ProfileTab account={account} onUpdated={onUpdated} />)
     await render(<ProfileTab account={{ ...account, FirstName: "Kateryna" }} onUpdated={onUpdated} />)
     expect(input("FirstName").value).toBe("Kateryna")
-    expect(action("Зберегти зміни")).toBeUndefined()
+    expect(action("Зберегти зміни")?.disabled).toBe(true)
     await change("LastName", "Bondar")
     await render(<ProfileTab account={{ ...account, FirstName: "Kateryna", LastName: "Rudenko" }} onUpdated={onUpdated} />)
     expect(input("LastName").value).toBe("Bondar")
     await change("LastName", "Rudenko")
-    expect(action("Зберегти зміни")).toBeUndefined()
+    expect(action("Зберегти зміни")?.disabled).toBe(true)
   })
 
   it("keeps a failed profile draft available for retry", async () => {
@@ -103,21 +103,21 @@ describe("profile save actions", () => {
     expect(action("Зберегти зміни")?.disabled).toBe(false)
     await submit()
     expect(patch).toHaveBeenCalledTimes(2)
-    expect(action("Зберегти зміни")).toBeUndefined()
+    expect(action("Зберегти зміни")?.disabled).toBe(true)
   })
 
   it("compares email to the normalized account address and guards a no-change submit", async () => {
     await render(<AccountTab account={account} />)
     await change("Email", " OLENA@EXAMPLE.TEST ")
     await change("CurrentPassword", "Password1")
-    expect(action("Змінити пошту")).toBeUndefined()
+    expect(action("Змінити пошту")?.disabled).toBe(true)
     await submit()
     expect(post).not.toHaveBeenCalled()
     await change("Email", " NEW@EXAMPLE.TEST ")
-    expect(action("Змінити пошту")).toBeDefined()
+    expect(action("Змінити пошту")?.disabled).toBe(false)
     await submit()
     expect(post).toHaveBeenCalledWith("/api/auth/account/email", { Email: "new@example.test", CurrentPassword: "Password1" })
-    expect(action("Змінити пошту")).toBeUndefined()
+    expect(action("Змінити пошту")?.disabled).toBe(true)
   })
 
   it("does not erase a newer email request after an older request succeeds", async () => {
@@ -133,17 +133,17 @@ describe("profile save actions", () => {
     expect(action("Змінити пошту")?.disabled).toBe(false)
   })
 
-  it("shows password Save when there is a new password operation, independently of the current secret", async () => {
+  it("keeps password Save visible and enables it for a valid new password operation", async () => {
     await render(<SecurityTab account={account} />)
-    expect(action("Зберегти пароль")).toBeUndefined()
+    expect(action("Зберегти пароль")?.disabled).toBe(true)
     await change("OldPassword", "OldPassword1")
-    expect(action("Зберегти пароль")).toBeUndefined()
+    expect(action("Зберегти пароль")?.disabled).toBe(true)
     await change("NewPassword", "NewPassword1")
     expect(action("Зберегти пароль")?.disabled).toBe(true)
     await change("ConfirmPassword", "NewPassword1")
     expect(action("Зберегти пароль")?.disabled).toBe(false)
     await submit()
     expect(post).toHaveBeenCalledWith("/api/auth/password/change", { OldPassword: "OldPassword1", NewPassword: "NewPassword1" })
-    expect(action("Зберегти пароль")).toBeUndefined()
+    expect(action("Зберегти пароль")?.disabled).toBe(true)
   })
 })
