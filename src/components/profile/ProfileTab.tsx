@@ -309,12 +309,13 @@ export function ProfileTab({
             />
 
             <div className="flex min-h-10 gap-2">
-              {(dirty || isSubmitting) && <Button
+              <Button
                 type="submit"
+                disabled={!dirty}
                 busy={isSubmitting}
               >
                 {t("profile.profile.save")}
-              </Button>}
+              </Button>
               {dirty && (
                 <Button
                   type="button"

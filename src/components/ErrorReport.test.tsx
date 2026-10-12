@@ -2,6 +2,7 @@
 import { act } from "react"
 import { createRoot } from "react-dom/client"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { version } from "../../package.json"
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/profile" }))
 
@@ -64,7 +65,7 @@ describe("500 page report", () => {
     expect(host.textContent).not.toContain("Номер звернення")
     const href = decodeURIComponent(link()!.getAttribute("href")!)
     expect(href).toContain("Повідомлення: boom")
-    expect(href).toContain("Застосунок: Cyber ICE Box ID 0.1.0")
+    expect(href).toContain(`Застосунок: Cyber ICE Box ID ${version}`)
     expect(href.match(/Повідомлення: (.*)/)![1].trim().length).toBeLessThanOrEqual(200)
   })
 

@@ -3,9 +3,9 @@ import { mainOrigin } from "@/lib/origins"
 import { t } from "@/i18n/t"
 
 // The original CyberICEBox (ICE CTF) crest emblem — the brand logo used across
-// the apps (shipped as favicon). Served as a static file from public/ (DS asset crest-128.png, 128x125),
+// the apps (shipped as favicon). Served as a lossless WebP from public/ (128x125),
 // not inlined, so the HTML and the JS bundle stay small.
-export const CREST_SRC = "/crest-128.png"
+export const CREST_SRC = "/crest-128.webp"
 
 export interface LogoProps {
   /** Rendered height in px (width scales with the 128:125 aspect). */
