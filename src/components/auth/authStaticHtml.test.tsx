@@ -59,7 +59,7 @@ describe("auth pages in the static HTML", () => {
 describe("crest", () => {
   it("is a file, not an inlined data URI", () => {
     const html = renderToStaticMarkup(<Logo />)
-    expect(html).toContain('src="/crest-128.png"')
+    expect(html).toContain('src="/crest-128.webp"')
     expect(html).not.toContain("data:image")
   })
 })
