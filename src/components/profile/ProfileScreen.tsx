@@ -17,7 +17,6 @@ import {
 
 import { Wordmark } from "@/components/brand/Wordmark"
 import { apiGet, mediaUrl } from "@/api/client"
-import { ThemeSwitch } from "@/components/ThemeToggle"
 import { safeReturnTo } from "@/lib/auth"
 import { backLabel } from "@/lib/backLink"
 import { useBackLink } from "@/lib/useBackLink"
@@ -184,8 +183,6 @@ function ProfileShell() {
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b border-line pb-4">
           <Wordmark size="md" />
           <div className="ml-auto flex items-center gap-2">
-            <ThemeSwitch />
-            <span className="mx-1 h-5 w-px bg-line" aria-hidden="true" />
             <InboxButton defaultTab="personal" />
             <AccountMenu account={account} />
           </div>

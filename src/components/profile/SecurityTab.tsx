@@ -184,7 +184,7 @@ export function SecurityTab({ account }: { account: Account }) {
               )}
             />
             <FormError message={formError} />
-            <div className="flex min-h-10 gap-2">
+            <div className="flex min-h-10 flex-wrap gap-2">
               <Button
                 type="submit"
                 disabled={!ready}

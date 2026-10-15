@@ -34,7 +34,7 @@ export function AuthLayout({
           lg:order-* only places them on the screen (the panel side alternates per page). */}
       <div
         className={cn(
-          "flex flex-col bg-paper",
+          "flex min-w-0 flex-col bg-paper",
           reversed ? "lg:order-2" : "lg:order-1"
         )}
       >
@@ -42,7 +42,7 @@ export function AuthLayout({
         <header className="px-6 pt-5 lg:hidden">
           <Wordmark size="md" />
         </header>
-        <main id="main" tabIndex={-1} className="flex flex-1 items-center justify-center px-6 py-12 outline-none md:px-10">
+        <main id="main" tabIndex={-1} className="flex flex-1 items-center justify-center px-4 py-8 outline-none sm:px-6 sm:py-12 md:px-10">
           {children}
         </main>
         {/* narrow screens: theme switch at the bottom (on wide screens it sits in the panel footer) */}

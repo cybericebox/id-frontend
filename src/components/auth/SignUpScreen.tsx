@@ -37,13 +37,13 @@ const RegisterSchema = z.object({
 
 type RegisterValues = z.infer<typeof RegisterSchema>
 
-// Puts the address into the copy as one unbreakable, emphasised token.
+// Emphasize the address while allowing long addresses to fit narrow screens.
 function withEmail(template: string, email: string) {
   const [before, after = ""] = template.split("{email}")
   return (
     <>
       {before}
-      <b className="whitespace-nowrap font-medium text-ink">{email}</b>
+      <b className="break-all font-medium text-ink">{email}</b>
       {after}
     </>
   )

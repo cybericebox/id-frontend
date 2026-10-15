@@ -159,7 +159,7 @@ export function SessionsTab() {
                 </div>
 
                 {/* Meta: IP · last activity, created — full width below. */}
-                <div className="mt-1.5 text-xs text-muted-foreground">
+                <div className="mt-1.5 break-all text-xs text-muted-foreground">
                   {t("profile.sessions.lastActivityLine", { ip: s.IP, date: formatDate(s.LastSeen) })}
                 </div>
                 <div className="text-xs text-muted-foreground">
@@ -173,6 +173,7 @@ export function SessionsTab() {
         {hasOthers && (
           <Button
             variant="outline"
+            className="h-auto min-h-10 max-w-full whitespace-normal py-2 text-center"
             onClick={() => { setConfirmError(""); setConfirmOpen(true) }}
           >
             {t("profile.sessions.revokeAll")}

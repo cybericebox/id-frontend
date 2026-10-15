@@ -126,7 +126,7 @@ export function AvatarCropDialog({
             step={0.01}
             value={zoom}
             onChange={(e) => setZoom(Number(e.target.value))}
-            className="flex-1 accent-primary"
+            className="min-w-0 flex-1 accent-primary"
           />
         </div>
 
