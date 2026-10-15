@@ -192,7 +192,7 @@ export function AccountTab({ account }: { account: Account }) {
               )}
               <p className="text-sm text-dim">{t("profile.account.emailGoogleNote")}</p>
               <FormError message={emailError} />
-              <div className="flex min-h-10 gap-2">
+              <div className="flex min-h-10 flex-wrap gap-2">
                 <Button
                   type="submit"
                   disabled={!emailChanged || !account.HasPassword}

@@ -101,8 +101,8 @@ export function ConnectionsTab({
           </Alert>
         )}
 
-        <div className="flex items-center justify-between gap-4 rounded-md border p-3">
-          <span className="flex items-center gap-2 text-sm font-medium text-ink">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3">
+          <span className="flex min-w-0 items-center gap-2 text-sm font-medium text-ink [&_svg]:shrink-0">
             <GoogleIcon />
             {hasGoogle
               ? t("profile.connections.googleConnected")

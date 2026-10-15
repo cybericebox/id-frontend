@@ -1,10 +1,10 @@
 "use client"
 
-import { Fragment, useEffect, useState } from "react"
-import { MessageSquare } from "lucide-react"
+import { Fragment, useEffect, useId, useRef, useState } from "react"
+import { ChevronDown, MessageSquare } from "lucide-react"
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
-  DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuRadioGroup, DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu"
 import { apiGet, mediaUrl } from "@/api/client"
 import { t } from "@/i18n/t"
@@ -14,12 +14,19 @@ import type { Account } from "@/components/profile/types"
 import { initials } from "@/lib/initials"
 import { openConsentSettings } from "@/lib/consent"
 import { FeedbackLink } from "@/components/FeedbackLink"
+import { THEME_OPTIONS, useThemeChoice } from "@/components/ThemeToggle"
 import { COOKIE_POLICY_HREF } from "@/components/CookieSettingsLink"
 
 // Unified account menu (lib/accountMenu): same entries, labels and icons in every app.
 const ICON_CLASS = "shrink-0 text-dim group-focus:text-accent-foreground"
 
 export function AccountMenu({ account }: { account: Account }) {
+  const [themeChoice, selectTheme] = useThemeChoice()
+  const [themeExpanded, setThemeExpanded] = useState(false)
+  const themeChoicesId = useId()
+  const themeTriggerRef = useRef<HTMLDivElement>(null)
+  const currentTheme = THEME_OPTIONS.find((option) => option.value === themeChoice)!
+  const ThemeIcon = currentTheme.icon
   const adminTier = Boolean(account.Role) && account.Role !== "user"
   // Event staff open the catalog too (GET /exercises/access, the catalog's own rule).
   const [staff, setStaff] = useState(false)
@@ -41,7 +48,7 @@ export function AccountMenu({ account }: { account: Account }) {
   const avatarInitials = initials(account.FirstName, account.LastName, account.Email)
 
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={(open) => { if (!open) setThemeExpanded(false) }}>
       <DropdownMenuTrigger
         aria-label={t("nav.accountMenu")}
         className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-brand text-sm font-medium text-on-brand focus-visible:outline-2 focus-visible:outline-action"
@@ -53,11 +60,47 @@ export function AccountMenu({ account }: { account: Account }) {
           avatarInitials
         )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="w-56 max-h-[var(--radix-dropdown-menu-content-available-height)] max-w-[calc(100vw-2rem)] overflow-y-auto">
         <DropdownMenuLabel className="flex flex-col gap-0.5">
-          <span className="font-medium">{fullName}</span>
-          <span className="text-xs font-normal text-dim">{account.Email}</span>
+          <span className="break-words font-medium">{fullName}</span>
+          <span className="break-all text-xs font-normal text-dim">{account.Email}</span>
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          ref={themeTriggerRef}
+          className="gap-2"
+          aria-expanded={themeExpanded}
+          aria-controls={themeChoicesId}
+          onSelect={(event) => { event.preventDefault(); setThemeExpanded((expanded) => !expanded) }}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowRight") { event.preventDefault(); setThemeExpanded(true) }
+            if (event.key === "ArrowLeft") { event.preventDefault(); setThemeExpanded(false) }
+          }}
+        >
+          <ThemeIcon aria-hidden="true" className="h-4 w-4 shrink-0 text-dim" />
+          <span>{t("theme.label")}</span>
+          <span className="ml-auto text-xs text-dim">{t(currentTheme.label)}</span>
+          <ChevronDown aria-hidden="true" className={`h-4 w-4 shrink-0 transition-transform ${themeExpanded ? "rotate-180" : ""}`} />
+        </DropdownMenuItem>
+        {themeExpanded && (
+          <DropdownMenuRadioGroup
+            id={themeChoicesId}
+            aria-label={t("theme.label")}
+            value={themeChoice}
+            onValueChange={(value) => selectTheme(value)}
+            onKeyDown={(event) => {
+              if (event.key === "ArrowLeft") {
+                event.preventDefault()
+                setThemeExpanded(false)
+                themeTriggerRef.current?.focus()
+              }
+            }}
+          >
+            {THEME_OPTIONS.map(({ value, icon: Icon, label }) => (
+              <DropdownMenuRadioItem key={value} value={value} className="gap-2"><Icon aria-hidden="true" className="h-4 w-4" />{t(label)}</DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+        )}
         <DropdownMenuSeparator />
         {entries.map((entry, i) => {
           if (entry.kind === "divider") return <DropdownMenuSeparator key={i} />

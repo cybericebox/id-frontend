@@ -5,13 +5,13 @@ import Link from "next/link"
 
 // Form column content: fixed width, vertical rhythm.
 export function AuthPane({ children }: { children: React.ReactNode }) {
-  return <div className="flex w-full max-w-[420px] flex-col gap-4">{children}</div>
+  return <div className="flex min-w-0 w-full max-w-[420px] flex-col gap-4">{children}</div>
 }
 
 export function AuthHeading({ title, subtitle }: { title: string; subtitle?: React.ReactNode }) {
   return (
     <header className="mb-2 flex flex-col gap-2">
-      <h1 className="text-[32px] font-semibold leading-tight">{title}</h1>
+      <h1 className="text-[28px] font-semibold leading-tight break-words sm:text-[32px]">{title}</h1>
       {subtitle && <p className="text-sm text-dim">{subtitle}</p>}
     </header>
   )
