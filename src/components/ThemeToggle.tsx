@@ -14,13 +14,13 @@ import {
 import { cn } from "@/utils/cn"
 import { nextTabIndex } from "@/lib/tablist"
 
-const OPTIONS: { value: ThemeChoice; icon: typeof Sun; label: string }[] = [
+export const THEME_OPTIONS: { value: ThemeChoice; icon: typeof Sun; label: string }[] = [
   { value: "light", icon: Sun, label: "theme.light" },
   { value: "dark", icon: Moon, label: "theme.dark" },
   { value: "system", icon: Monitor, label: "theme.system" },
 ]
 
-function useThemeChoice() {
+export function useThemeChoice() {
   const [choice, setChoice] = React.useState<ThemeChoice>("system")
   const choiceRef = React.useRef(choice)
 
@@ -46,7 +46,7 @@ export function ThemeSwitch({ className, onMass = false }: { className?: string;
   const [choice, onChange] = useThemeChoice()
   return (
     <div role="radiogroup" aria-label={t("theme.label")} className={cn("inline-flex items-center gap-0.5 rounded-md border p-0.5", onMass ? "border-brand-line" : "border-line", className)}>
-      {OPTIONS.map(({ value, icon: Icon, label }, index) => {
+      {THEME_OPTIONS.map(({ value, icon: Icon, label }, index) => {
         const active = choice === value
         return (
           <Tooltip key={value} content={t(label)}>
@@ -59,10 +59,10 @@ export function ThemeSwitch({ className, onMass = false }: { className?: string;
               tabIndex={active ? 0 : -1}
               onClick={() => onChange(value)}
               onKeyDown={(event) => {
-                const to = nextTabIndex(event, index, OPTIONS.length, "horizontal")
+                const to = nextTabIndex(event, index, THEME_OPTIONS.length, "horizontal")
                 if (to === null || event.key === "Home" || event.key === "End") return
                 event.preventDefault()
-                onChange(OPTIONS[to].value)
+                onChange(THEME_OPTIONS[to].value)
                 const radios = event.currentTarget.closest<HTMLElement>('[role="radiogroup"]')?.querySelectorAll<HTMLElement>('[role="radio"]')
                 radios?.[to]?.focus()
               }}
