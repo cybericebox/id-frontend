@@ -1,5 +1,7 @@
 "use client"
 
+import "@/styles/account-menu.css"
+
 import { Fragment, useEffect, useId, useRef, useState } from "react"
 import { ChevronDown, MessageSquare } from "lucide-react"
 import {
@@ -60,12 +62,19 @@ export function AccountMenu({ account }: { account: Account }) {
           avatarInitials
         )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56 max-h-[var(--radix-dropdown-menu-content-available-height)] max-w-[calc(100vw-2rem)] overflow-y-auto">
-        <DropdownMenuLabel className="flex flex-col gap-0.5">
-          <span className="break-words font-medium">{fullName}</span>
-          <span className="break-all text-xs font-normal text-dim">{account.Email}</span>
+      <DropdownMenuContent align="end" className="account-menu max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto" collisionPadding={16}>
+        <DropdownMenuLabel className="account-menu__identity">
+          <span className="account-menu__label font-medium" title={fullName}>{fullName}</span>
+          <span className="account-menu__label text-xs font-normal text-dim" title={account.Email}>{account.Email}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {entries.filter((entry) => entry.kind === "link").map((entry) => {
+          const Icon = ACCOUNT_MENU_ICONS[entry.key]
+          return <DropdownMenuItem key={entry.key} asChild className="group gap-2">
+            <a href={entry.href}><Icon {...ACCOUNT_MENU_ICON_PROPS} className={ICON_CLASS} /><span className="account-menu__label">{t(ACCOUNT_MENU_LABELS[entry.key])}</span></a>
+          </DropdownMenuItem>
+        })}
+        {entries.some((entry) => entry.kind === "link") && <DropdownMenuSeparator />}
         <DropdownMenuItem
           ref={themeTriggerRef}
           className="gap-2"
@@ -101,8 +110,7 @@ export function AccountMenu({ account }: { account: Account }) {
             ))}
           </DropdownMenuRadioGroup>
         )}
-        <DropdownMenuSeparator />
-        {entries.map((entry, i) => {
+        {entries.filter((entry) => entry.kind !== "link").map((entry, i) => {
           if (entry.kind === "divider") return <DropdownMenuSeparator key={i} />
           if (entry.kind === "cookies") {
             const Icon = ACCOUNT_MENU_ICONS.cookies
@@ -110,24 +118,25 @@ export function AccountMenu({ account }: { account: Account }) {
             // so the menu still sees the select and closes); the panel opens once focus is back on the trigger.
             return (
               <Fragment key={i}>
-                <DropdownMenuItem asChild className="group gap-2" onSelect={() => { window.setTimeout(openConsentSettings, 0) }}>
-                  <a href={COOKIE_POLICY_HREF} aria-label={t(ACCOUNT_MENU_LABELS.cookiesAria)} onClick={(e) => e.nativeEvent.preventDefault()}>
-                    <Icon {...ACCOUNT_MENU_ICON_PROPS} className={ICON_CLASS} />{t(ACCOUNT_MENU_LABELS.cookies)}
-                  </a>
-                </DropdownMenuItem>
                 {/* the profile pages have no footer, so «Надіслати відгук» is a normal menu item here */}
                 <DropdownMenuItem asChild className="group gap-2">
-                  <FeedbackLink><MessageSquare {...ACCOUNT_MENU_ICON_PROPS} className={ICON_CLASS} />{t("feedback.link")}</FeedbackLink>
+                  <FeedbackLink><MessageSquare {...ACCOUNT_MENU_ICON_PROPS} className={ICON_CLASS} /><span className="account-menu__label">{t("feedback.link")}</span></FeedbackLink>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild className="group gap-2" onSelect={() => { window.setTimeout(openConsentSettings, 0) }}>
+                  <a href={COOKIE_POLICY_HREF} aria-label={t(ACCOUNT_MENU_LABELS.cookiesAria)} onClick={(e) => e.nativeEvent.preventDefault()}>
+                    <Icon {...ACCOUNT_MENU_ICON_PROPS} className={ICON_CLASS} /><span className="account-menu__label">{t(ACCOUNT_MENU_LABELS.cookies)}</span>
+                  </a>
+                </DropdownMenuItem>
+
               </Fragment>
             )
           }
-          const key = entry.kind === "signOut" ? "signOut" : entry.key
+          const key = "signOut"
           const Icon = ACCOUNT_MENU_ICONS[key]
           return (
             <DropdownMenuItem key={key} asChild className="group gap-2">
-              <a href={entry.kind === "signOut" ? "/sign-out/" : entry.href}>
-                <Icon {...ACCOUNT_MENU_ICON_PROPS} className={ICON_CLASS} />{t(ACCOUNT_MENU_LABELS[key])}
+              <a href="/sign-out/">
+                <Icon {...ACCOUNT_MENU_ICON_PROPS} className={ICON_CLASS} /><span className="account-menu__label">{t(ACCOUNT_MENU_LABELS[key])}</span>
               </a>
             </DropdownMenuItem>
           )
