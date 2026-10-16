@@ -230,7 +230,7 @@ function ProfileShell() {
             <p className="text-lg font-semibold leading-tight break-words">
               {account.FirstName} {account.LastName}
             </p>
-            <p className="break-all text-sm text-dim">{account.Email}</p>
+            <p className="truncate text-sm text-dim" title={account.Email}>{account.Email}</p>
             {memberSince(account.CreatedAt) && (
               <p className="text-xs text-faint">
                 {t("profile.memberSinceDate", { date: memberSince(account.CreatedAt) })}
