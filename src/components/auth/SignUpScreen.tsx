@@ -18,7 +18,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { FormError, reportFormError } from "@/components/ui/form-error"
+import { FormError, reportFieldOrFormError } from "@/components/ui/form-error"
 import { CircleAlert, MailCheck } from "lucide-react"
 import { AuthLayout } from "./AuthLayout"
 import { useOneShotParam } from "@/lib/useOneShotParam"
@@ -107,7 +107,7 @@ export function SignUpScreen() {
       return
     } catch (err) {
       // Localized by the error's stable code; falls back to a generic message.
-      reportFormError(err, setFormError)
+      reportFieldOrFormError(err, setFormError, form.setError, { 20426: "Email" })
     } finally {
       setIsSubmitting(false)
     }

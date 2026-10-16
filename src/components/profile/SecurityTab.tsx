@@ -25,7 +25,7 @@ import { PasswordStrength, passwordError } from "@/components/ui/password-streng
 import { usePasswordPolicy, type PasswordPolicy } from "@/lib/passwordPolicy"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/toast"
-import { FormError, reportFormError } from "@/components/ui/form-error"
+import { FormError, reportFieldOrFormError } from "@/components/ui/form-error"
 import { apiPost } from "@/api/client"
 import { t } from "@/i18n/t"
 import type { Account } from "./types"
@@ -106,7 +106,7 @@ export function SecurityTab({ account }: { account: Account }) {
       }
     } catch (err) {
       // A 401 is auto-redirected by the api client (passwords are never persisted).
-      reportFormError(err, setFormError)
+      reportFieldOrFormError(err, setFormError, form.setError, { 20410: "OldPassword", 20409: "NewPassword" })
     } finally {
       submittingRef.current = false
       setIsSubmitting(false)
@@ -163,7 +163,7 @@ export function SecurityTab({ account }: { account: Account }) {
                     />
                   </FormControl>
                   <PasswordStrength value={field.value} policy={policy} />
-                  <FormMessage className={field.value ? "hidden" : undefined} />
+                  <FormMessage className={field.value && form.formState.errors.NewPassword?.type !== "server" ? "hidden" : undefined} />
                 </FormItem>
               )}
             />

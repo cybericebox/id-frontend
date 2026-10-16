@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { FormError, reportFormError } from "@/components/ui/form-error"
+import { FormError, reportFieldOrFormError } from "@/components/ui/form-error"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Check, LinkIcon } from "lucide-react"
 import { PasswordInput } from "@/components/ui/password-input"
@@ -320,7 +320,7 @@ export function SetupScreen() {
         window.location.assign("/profile/")
       }
     } catch (err) {
-      reportFormError(err, setFormError)
+      reportFieldOrFormError(err, setFormError, form.setError, { 20407: "AcceptTos", 20409: "Password" })
     } finally {
       setIsSubmitting(false)
     }
@@ -492,12 +492,12 @@ export function SetupScreen() {
                           placeholder={t("setup.passwordPlaceholder")}
                           autoComplete="new-password"
                           {...field}
-                          aria-describedby={field.value ? strengthId : form.formState.errors.Password ? passwordMsgId : undefined}
+                          aria-describedby={[field.value ? strengthId : undefined, form.formState.errors.Password && (!field.value || form.formState.errors.Password?.type === "server") ? passwordMsgId : undefined].filter(Boolean).join(" ") || undefined}
                         />
                       </FormControl>
                       {/* with text typed, the strength line names what is missing and describes the field */}
                       <PasswordStrength id={strengthId} value={field.value} policy={policy} />
-                      {!field.value && <FormMessage id={passwordMsgId} />}
+                      {(!field.value || form.formState.errors.Password?.type === "server") && <FormMessage id={passwordMsgId} />}
                     </FormItem>
                   )}
                 />
