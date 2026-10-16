@@ -24,7 +24,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Input } from "@/components/ui/input"
 import { PasswordInput } from "@/components/ui/password-input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { FormError, reportFormError } from "@/components/ui/form-error"
+import { FormError, reportFieldOrFormError, fieldErrorMessage } from "@/components/ui/form-error"
 import { ReauthPasswordField } from "./ReauthPasswordField"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/toast"
@@ -48,6 +48,7 @@ export function AccountTab({ account }: { account: Account }) {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState("")
+  const [deletePasswordError, setDeletePasswordError] = useState<string | null>(null)
   const [deletePassword, setDeletePassword] = useState("")
   const submittingRef = useRef(false)
 
@@ -94,7 +95,7 @@ export function AccountTab({ account }: { account: Account }) {
       }
       toast.success(t("profile.account.emailSent"))
     } catch (err) {
-      reportFormError(err, setEmailError)
+      reportFieldOrFormError(err, setEmailError, form.setError, { 20426: "Email", 20302: "Email", 20410: "CurrentPassword" })
     } finally {
       submittingRef.current = false
       setIsSubmitting(false)
@@ -104,6 +105,7 @@ export function AccountTab({ account }: { account: Account }) {
   const onDelete = async () => {
     setIsDeleting(true)
     setDeleteError("")
+    setDeletePasswordError(null)
     try {
       await apiDelete(
         "/api/auth/account",
@@ -115,7 +117,9 @@ export function AccountTab({ account }: { account: Account }) {
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Reload after account deletion to discard authenticated client state.
       window.location.href = "/sign-in/"
     } catch (err) {
-      setDeleteError(extractError(err))
+      const passwordError = account.HasPassword ? fieldErrorMessage(err, [20410]) : null
+      if (passwordError) setDeletePasswordError(passwordError)
+      else setDeleteError(extractError(err))
       setIsDeleting(false)
     }
   }
@@ -225,7 +229,7 @@ export function AccountTab({ account }: { account: Account }) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button variant="destructive" onClick={() => { setDeleteError(""); setDeletePassword(""); setDeleteOpen(true) }}>
+          <Button variant="destructive" onClick={() => { setDeleteError(""); setDeletePasswordError(null); setDeletePassword(""); setDeleteOpen(true) }}>
             {t("profile.account.deleteButton")}
           </Button>
         </CardContent>
@@ -248,7 +252,8 @@ export function AccountTab({ account }: { account: Account }) {
             id="delete-account-password"
             hint={t("profile.account.deletePasswordHint")}
             value={deletePassword}
-            onChange={setDeletePassword}
+            error={deletePasswordError}
+            onChange={(value) => { setDeletePassword(value); setDeletePasswordError(null) }}
             disabled={isDeleting}
           />
         )}

@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input"
 import { PasswordInput } from "@/components/ui/password-input"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { FormError, reportFormError } from "@/components/ui/form-error"
+import { FormError, reportFieldOrFormError } from "@/components/ui/form-error"
 import { AuthLayout } from "./AuthLayout"
 import { useOneShotParam } from "@/lib/useOneShotParam"
 import { useUrlParams } from "@/lib/useUrlParams"
@@ -108,7 +108,7 @@ export function SignInScreen() {
       }
     } catch (err) {
       // Localized by the error's stable code (Status.Code), not the English message.
-      reportFormError(err, setFormError)
+      reportFieldOrFormError(err, setFormError, form.setError, { 20426: "Email" })
     } finally {
       setIsSubmitting(false)
     }

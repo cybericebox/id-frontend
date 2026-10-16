@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { toast } from "@/components/ui/toast"
+import { fieldErrorMessage } from "@/components/ui/form-error"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { apiDelete } from "@/api/client"
 import { startGoogleLink } from "@/api/googleLink"
@@ -36,6 +37,8 @@ export function ConnectionsTab({
   const [isBusy, setIsBusy] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmError, setConfirmError] = useState("")
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [connectPasswordError, setConnectPasswordError] = useState<string | null>(null)
   const [password, setPassword] = useState("")
   const [connectOpen, setConnectOpen] = useState(false)
   const [connectError, setConnectError] = useState("")
@@ -49,6 +52,7 @@ export function ConnectionsTab({
   const unlink = async () => {
     setErrorMsg(null)
     setConfirmError("")
+    setPasswordError(null)
     setIsBusy(true)
     try {
       await apiDelete(
@@ -63,7 +67,9 @@ export function ConnectionsTab({
       toast.success(t("profile.connections.unlinked"))
     } catch (err) {
       // 4xx lockout-guard (last login method) surfaces here — show, don't crash.
-      setConfirmError(extractError(err))
+      const fieldError = account.HasPassword ? fieldErrorMessage(err, [20410]) : null
+      if (fieldError) setPasswordError(fieldError)
+      else setConfirmError(extractError(err))
     } finally {
       setIsBusy(false)
     }
@@ -74,13 +80,16 @@ export function ConnectionsTab({
   const connect = async () => {
     setErrorMsg(null)
     setConnectError("")
+    setConnectPasswordError(null)
     setIsConnecting(true)
     try {
       const url = await startGoogleLink(account.HasPassword ? connectPassword : undefined)
       window.location.href = url
     } catch (err) {
       // A wrong password stays in the dialog; the "sign in again" answer of a password-less account shows here.
-      if (account.HasPassword) setConnectError(extractError(err))
+      const fieldError = account.HasPassword ? fieldErrorMessage(err, [20410]) : null
+      if (fieldError) setConnectPasswordError(fieldError)
+      else if (account.HasPassword) setConnectError(extractError(err))
       else setErrorMsg(extractError(err))
       setIsConnecting(false)
     }
@@ -112,7 +121,7 @@ export function ConnectionsTab({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => { setConfirmError(""); setPassword(""); setConfirmOpen(true) }}
+              onClick={() => { setConfirmError(""); setPasswordError(null); setPassword(""); setConfirmOpen(true) }}
               disabled={isBusy || onlyMethod}
               aria-describedby={onlyMethod ? "unlink-only-method" : undefined}
             >
@@ -127,6 +136,7 @@ export function ConnectionsTab({
               onClick={() => {
                 if (account.HasPassword) {
                   setConnectError("")
+                  setConnectPasswordError(null)
                   setConnectPassword("")
                   setConnectOpen(true)
                 } else {
@@ -156,7 +166,8 @@ export function ConnectionsTab({
             id="connect-google-password"
             hint={t("profile.connections.connectPasswordHint")}
             value={connectPassword}
-            onChange={setConnectPassword}
+            error={connectPasswordError}
+            onChange={(value) => { setConnectPassword(value); setConnectPasswordError(null) }}
             disabled={isConnecting}
           />
         </ConfirmDialog>
@@ -177,7 +188,8 @@ export function ConnectionsTab({
               id="unlink-google-password"
               hint={t("profile.connections.unlinkPasswordHint")}
               value={password}
-              onChange={setPassword}
+              error={passwordError}
+              onChange={(value) => { setPassword(value); setPasswordError(null) }}
               disabled={isBusy}
             />
           )}

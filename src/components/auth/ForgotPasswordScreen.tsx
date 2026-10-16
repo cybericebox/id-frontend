@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { FormError, reportFormError } from "@/components/ui/form-error"
+import { FormError, reportFieldOrFormError } from "@/components/ui/form-error"
 import { useUrlParams } from "@/lib/useUrlParams"
 import { useGuestOnly } from "@/lib/useGuestOnly"
 import { MailCheck } from "lucide-react"
@@ -83,7 +83,7 @@ export function ForgotPasswordScreen() {
       setSubmitted(true)
       return
     } catch (err) {
-      reportFormError(err, setFormError)
+      reportFieldOrFormError(err, setFormError, form.setError, { 20426: "Email" })
     } finally {
       setIsSubmitting(false)
     }
