@@ -27,11 +27,13 @@ describe("site banner list", () => {
     expect(html([banner({ LinkURL: url })])).not.toContain("<a ")
   })
 
-  it("keeps the given order (the parent sorts critical first) and tints by level", () => {
+  it("keeps the server priority order and tints by level", () => {
     const out = html([banner({ ID: "c", Text: "Критично", Level: "critical" }), banner({ ID: "i", Text: "Інфо" })])
-    expect(out.indexOf("Критично")).toBeLessThan(out.indexOf("Інфо"))
+    expect(out).toContain("Критично")
+    expect(out).not.toContain("Інфо")
     expect(out).toContain("ib-site-banner--critical")
-    expect(out).toContain("ib-site-banner--info")
+    expect(out).not.toContain("ib-site-banner--info")
+    expect(out).toContain("Ще 1 оголошення")
   })
 
   it("shows the dismiss button only for dismissible banners, with a tooltip and no native title", () => {
