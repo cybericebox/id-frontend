@@ -37,7 +37,7 @@ export function NotificationMessageCard({ icon = "bell", tone = "neutral", accen
   const Icon = icons[icon] ?? Bell
   return <div className="flex min-w-0 items-start gap-3 text-left">
     <span aria-hidden="true" className={`inline-flex shrink-0 items-center justify-center ${compact ? "h-6 w-6" : "h-8 w-8"}`} style={{ color: accent }}>
-      <Icon size={compact ? 18 : 22} strokeWidth={1.8} />
+      <Icon size={compact ? 18 : 22} strokeWidth={2} />
     </span>
     <div className="min-w-0 flex-1">
       {title && <p className={`min-w-0 break-words text-sm leading-snug ${resolved ? "text-dim" : "text-ink"} ${unread ? "font-semibold" : "font-medium"}`}>
