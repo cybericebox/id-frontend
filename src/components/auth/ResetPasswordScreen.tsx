@@ -18,7 +18,7 @@ import { PasswordInput } from "@/components/ui/password-input"
 import { PasswordStrength, passwordError } from "@/components/ui/password-strength"
 import { usePasswordPolicy, type PasswordPolicy } from "@/lib/passwordPolicy"
 import { Button } from "@/components/ui/button"
-import { FormError, reportFormError } from "@/components/ui/form-error"
+import { FormError, reportFieldOrFormError } from "@/components/ui/form-error"
 import { useUrlParams } from "@/lib/useUrlParams"
 import { useGuestOnly } from "@/lib/useGuestOnly"
 import { AuthLayout } from "./AuthLayout"
@@ -102,7 +102,7 @@ export function ResetPasswordScreen() {
       setSucceeded(true)
       return
     } catch (err) {
-      reportFormError(err, setFormError)
+      reportFieldOrFormError(err, setFormError, form.setError, { 20409: "NewPassword" })
     } finally {
       setIsSubmitting(false)
     }
@@ -164,13 +164,13 @@ export function ResetPasswordScreen() {
                       placeholder={t("resetPassword.newPasswordPlaceholder")}
                       autoComplete="new-password"
                       {...field}
-                      aria-describedby={field.value ? strengthId : form.formState.errors.NewPassword ? msgId : undefined}
+                      aria-describedby={[field.value ? strengthId : undefined, form.formState.errors.NewPassword && (!field.value || form.formState.errors.NewPassword?.type === "server") ? msgId : undefined].filter(Boolean).join(" ") || undefined}
                     />
                   </FormControl>
                   {/* with text typed, the strength line names what is missing and is the field's description;
                       the empty-field error shows only while there is no text */}
                   <PasswordStrength id={strengthId} value={field.value} policy={policy} />
-                  {!field.value && <FormMessage id={msgId} />}
+                  {(!field.value || form.formState.errors.NewPassword?.type === "server") && <FormMessage id={msgId} />}
                 </FormItem>
               )}
             />

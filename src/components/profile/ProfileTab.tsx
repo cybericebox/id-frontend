@@ -52,6 +52,7 @@ export function ProfileTab({
 }) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [photoError, setPhotoError] = useState<string | null>(null)
   const [photoAction, setPhotoAction] = useState<"upload" | "remove" | null>(null)
   const isPhotoBusy = photoAction !== null
   const [cropSrc, setCropSrc] = useState<string | null>(null)
@@ -113,13 +114,13 @@ export function ProfileTab({
     e.target.value = "" // allow re-selecting the same file later
     if (!file) return
 
-    setErrorMsg(null)
+    setPhotoError(null)
     if (!file.type.startsWith("image/")) {
-      setErrorMsg(t("profile.profile.photoInvalidType"))
+      setPhotoError(t("profile.profile.photoInvalidType"))
       return
     }
     if (file.size > MAX_PHOTO_BYTES) {
-      setErrorMsg(t("profile.profile.photoTooLarge"))
+      setPhotoError(t("profile.profile.photoTooLarge"))
       return
     }
     setCropSrc(URL.createObjectURL(file))
@@ -132,7 +133,7 @@ export function ProfileTab({
 
   const onCropConfirm = async (blob: Blob) => {
     closeCropper()
-    setErrorMsg(null)
+    setPhotoError(null)
     setPhotoAction("upload")
     try {
       const fd = new FormData()
@@ -146,20 +147,20 @@ export function ProfileTab({
         body: fd,
       })
       if (!res.ok) {
-        setErrorMsg(await localizedResponseError(res))
+        setPhotoError(await localizedResponseError(res))
         return
       }
       toast.success(t("profile.profile.photoUpdated"))
       onUpdated()
     } catch (err) {
-      reportFormError(err, setErrorMsg)
+      reportFormError(err, setPhotoError)
     } finally {
       setPhotoAction(null)
     }
   }
 
   const onRemovePhoto = async () => {
-    setErrorMsg(null)
+    setPhotoError(null)
     setPhotoAction("remove")
     try {
       const res = await fetch(apiUrl("/api/auth/account/avatar"), {
@@ -167,13 +168,13 @@ export function ProfileTab({
         credentials: "include",
       })
       if (!res.ok) {
-        setErrorMsg(await localizedResponseError(res))
+        setPhotoError(await localizedResponseError(res))
         return
       }
       toast.success(t("profile.profile.photoRemoved"))
       onUpdated()
     } catch (err) {
-      reportFormError(err, setErrorMsg)
+      reportFormError(err, setPhotoError)
     } finally {
       setPhotoAction(null)
     }
@@ -239,6 +240,8 @@ export function ProfileTab({
               type="file"
               accept="image/*"
               className="hidden"
+              aria-invalid={Boolean(photoError)}
+              aria-describedby={photoError ? "profile-photo-error" : undefined}
               onChange={onPhotoChosen}
             />
             <div className="flex flex-wrap gap-2">
@@ -246,6 +249,7 @@ export function ProfileTab({
                 type="button"
                 variant="outline"
                 size="sm"
+                aria-describedby={photoError ? "profile-photo-error" : undefined}
                 onClick={onPickPhoto}
                 disabled={isPhotoBusy}
                 busy={photoAction === "upload"}
@@ -267,6 +271,7 @@ export function ProfileTab({
                 </Button>
               )}
             </div>
+            {photoError && <p id="profile-photo-error" role="alert" className="text-xs font-medium text-destructive">{photoError}</p>}
           </div>
         </div>
 

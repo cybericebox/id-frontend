@@ -11,6 +11,8 @@ vi.mock("@/api/client", async (orig) => ({
 }))
 vi.mock("@/components/ui/toast", () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
+import { ApiError } from "@/api/client"
+import { localizedError } from "@/i18n/apiError"
 import { ProfileTab } from "./ProfileTab"
 import { AccountTab } from "./AccountTab"
 import { SecurityTab } from "./SecurityTab"
@@ -146,4 +148,47 @@ describe("profile save actions", () => {
     expect(post).toHaveBeenCalledWith("/api/auth/password/change", { OldPassword: "OldPassword1", NewPassword: "NewPassword1" })
     expect(action("Зберегти пароль")?.disabled).toBe(true)
   })
+
+  it.each([[20410, "OldPassword"], [20409, "NewPassword"]])("places backend password error %s beside %s", async (code, name) => {
+    const error = new ApiError(400, null, undefined, undefined, code)
+    post.mockRejectedValueOnce(error)
+    await render(<SecurityTab account={account} />)
+    await change("OldPassword", "OldPassword1")
+    await change("NewPassword", "NewPassword1")
+    await change("ConfirmPassword", "NewPassword1")
+    await submit()
+    const control = input(String(name))
+    expect(control.getAttribute("aria-invalid")).toBe("true")
+    const message = document.getElementById(control.getAttribute("aria-describedby")!)
+    expect(message?.textContent).toBe(localizedError(error))
+    expect(control.closest(".space-y-2")?.contains(message)).toBe(true)
+    expect(message?.classList.contains("hidden")).toBe(false)
+    expect(host.querySelector('[data-slot="alert"]')).toBeNull()
+  })
+
+  it("puts a claimed email error at the email and keeps the draft", async () => {
+    const error = new ApiError(400, null, undefined, undefined, 20302)
+    post.mockRejectedValueOnce(error)
+    await render(<AccountTab account={account} />)
+    await change("Email", "taken@example.test")
+    await change("CurrentPassword", "Password1")
+    await submit()
+    const control = input("Email")
+    expect(control.getAttribute("aria-invalid")).toBe("true")
+    expect(document.getElementById(control.getAttribute("aria-describedby")!)?.textContent).toBe(localizedError(error))
+    expect(control.value).toBe("taken@example.test")
+    expect(input("CurrentPassword").getAttribute("aria-invalid")).toBe("false")
+  })
+
+  it("places an invalid profile photo error alongside its picker", async () => {
+    await render(<ProfileTab account={account} onUpdated={vi.fn()} />)
+    const picker = host.querySelector<HTMLInputElement>('input[type="file"]')!
+    Object.defineProperty(picker, "files", { configurable: true, value: [new File(["data"], "wrong.txt", { type: "text/plain" })] })
+    await act(async () => picker.dispatchEvent(new Event("change", { bubbles: true })))
+    const message = document.getElementById(picker.getAttribute("aria-describedby")!)
+    expect(picker.getAttribute("aria-invalid")).toBe("true")
+    expect(picker.parentElement?.contains(message)).toBe(true)
+    expect(host.querySelector("form")?.contains(message)).toBe(false)
+  })
+
 })
