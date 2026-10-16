@@ -21,6 +21,7 @@ const src = [process.env.DS_DIR, ...up, join(root, "ds-source")].filter(Boolean)
 
 // copy (relative to src/) → source file in the DS
 const files = {
+  "styles/ds-modal-motion.css": "components/modal/radix-motion.css",
   "styles/ds-tokens.css": "tokens.css",
   "components/ui/tooltip.css": "components/tooltip/tooltip.css",
   "components/ui/error-page.css": "patterns/error-page/error-page.css",
