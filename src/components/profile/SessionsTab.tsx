@@ -20,6 +20,7 @@ import { BRAND } from "@/i18n/brand"
 import { t, locale } from "@/i18n/t"
 import type { SessionInfo } from "./types"
 import { extractError } from "./ProfileTab"
+import { lastActivityLine } from "./sessionMeta"
 import { createSessionsStore, type SessionsState } from "./sessionsStore"
 
 // osFromUA derives a human OS/platform label from a user-agent string. The raw
@@ -158,9 +159,9 @@ export function SessionsTab() {
                   )}
                 </div>
 
-                {/* Meta: IP · last activity, created — full width below. */}
+                {/* Meta: (IP ·) last activity, created — full width below. */}
                 <div className="mt-1.5 break-all text-xs text-muted-foreground">
-                  {t("profile.sessions.lastActivityLine", { ip: s.IP, date: formatDate(s.LastSeen) })}
+                  {lastActivityLine(s.IP, formatDate(s.LastSeen))}
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {t("profile.sessions.createdAtLine", { date: formatDate(s.CreatedAt) })}
