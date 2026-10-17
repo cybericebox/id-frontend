@@ -7,6 +7,7 @@
 import { apiOrigin } from "@/lib/origins"
 import { isNetworkOutage, isUnreachableResponse, reportServiceUnavailable } from "@/lib/serviceStatus"
 import { COOKIE_RETURN_TO } from "@/lib/storageKeys"
+import { fetchWithOverloadRetry, parseRetryAfterSeconds } from "./retry"
 
 const BASE_URL = apiOrigin
 
@@ -21,7 +22,8 @@ export class ApiError extends Error {
     // Stable numeric FullCode from the envelope (Status.Code). This — not the
     // English message — is the i18n key callers localize against (see i18n/apiError).
     public readonly code?: number,
-    // Retry-After header of a 429, in seconds (the wait the backend asks for).
+    // Retry-After header, in seconds (the wait the backend asks for); on a 429 or 503 it marks an overload
+    // answer (api/retry).
     public readonly retryAfter?: number,
     // X-Request-ID of the response: the id under which the backend journaled a 5xx
     // (readable cross-origin only when the API exposes it in Access-Control-Expose-Headers).
@@ -39,7 +41,10 @@ export class ApiError extends Error {
 //       runs on the caller.
 //   required: false — opt out (e.g. fetchMe, which treats 401 as "anonymous").
 //       The 401 is thrown as ApiError so the caller can handle it.
-export type ApiOptions = { required?: boolean }
+//   retry (default true) — a GET answered 429/503 is tried again with backoff
+//       (api/retry); the promise stays pending meanwhile. Mutations never repeat.
+//   retry: false — return the first answer (a caller that retries on its own).
+export type ApiOptions = { required?: boolean; retry?: boolean }
 
 // portless strips the port from a URL and forces https:, matching the backend's
 // expectations for return_to (port-free, https-only). Returns the input unchanged
@@ -76,12 +81,6 @@ function redirectToSignInPage(signInUrl: string | null): void {
   window.location.replace(signInUrl || portless(window.location.origin) + "/sign-in/")
 }
 
-function parseRetryAfter(raw: string | null): number | undefined {
-  if (!raw) return undefined
-  const n = Number(raw)
-  return Number.isFinite(n) && n > 0 ? Math.ceil(n) : undefined
-}
-
 async function request<T>(
   path: string,
   init: RequestInit = {},
@@ -89,16 +88,21 @@ async function request<T>(
 ): Promise<T> {
   const url = `${BASE_URL}${path}`
 
+  const doFetch = () => fetch(url, {
+    ...init,
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...(init.headers ?? {}),
+    },
+  })
+
   let res: Response
   try {
-    res = await fetch(url, {
-      ...init,
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        ...(init.headers ?? {}),
-      },
-    })
+    // Only the final answer reaches the outage report below, so a retried 503 never reports an outage.
+    res = (opts.retry ?? true)
+      ? await fetchWithOverloadRetry(doFetch, { method: init.method ?? "GET", signal: init.signal })
+      : await doFetch()
   } catch (err) {
     // Network failure (backend down, DNS, offline) → app-wide outage modal; a
     // caller abort or timeout is not an outage.
@@ -145,7 +149,7 @@ async function request<T>(
       envelope?.Status?.Message,
       res.headers.get("X-Sign-In-URL") ?? undefined,
       envelope?.Status?.Code,
-      parseRetryAfter(res.headers.get("Retry-After")),
+      parseRetryAfterSeconds(res.headers.get("Retry-After")),
       res.headers.get("X-Request-ID") ?? undefined
     )
   }
