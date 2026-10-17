@@ -362,6 +362,7 @@
   "profile.account.currentEmailLine": "Current email: {email} {status}",
   "profile.memberSinceDate": "On the platform since {date}",
   "profile.sessions.lastActivityLine": "{ip} · Last activity: {date}",
+  "profile.sessions.lastActivityNoIpLine": "Last activity: {date}",
   "profile.sessions.createdAtLine": "Created: {date}",
   "profile.sessions.deviceLabel": "{browser} · {os}",
   "inbox.unreadItemSr": "Unread: ",
