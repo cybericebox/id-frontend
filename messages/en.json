@@ -58,6 +58,8 @@
   "confirmEmail.missing": "The link is missing or broken.",
   "confirmEmail.toProfile": "To profile",
   "error.unavailable": "The service is temporarily unavailable. Try again in a minute.",
+  "error.overloaded": "The server is overloaded, try again in a few seconds",
+  "error.overloaded.retry": "Try again",
   "serviceGate.title": "The server is temporarily unavailable",
   "serviceGate.body": "The page will refresh as soon as the server responds.",
   "serviceGate.checking": "Checking the connection…",

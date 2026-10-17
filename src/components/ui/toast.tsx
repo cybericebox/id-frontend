@@ -5,14 +5,22 @@ import { CheckCircle2, CircleAlert, TriangleAlert, X } from "lucide-react"
 import { t } from "@/i18n/t"
 
 type Tone = "success" | "warning" | "error"
-type Toast = { id: number; message: string; tone: Tone }
+/** A button in the toast; clicking it runs `onClick` and closes the toast. */
+export type ToastAction = { label: string; onClick: () => void }
+export type ToastOptions = { action?: ToastAction }
+type Toast = { id: number; message: string; tone: Tone; action?: ToastAction }
 let nextToastId = 0
 const listeners = new Set<(item: Toast) => void>()
 
+function show(tone: Tone, message: string, options?: ToastOptions) {
+  const item = { id: ++nextToastId, message, tone, action: options?.action }
+  listeners.forEach((listener) => listener(item))
+}
+
 export const toast = {
-  success: (message: string) => { const item = { id: ++nextToastId, message, tone: "success" as const }; listeners.forEach((listener) => listener(item)) },
-  warning: (message: string) => { const item = { id: ++nextToastId, message, tone: "warning" as const }; listeners.forEach((listener) => listener(item)) },
-  error: (message: string) => { const item = { id: ++nextToastId, message, tone: "error" as const }; listeners.forEach((listener) => listener(item)) },
+  success: (message: string, options?: ToastOptions) => show("success", message, options),
+  warning: (message: string, options?: ToastOptions) => show("warning", message, options),
+  error: (message: string, options?: ToastOptions) => show("error", message, options),
 }
 
 const toneStyle: Record<Tone, string> = {
@@ -45,6 +53,10 @@ function ToastCard({ item, onDismiss }: { item: Toast; onDismiss: (id: number) =
       : item.tone === "warning" ? <TriangleAlert aria-hidden="true" className={`mt-0.5 h-4 w-4 shrink-0 ${iconStyle[item.tone]}`} />
         : <CircleAlert aria-hidden="true" className={`mt-0.5 h-4 w-4 shrink-0 ${iconStyle[item.tone]}`} />}
     <span className="min-w-0 flex-1">{item.message}</span>
+    {item.action && <button type="button" onClick={() => { onDismiss(item.id); item.action?.onClick() }}
+      className="shrink-0 rounded font-medium text-ink underline underline-offset-2 hover:no-underline focus-visible:outline-2 focus-visible:outline-primary">
+      {item.action.label}
+    </button>}
     <button type="button" aria-label={t("toast.dismiss", { message: item.message })} onClick={() => onDismiss(item.id)}
       className="rounded p-0.5 text-dim hover:text-ink focus-visible:outline-2 focus-visible:outline-primary">
       <X aria-hidden="true" className="h-4 w-4" />

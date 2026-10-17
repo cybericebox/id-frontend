@@ -9,6 +9,7 @@
 import errorsUk from "../../messages/errors.uk.json"
 import errorsEn from "../../messages/errors.en.json"
 import { ApiError } from "@/api/client"
+import { isOverloadError } from "@/api/retry"
 import { isUnavailableStatus } from "@/lib/serviceStatus"
 import { t } from "./t"
 
@@ -37,6 +38,10 @@ export function waitText(seconds: number): string {
 }
 
 export function localizedError(err: unknown): string {
+  // A 503 with Retry-After and no catalog message is the server shedding load (reads were already retried).
+  if (err instanceof ApiError && err.status === 503 && isOverloadError(err) && !(err.code != null && (uk[String(err.code)] ?? en[String(err.code)]))) {
+    return t("error.overloaded")
+  }
   if (isServiceUnavailable(err)) return t("error.unavailable")
   // The general rate limiter answers 429 with an empty body (no code) and Retry-After.
   if (err instanceof ApiError && (err.code === CODE_TOO_MANY_REQUESTS || (err.status === 429 && err.code == null))) {
