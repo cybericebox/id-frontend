@@ -30,7 +30,7 @@ describe("overload retry in the API client", () => {
     expect(isServiceDown()).toBe(false)
   })
 
-  it("reports the outage only on the final 503, after the retries", async () => {
+  it("does not report an outage on the final overload 503 either", async () => {
     const reports = vi.fn()
     const unsubscribe = subscribeServiceStatus(reports)
     const fetchMock = vi.fn(async () => busy())
@@ -40,7 +40,7 @@ describe("overload retry in the API client", () => {
     expect(await result).toBeInstanceOf(ApiError)
     unsubscribe()
     expect(fetchMock).toHaveBeenCalledTimes(4)
-    expect(reports).toHaveBeenCalledTimes(1)
+    expect(reports).not.toHaveBeenCalled()
   })
 
   it("does not repeat a GET 503 without Retry-After and reports it at once", async () => {
@@ -56,6 +56,12 @@ describe("overload retry in the API client", () => {
     vi.stubGlobal("fetch", fetchMock)
     await expect(apiPost("/api/x", {})).rejects.toBeInstanceOf(ApiError)
     expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it("does not report an outage on an overload 503 to a mutation", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => busy()))
+    await expect(apiPost("/api/x", {})).rejects.toBeInstanceOf(ApiError)
+    expect(isServiceDown()).toBe(false)
   })
 
   it("retry: false returns the first answer", async () => {

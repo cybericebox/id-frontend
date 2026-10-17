@@ -59,6 +59,8 @@ describe("isBackendUnreachable", () => {
   it("is not a backend error, an abort or a 4xx", () => {
     expect(isBackendUnreachable(new ApiError(502, null, undefined, undefined, 50310, undefined, "01a112da"))).toBe(false)
     expect(isBackendUnreachable(new ApiError(500, null))).toBe(false)
+    expect(isBackendUnreachable(new ApiError(503, null, undefined, undefined, undefined, 1))).toBe(false)
+    expect(isBackendUnreachable(new ApiError(503, null))).toBe(true)
     expect(isBackendUnreachable(new ApiError(404, null))).toBe(false)
     expect(isBackendUnreachable(new DOMException("aborted", "AbortError"))).toBe(false)
   })
@@ -72,6 +74,16 @@ describe("probeService", () => {
     expect(fetch).toHaveBeenCalledWith("https://api.test/api/auth/me", expect.objectContaining({ credentials: "include" }))
     fetch.mockResolvedValue(new Response("", { status: 401 }))
     await expect(probeService("https://api.test")).resolves.toBe(true)
+  })
+
+  it("an overload 503 with Retry-After and no X-Request-ID means the backend is up", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("", { status: 503, headers: { "Retry-After": "1" } })))
+    await expect(probeService("https://api.test")).resolves.toBe(true)
+  })
+
+  it("a bare 503 is still down", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("", { status: 503 })))
+    await expect(probeService("https://api.test")).resolves.toBe(false)
   })
 
   it("a backend 500 with X-Request-ID means the backend is up", async () => {
