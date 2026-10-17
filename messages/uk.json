@@ -362,6 +362,7 @@
   "profile.account.currentEmailLine": "Поточна електронна пошта: {email} {status}",
   "profile.memberSinceDate": "На платформі з {date}",
   "profile.sessions.lastActivityLine": "{ip} · Остання активність: {date}",
+  "profile.sessions.lastActivityNoIpLine": "Остання активність: {date}",
   "profile.sessions.createdAtLine": "Створено: {date}",
   "profile.sessions.deviceLabel": "{browser} · {os}",
   "inbox.unreadItemSr": "Непрочитане: ",
