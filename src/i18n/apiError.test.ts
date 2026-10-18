@@ -47,4 +47,14 @@ describe("localizedError", () => {
     expect((uk as Record<string, string>)["error.overloaded.retry"]).toBe("Спробувати ще раз")
     expect((en as Record<string, string>)["error.overloaded.retry"]).toBe("Try again")
   })
+
+  it("answers the overload codes without a catalog message with the overloaded message", () => {
+    expect(localizedError(apiErr(503, 70431))).toBe(t("error.overloaded"))
+    expect(localizedError(apiErr(503, 70432, 2))).toBe(t("error.overloaded"))
+  })
+
+  it("keeps a personal rate limit (429) on its own message with the wait, never the overloaded one", () => {
+    expect(localizedError(apiErr(429, 70428, 30))).toBe(t("error.tooManyRetry", { wait: waitText(30) }))
+    expect(localizedError(apiErr(429, 70428, 30))).not.toBe(t("error.overloaded"))
+  })
 })
