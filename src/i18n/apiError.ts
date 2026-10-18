@@ -38,8 +38,8 @@ export function waitText(seconds: number): string {
 }
 
 export function localizedError(err: unknown): string {
-  // A 503 with Retry-After and no catalog message is the server shedding load (reads were already retried).
-  if (err instanceof ApiError && err.status === 503 && isOverloadError(err) && !(err.code != null && (uk[String(err.code)] ?? en[String(err.code)]))) {
+  // The server's overload signal (a 503 with Retry-After, an overload code) without a catalog message (reads were already retried).
+  if (err instanceof ApiError && isOverloadError(err) && !(err.code != null && (uk[String(err.code)] ?? en[String(err.code)]))) {
     return t("error.overloaded")
   }
   if (isServiceUnavailable(err)) return t("error.unavailable")

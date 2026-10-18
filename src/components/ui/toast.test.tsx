@@ -33,6 +33,20 @@ describe("toast retry action", () => {
     expect(host.querySelector('[role="alert"]')).toBeNull()
   })
 
+  it("treats the overload code (70431) as the overload signal, Retry-After or not", async () => {
+    await show(() => toastApiError(new ApiError(503, null, "x", undefined, 70431), vi.fn()))
+    expect(host.querySelector('[role="alert"]')?.textContent).toContain("Сервер перевантажений, спробуйте за кілька секунд")
+    expect(button("Спробувати ще раз")).toBeDefined()
+  })
+
+  it("keeps a personal rate limit (429) on its own message with the wait, without the retry button", async () => {
+    await show(() => toastApiError(new ApiError(429, null, "x", undefined, 70428, 30), vi.fn()))
+    const text = host.querySelector('[role="alert"]')?.textContent
+    expect(text).toContain("30 с")
+    expect(text).not.toContain("Сервер перевантажений")
+    expect(button("Спробувати ще раз")).toBeUndefined()
+  })
+
   it("shows no retry button for a 500, a 503 without Retry-After, or without a handler", async () => {
     await show(() => {
       toastApiError(new ApiError(500, null), vi.fn())
