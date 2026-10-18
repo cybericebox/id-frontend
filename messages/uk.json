@@ -206,6 +206,7 @@
   "profile.profile.photoUpdated": "Фото оновлено",
   "profile.profile.photoRemoved": "Фото видалено",
   "profile.profile.photoTooLarge": "Файл завеликий (максимум 5 МБ)",
+  "profile.images.autoShrink": "Великі зображення автоматично зменшуються до {side} пікселів по довшій стороні.",
   "profile.profile.photoInvalidType": "Підтримуються лише зображення",
   "profile.profile.save": "Зберегти зміни",
   "profile.profile.saved": "Профіль оновлено",

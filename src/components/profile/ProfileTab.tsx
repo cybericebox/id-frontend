@@ -32,6 +32,7 @@ import type { Account } from "./types"
 
 import { AvatarCropDialog } from "./AvatarCropDialog"
 import { STORAGE_DRAFT_PROFILE_NAME } from "@/lib/storageKeys"
+import { fitImage, fitImageMaxSide } from "@/lib/fitImage"
 
 const ProfileSchema = z.object({
   FirstName: z.string().min(1, { message: t("validation.required") }).max(255),
@@ -109,15 +110,23 @@ export function ProfileTab({
 
   // Validate the picked file, then open the crop editor. Upload happens only
   // after the user confirms the crop (onCropConfirm).
-  const onPhotoChosen = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+  const onPhotoChosen = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = e.target.files?.[0]
     e.target.value = "" // allow re-selecting the same file later
-    if (!file) return
+    if (!picked) return
 
     setPhotoError(null)
-    if (!file.type.startsWith("image/")) {
+    if (!picked.type.startsWith("image/")) {
       setPhotoError(t("profile.profile.photoInvalidType"))
       return
+    }
+    // Oversized pictures are shrunk first; the size limit applies to the result.
+    setPhotoAction("upload")
+    let file: File
+    try {
+      file = await fitImage(picked)
+    } finally {
+      setPhotoAction(null)
     }
     if (file.size > MAX_PHOTO_BYTES) {
       setPhotoError(t("profile.profile.photoTooLarge"))
@@ -242,7 +251,7 @@ export function ProfileTab({
               className="hidden"
               aria-invalid={Boolean(photoError)}
               aria-describedby={photoError ? "profile-photo-error" : undefined}
-              onChange={onPhotoChosen}
+              onChange={(e) => void onPhotoChosen(e)}
             />
             <div className="flex flex-wrap gap-2">
               <Button
@@ -271,6 +280,7 @@ export function ProfileTab({
                 </Button>
               )}
             </div>
+            <p className="text-xs text-muted-foreground">{t("profile.images.autoShrink", { side: fitImageMaxSide })}</p>
             {photoError && <p id="profile-photo-error" role="alert" className="text-xs font-medium text-destructive">{photoError}</p>}
           </div>
         </div>
