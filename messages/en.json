@@ -206,6 +206,7 @@
   "profile.profile.photoUpdated": "Photo updated",
   "profile.profile.photoRemoved": "Photo removed",
   "profile.profile.photoTooLarge": "File too large (max 5 MB)",
+  "profile.images.autoShrink": "Large pictures are shrunk automatically to {side} pixels on the long side.",
   "profile.profile.photoInvalidType": "Only images are supported",
   "profile.profile.save": "Save changes",
   "profile.profile.saved": "Profile updated",
