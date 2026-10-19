@@ -20,7 +20,7 @@ export function notificationAccent(tone = "neutral", accentColor = ""): string {
 }
 
 /** The platform's notification layout, shared by the inbox and pop-ins (a copy of admin's). */
-export function NotificationMessageCard({ icon = "bell", tone = "neutral", accentColor = "", title, body, timestamp, unread = false, resolved = false, actions, compact = false }: {
+export function NotificationMessageCard({ icon = "bell", tone = "neutral", accentColor = "", title, body, timestamp, unread = false, needsAction = false, resolved = false, actions, compact = false }: {
   icon?: string
   tone?: string
   accentColor?: string
@@ -28,6 +28,7 @@ export function NotificationMessageCard({ icon = "bell", tone = "neutral", accen
   body?: ReactNode
   timestamp?: ReactNode
   unread?: boolean
+  needsAction?: boolean
   /** Answered or expired: the title steps back to the secondary text colour (no opacity, text stays readable). */
   resolved?: boolean
   actions?: ReactNode
@@ -40,11 +41,15 @@ export function NotificationMessageCard({ icon = "bell", tone = "neutral", accen
       <Icon size={compact ? 18 : 22} strokeWidth={2} />
     </span>
     <div className="min-w-0 flex-1">
-      {title && <p className={`min-w-0 break-words text-sm leading-snug ${resolved ? "text-dim" : "text-ink"} ${unread ? "font-semibold" : "font-medium"}`}>
+      {title && <div className="flex min-w-0 items-start gap-2">
+        <p className={`min-w-0 flex-1 break-words text-sm leading-snug ${resolved ? "text-dim" : "text-ink"} ${unread ? "font-semibold" : "font-medium"}`}>
         {/* unread = bold title (DS: no dots) plus the word for assistive technology */}
         {unread && <span className="sr-only">{t("inbox.unreadItemSr")}</span>}
         {keepBrand(title)}
-      </p>}
+        </p>
+        {needsAction && <span className="mt-px shrink-0 rounded px-1.5 py-px text-xs font-medium bg-[var(--ib-warn-bg)] text-[var(--ib-warn)]">{t("inbox.needsAction")}</span>}
+        {unread && <span aria-hidden="true" className="mt-px shrink-0 text-xs font-medium text-action">{t("inbox.unreadItem")}</span>}
+      </div>}
       {body && <div className={`${title ? "mt-1" : ""} break-words text-sm leading-relaxed text-dim ${compact ? "line-clamp-2" : ""}`}>{body}</div>}
       {timestamp && <div className="mt-1.5 text-xs text-dim">{timestamp}</div>}
       {actions && <div className="mt-2 flex flex-wrap gap-x-2 gap-y-1">{actions}</div>}
