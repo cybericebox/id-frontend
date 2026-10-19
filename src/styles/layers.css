@@ -1,0 +1,13 @@
+/* The one layer scale of the app (z-index). Popovers and menus < cookie bar < inbox pop-ins < modal dialogs < tooltip
+   < toasts; the skip link and the service-down notice stay on top. The tooltip (70) and service-down (1000) values
+   live in their DS copies; the scale names them so every layer is ordered in one place. */
+:root{
+  --z-popover:50;
+  --z-consent:55;
+  --z-popin:56;
+  --z-dialog:60;
+  --z-tooltip:70;
+  --z-toast:90;
+  --z-skip:100;
+  --z-service-down:1000;
+}

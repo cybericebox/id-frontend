@@ -313,6 +313,7 @@ export function SetupScreen() {
       )
 
       clearDraft(draftKey) // registration complete — drop the saved draft
+      // The button stays busy while the browser navigates, so a second click cannot submit the used token again.
       if (RedirectURL) {
         window.location.assign(RedirectURL)
       } else {
@@ -321,7 +322,6 @@ export function SetupScreen() {
       }
     } catch (err) {
       reportFieldOrFormError(err, setFormError, form.setError, { 20407: "AcceptTos", 20409: "Password" })
-    } finally {
       setIsSubmitting(false)
     }
   }
@@ -415,7 +415,6 @@ export function SetupScreen() {
                       <Input
                         type="text"
                         required
-                        placeholder={t("setup.firstNamePlaceholder")}
                         autoComplete="given-name"
                         {...field}
                       />
@@ -436,7 +435,6 @@ export function SetupScreen() {
                       <Input
                         type="text"
                         required
-                        placeholder={t("setup.lastNamePlaceholder")}
                         autoComplete="family-name"
                         {...field}
                       />
@@ -489,7 +487,6 @@ export function SetupScreen() {
                       <FormControl>
                         <PasswordInput
                           required={!hasGoogle}
-                          placeholder={t("setup.passwordPlaceholder")}
                           autoComplete="new-password"
                           {...field}
                           aria-describedby={[field.value ? strengthId : undefined, form.formState.errors.Password && (!field.value || form.formState.errors.Password?.type === "server") ? passwordMsgId : undefined].filter(Boolean).join(" ") || undefined}
@@ -512,7 +509,6 @@ export function SetupScreen() {
                         <FormControl>
                           <PasswordInput
                             required={confirmRequired}
-                            placeholder={t("setup.confirmPasswordPlaceholder")}
                             autoComplete="new-password"
                             {...field}
                           />
@@ -552,6 +548,7 @@ export function SetupScreen() {
                 className="w-full"
                 disabled={isSubmitting}
                 busy={isSubmitting}
+                busyLabel={t("common.busy.creatingAccount")}
               >
                 {t("setup.submit")}
               </Button>

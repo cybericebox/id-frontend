@@ -72,6 +72,7 @@ export function SignInScreen() {
         recaptchaToken = await executeCaptcha("signIn")
       } catch {
         setFormError(t("error.captcha"))
+        setIsSubmitting(false)
         return
       }
 
@@ -101,23 +102,18 @@ export function SignInScreen() {
         { required: false }
       )
 
-      if (RedirectURL) {
-        window.location.assign(RedirectURL)
-      } else {
-        window.location.assign(safeReturnTo(returnTo || undefined))
-      }
+      // The button stays busy while the browser navigates: a second click would open a second session.
+      window.location.assign(RedirectURL || safeReturnTo(returnTo || undefined))
     } catch (err) {
       // Localized by the error's stable code (Status.Code), not the English message.
       reportFieldOrFormError(err, setFormError, form.setError, { 20426: "Email" })
-    } finally {
       setIsSubmitting(false)
     }
   }
 
-  // Build /sign-up link preserving return_to if present
-  const registerHref = returnTo
-    ? `/sign-up?return_to=${encodeURIComponent(returnTo)}`
-    : "/sign-up"
+  // Build the /sign-up and recovery links preserving return_to if present
+  const returnQuery = returnTo ? `?return_to=${encodeURIComponent(returnTo)}` : ""
+  const registerHref = `/sign-up${returnQuery}`
 
   return (
     <AuthLayout reversed={false} variant="signin">
@@ -196,13 +192,12 @@ export function SignInScreen() {
                   <FormItem>
                     <div className="flex items-center justify-between">
                       <FormLabel>{t("common.password")}</FormLabel>
-                      <Link href="/forgot-password" className={authLinkClass}>
+                      <Link href={`/forgot-password${returnQuery}`} className={authLinkClass}>
                         {t("signIn.forgotPassword")}
                       </Link>
                     </div>
                     <FormControl>
                       <PasswordInput
-                        placeholder={t("signIn.passwordPlaceholder")}
                         autoComplete="current-password"
                         {...field}
                       />
@@ -219,6 +214,7 @@ export function SignInScreen() {
                 className="w-full"
                 disabled={isSubmitting}
                 busy={isSubmitting}
+                busyLabel={t("common.busy.signingIn")}
               >
                 {t("signIn.submit")}
               </Button>

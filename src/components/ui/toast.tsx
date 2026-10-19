@@ -76,7 +76,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   return <>
     {children}
-    <div role="region" className="pointer-events-none fixed left-1/2 top-4 z-[100] flex w-[min(24rem,calc(100vw-2rem))] -translate-x-1/2 flex-col gap-2" aria-label={t("toast.region")}>
+    <div role="region" className="pointer-events-none fixed left-1/2 top-4 z-[var(--z-toast)] flex w-[min(24rem,calc(100vw-2rem))] -translate-x-1/2 flex-col gap-2" aria-label={t("toast.region")}>
       {items.map((item) => <ToastCard key={item.id} item={item} onDismiss={dismiss} />)}
     </div>
   </>

@@ -142,6 +142,7 @@ export function ForgotPasswordScreen() {
                 className="w-full"
                 disabled={isSubmitting}
                 busy={isSubmitting}
+                busyLabel={t("common.busy.sending")}
               >
                 {t("forgotPassword.submit")}
               </Button>

@@ -16,12 +16,12 @@ import { localizedError } from "@/i18n/apiError"
 import { ProfileTab } from "./ProfileTab"
 import { AccountTab } from "./AccountTab"
 import { SecurityTab } from "./SecurityTab"
-import { STORAGE_DRAFT_PROFILE_NAME } from "@/lib/storageKeys"
+import { profileNameDraftKey } from "@/lib/storageKeys"
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 const account: Account = {
-  FirstName: "Olena", LastName: "Koval", Email: "olena@example.test", Picture: "",
+  ID: "u1", FirstName: "Olena", LastName: "Koval", Email: "olena@example.test", Picture: "",
   EmailConfirmed: true, Role: "user", Providers: [], HasPassword: true, CreatedAt: "",
 }
 
@@ -29,7 +29,8 @@ describe("profile save actions", () => {
   let host: HTMLElement
   let root: ReturnType<typeof createRoot>
   const render = async (ui: ReactNode) => { await act(async () => root.render(ui)) }
-  const action = (label: string) => Array.from(host.querySelectorAll("button")).find((button) => button.textContent === label)
+  // a busy-capable button holds two faces: match its idle label
+  const action = (label: string) => Array.from(host.querySelectorAll("button")).find((button) => (button.querySelector(".ib-btn__face")?.textContent ?? button.textContent) === label)
   const input = (name: string) => host.querySelector<HTMLInputElement>(`input[name="${name}"]`)!
   const change = async (name: string, value: string) => {
     await act(async () => {
@@ -48,6 +49,13 @@ describe("profile save actions", () => {
     root = createRoot(host)
   })
   afterEach(() => { act(() => root.unmount()); host.remove() })
+
+  it("never restores the name draft another account left in this tab", async () => {
+    sessionStorage.setItem(profileNameDraftKey("someone-else"), JSON.stringify({ FirstName: "Taras", LastName: "Shevchenko" }))
+    await render(<ProfileTab account={account} onUpdated={vi.fn()} />)
+    expect(input("FirstName").value).toBe("Olena")
+    expect(action("Зберегти зміни")?.disabled).toBe(true)
+  })
 
   it("disables visible unchanged profile Save and rejects a keyboard no-op", async () => {
     await render(<ProfileTab account={account} onUpdated={vi.fn()} />)
@@ -74,13 +82,13 @@ describe("profile save actions", () => {
     await act(async () => resolve())
     expect(input("LastName").value).toBe("Bondar")
     expect(action("Зберегти зміни")?.disabled).toBe(false)
-    expect(JSON.parse(sessionStorage.getItem(STORAGE_DRAFT_PROFILE_NAME)!)).toEqual({ FirstName: "Kateryna", LastName: "Bondar" })
+    expect(JSON.parse(sessionStorage.getItem(profileNameDraftKey(account.ID))!)).toEqual({ FirstName: "Kateryna", LastName: "Bondar" })
     await render(<ProfileTab account={{ ...account, FirstName: "Kateryna" }} onUpdated={onUpdated} />)
     expect(input("LastName").value).toBe("Bondar")
     await submit()
     expect(patch).toHaveBeenLastCalledWith("/api/auth/account/profile", { FirstName: "Kateryna", LastName: "Bondar" })
     expect(action("Зберегти зміни")?.disabled).toBe(true)
-    expect(sessionStorage.getItem(STORAGE_DRAFT_PROFILE_NAME)).toBeNull()
+    expect(sessionStorage.getItem(profileNameDraftKey(account.ID))).toBeNull()
   })
 
   it("follows account refreshes only when the profile draft is clean", async () => {

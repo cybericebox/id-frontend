@@ -106,7 +106,7 @@ function ServiceDown({ onCheck }: { onCheck: () => Promise<void> }) {
       <p className="ib-service-down__status">{checking ? t("serviceGate.checking") : t("serviceGate.nextTry", { seconds })}</p>
       {/* the countdown changes every second and stays silent; only the check itself is announced */}
       <span className="sr-only" role="status">{checking ? t("serviceGate.checking") : ""}</span>
-      <Button ref={buttonRef} type="button" variant="outline" className="w-full" busy={checking} onClick={() => { void check() }}>{t("serviceGate.retryNow")}</Button>
+      <Button ref={buttonRef} type="button" variant="outline" className="w-full" busy={checking} busyLabel={t("serviceGate.checking")} onClick={() => { void check() }}>{t("serviceGate.retryNow")}</Button>
     </div>
   </div>
 }
