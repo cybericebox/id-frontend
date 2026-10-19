@@ -20,3 +20,4 @@ out
 
 # vitest cache
 .vitest/
+.worktrees/
