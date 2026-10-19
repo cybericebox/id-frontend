@@ -32,7 +32,7 @@ import { apiPost, apiDelete } from "@/api/client"
 import { t, tRich } from "@/i18n/t"
 import type { Account } from "./types"
 import { extractError } from "./ProfileTab"
-import { STORAGE_DRAFT_ACCOUNT_EMAIL } from "@/lib/storageKeys"
+import { accountEmailDraftKey } from "@/lib/storageKeys"
 
 
 // The account password re-confirms the change; the draft keeps the address only.
@@ -51,6 +51,7 @@ export function AccountTab({ account }: { account: Account }) {
   const [deletePasswordError, setDeletePasswordError] = useState<string | null>(null)
   const [deletePassword, setDeletePassword] = useState("")
   const submittingRef = useRef(false)
+  const draftKey = accountEmailDraftKey(account.ID)
 
   const form = useForm<EmailValues>({
     resolver: zodResolver(EmailSchema),
@@ -64,7 +65,7 @@ export function AccountTab({ account }: { account: Account }) {
   // email survives an auth redirect (client auto-redirects on 401). Cleared on send.
   useEffect(() => {
     try {
-      const raw = sessionStorage.getItem(STORAGE_DRAFT_ACCOUNT_EMAIL)
+      const raw = sessionStorage.getItem(draftKey)
       // keepDefaultValues: the restored address counts as a change, so «Змінити пошту» stays enabled
       if (raw) form.reset({ Email: (JSON.parse(raw) as { Email?: string }).Email ?? "", CurrentPassword: "" }, { keepDefaultValues: true })
     } catch {
@@ -72,7 +73,7 @@ export function AccountTab({ account }: { account: Account }) {
     }
     const sub = form.watch((values) => {
       try {
-        sessionStorage.setItem(STORAGE_DRAFT_ACCOUNT_EMAIL, JSON.stringify({ Email: values.Email ?? "" }))
+        sessionStorage.setItem(draftKey, JSON.stringify({ Email: values.Email ?? "" }))
       } catch {
         /* ignore */
       }
@@ -91,7 +92,7 @@ export function AccountTab({ account }: { account: Account }) {
       const current = form.getValues()
       if (current.Email.trim().toLowerCase() === data.Email && current.CurrentPassword === data.CurrentPassword) {
         form.reset({ Email: "", CurrentPassword: "" })
-        try { sessionStorage.removeItem(STORAGE_DRAFT_ACCOUNT_EMAIL) } catch { /* storage may be unavailable */ }
+        try { sessionStorage.removeItem(draftKey) } catch { /* storage may be unavailable */ }
       }
       toast.success(t("profile.account.emailSent"))
     } catch (err) {
@@ -201,6 +202,7 @@ export function AccountTab({ account }: { account: Account }) {
                   type="submit"
                   disabled={!emailChanged || !account.HasPassword}
                   busy={isSubmitting}
+                  busyLabel={t("common.busy.sending")}
                 >
                   {t("profile.account.changeEmail")}
                 </Button>
@@ -240,6 +242,7 @@ export function AccountTab({ account }: { account: Account }) {
         onCancel={() => setDeleteOpen(false)}
         tone="danger"
         busy={isDeleting}
+        busyLabel={t("common.busy.deleting")}
         error={deleteError}
         title={t("profile.account.deleteConfirmTitle")}
         description={t("profile.account.deleteConfirmBody")}

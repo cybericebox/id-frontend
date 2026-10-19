@@ -20,7 +20,7 @@ import { BRAND } from "@/i18n/brand"
 import { t, locale } from "@/i18n/t"
 import type { SessionInfo } from "./types"
 import { extractError } from "./ProfileTab"
-import { lastActivityLine } from "./sessionMeta"
+import { lastActivityContent } from "./sessionMeta"
 import { createSessionsStore, type SessionsState } from "./sessionsStore"
 
 // osFromUA derives a human OS/platform label from a user-agent string. The raw
@@ -135,11 +135,11 @@ export function SessionsTab() {
         ) : (
           <ul aria-label={t("profile.sessions.list")} className="min-h-40 space-y-3">
             {sessions.map((s) => (
-              <li key={s.ID} className="rounded-md border p-3">
-                {/* Line 1: browser · OS (+ current badge) on the left, revoke
-                    button only in the top-right of this row. */}
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm font-semibold">
+              <li key={s.ID} className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 rounded-md border p-3">
+                {/* Left: browser · OS (+ current badge), then the meta lines; right: the revoke button, always in its
+                    own column at the top, so the list stays even whatever the length of the name. */}
+                <div className="min-w-0">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm font-semibold break-words">
                     <span>{browserFromUA(s.UserAgent)} · {osFromUA(s.UserAgent)}</span>
                     {s.IsCurrent && (
                       <span className="rounded-sm bg-soft px-2 py-0.5 text-xs font-medium text-ink">
@@ -147,25 +147,25 @@ export function SessionsTab() {
                       </span>
                     )}
                   </div>
-                  {!s.IsCurrent && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      aria-label={t("profile.sessions.revokeLabel", { device: t("profile.sessions.deviceLabel", { browser: browserFromUA(s.UserAgent), os: osFromUA(s.UserAgent) }) })}
-                      onClick={() => { setRevokeError(""); setRevokeTarget(s) }}
-                    >
-                      {t("profile.sessions.revoke")}
-                    </Button>
-                  )}
+                  {/* Meta: (IP ·) last activity, created; words wrap whole, only a long address breaks anywhere. */}
+                  <div className="mt-1.5 break-words text-xs text-muted-foreground">
+                    {lastActivityContent(s.IP, formatDate(s.LastSeen), (address) => <span className="[overflow-wrap:anywhere]">{address}</span>)}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {t("profile.sessions.createdAtLine", { date: formatDate(s.CreatedAt) })}
+                  </div>
                 </div>
-
-                {/* Meta: (IP ·) last activity, created — full width below. */}
-                <div className="mt-1.5 break-all text-xs text-muted-foreground">
-                  {lastActivityLine(s.IP, formatDate(s.LastSeen))}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {t("profile.sessions.createdAtLine", { date: formatDate(s.CreatedAt) })}
-                </div>
+                {!s.IsCurrent && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="self-start"
+                    aria-label={t("profile.sessions.revokeLabel", { device: t("profile.sessions.deviceLabel", { browser: browserFromUA(s.UserAgent), os: osFromUA(s.UserAgent) }) })}
+                    onClick={() => { setRevokeError(""); setRevokeTarget(s) }}
+                  >
+                    {t("profile.sessions.revoke")}
+                  </Button>
+                )}
               </li>
             ))}
           </ul>
@@ -185,6 +185,7 @@ export function SessionsTab() {
           onCancel={() => setRevokeTarget(null)}
           tone="danger"
           busy={revokeBusy}
+          busyLabel={t("common.busy.revoking")}
           error={revokeError}
           title={t("profile.sessions.revokeOneTitle")}
           description={revokeTarget ? <>{t("profile.sessions.revokeOneBody")} <b className="font-medium text-ink">{browserFromUA(revokeTarget.UserAgent)} · {osFromUA(revokeTarget.UserAgent)}</b></> : undefined}
@@ -196,6 +197,7 @@ export function SessionsTab() {
           onCancel={() => setConfirmOpen(false)}
           tone="danger"
           busy={confirmBusy}
+          busyLabel={t("common.busy.revoking")}
           error={confirmError}
           title={t("profile.sessions.revokeAllTitle")}
           description={t("profile.sessions.revokeAllBody")}

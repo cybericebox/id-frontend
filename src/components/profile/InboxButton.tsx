@@ -12,7 +12,8 @@ import DOMPurify from "isomorphic-dompurify"
 import { Bell, Check, ChevronRight, X } from "lucide-react"
 import { EmptyState } from "@/components/ui/empty-state"
 import { LoadError } from "@/components/ui/load-error"
-import { Spinner } from "@/components/ui/spinner"
+import { CrestMark, Spinner } from "@/components/ui/spinner"
+import "@/components/ui/button.css"
 import { Tooltip } from "@/components/ui/tooltip"
 
 import { apiGet, apiPatch, apiPost } from "@/api/client"
@@ -354,7 +355,7 @@ export function InboxButton({ defaultTab = "all", event }: InboxButtonProps = {}
       </button>
     </Popover.Trigger>
     <Popover.Portal>
-      <Popover.Content align="end" sideOffset={20} collisionPadding={12} aria-label={t("inbox.title")} className={`z-50 flex ${panelMaxHeight} w-[min(32rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-lg border border-line bg-surface text-ink outline-none`}>
+      <Popover.Content align="end" sideOffset={20} collisionPadding={12} aria-label={t("inbox.title")} className={`z-[var(--z-popover)] flex ${panelMaxHeight} w-[min(32rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-lg border border-line bg-surface text-ink outline-none`}>
         <div className="flex shrink-0 items-center justify-between gap-2 px-4 pt-3 pb-2">
           <h2 className="flex text-dim"><span className="sr-only">{t("inbox.title")}</span><Bell size={19} aria-hidden="true" /></h2>
           <div className="flex shrink-0 items-center gap-2">
@@ -407,7 +408,10 @@ export function InboxButton({ defaultTab = "all", event }: InboxButtonProps = {}
                 actions={href || unreadItem || canResolve(item) ? <>
                   {href ? <a href={href} onClick={(clickEvent) => { clickEvent.preventDefault(); void followLink(item, href) }} className={`${rowActionClass} text-sm`}>{t("inbox.open")}</a> : unreadItem ? <button type="button" onClick={() => void markRead(item)} className={`${rowActionClass} text-xs`}>{t("inbox.markRead")}</button> : null}
                   {canResolve(item) && <button type="button" disabled={resolving === item.ID} aria-busy={resolving === item.ID} onClick={() => void resolve(item)} className={`${rowActionClass} gap-1 text-xs disabled:cursor-not-allowed disabled:opacity-60`}>
-                    {resolving === item.ID ? <Spinner size="sm" label={t("common.loading")} /> : <Check size={14} aria-hidden="true" />}{t("inbox.resolve")}
+                    <span className="ib-btn__faces">
+                      <span className="ib-btn__face" aria-hidden={resolving === item.ID || undefined}><Check size={14} aria-hidden="true" />{t("inbox.resolve")}</span>
+                      <span className="ib-btn__face ib-btn__face--busy" aria-hidden={resolving !== item.ID || undefined}>{resolving === item.ID ? <CrestMark /> : <span className="ib-btn__mark" />}{t("common.busy.resolving")}</span>
+                    </span>
                   </button>}
                 </> : undefined}
               />
@@ -422,7 +426,7 @@ export function InboxButton({ defaultTab = "all", event }: InboxButtonProps = {}
     </Popover.Portal>
   </Popover.Root>
   {/* the live region is mounted before the first pop-in, so screen readers announce what arrives in it */}
-  {typeof document !== "undefined" && createPortal(<div className="fixed right-4 top-20 z-[70] flex max-h-[calc(100dvh-6rem)] flex-col gap-3 overflow-y-auto" aria-live="polite">
+  {typeof document !== "undefined" && createPortal(<div className="fixed right-4 top-20 z-[var(--z-popin)] flex max-h-[calc(100dvh-6rem)] flex-col gap-3 overflow-y-auto" aria-live="polite">
     {popIns.slice(0, 3).map((item) => <NotificationPopIn key={item.ID} message={item} onClose={() => setPopIns((current) => current.filter((entry) => entry.ID !== item.ID))} onAction={(href) => { const safe = safeHref(href); if (safe) void followLink(item, safe) }} />)}
   </div>, document.body)}
   </>

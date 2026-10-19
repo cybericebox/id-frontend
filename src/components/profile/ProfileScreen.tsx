@@ -37,8 +37,9 @@ import { initials } from "@/lib/initials"
 import { roleLabel } from "@/lib/roles"
 import { useMediaQuery } from "@/lib/useMediaQuery"
 import { focusTab, nextTabIndex } from "@/lib/tablist"
+import { clearAccountDrafts } from "@/lib/drafts"
 
-const BACK_ARROW_CLASS = "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-dim hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-action"
+const BACK_ARROW_CLASS = "ib-tap inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-dim hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-action"
 
 type TabKey = "profile" | "account" | "security" | "sessions" | "connections"
 
@@ -100,6 +101,22 @@ function ProfileShell() {
     else router.replace(href, { scroll: false })
   }
 
+  // A section opened from the list pushed one entry: «Назад до розділів» goes back to it (no list → section → list
+  // loop in the history); a section that came from a link replaces its entry with the list.
+  const openedFromListRef = useRef(false)
+  const openSection = (key: TabKey) => {
+    openedFromListRef.current = true
+    selectTab(key, "push")
+  }
+  const backToSections = () => {
+    if (openedFromListRef.current) {
+      openedFromListRef.current = false
+      router.back()
+    } else {
+      selectTab(null, "replace")
+    }
+  }
+
   // Mobile master-detail focus: the opened section takes focus, closing returns it to its row.
   const detailRef = useRef<HTMLDivElement>(null)
   const rowsRef = useRef(new Map<TabKey, HTMLButtonElement>())
@@ -123,6 +140,8 @@ function ProfileShell() {
     setIsLoading(true)
     try {
       const data = await apiGet<Account>("/api/auth/account")
+      // before the sections mount and restore their drafts: drafts of another account (a switch in this tab) go
+      clearAccountDrafts(data.ID)
       setAccount(data)
       setLoadError(null)
     } catch (err) {
@@ -201,7 +220,8 @@ function ProfileShell() {
         </div>
       </header>
 
-      {account && (
+      {/* On a phone the identity card belongs to the list of sections; an opened section starts with its own content. */}
+      {mobileDetail === null && (
         <div className="mb-6 flex items-start gap-4 rounded-lg border border-line bg-surface p-4">
           <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand text-xl font-semibold text-on-brand">
             {account.Picture ? (
@@ -287,7 +307,7 @@ function ProfileShell() {
                   else rowsRef.current.delete(item.key)
                 }}
                 type="button"
-                onClick={() => selectTab(item.key, "push")}
+                onClick={() => openSection(item.key)}
                 className="flex w-full items-center gap-3 rounded-lg border border-line bg-surface p-4 text-left transition-colors hover:bg-hover"
               >
                 <item.icon className="h-5 w-5 shrink-0 text-dim" aria-hidden="true" />
@@ -306,7 +326,7 @@ function ProfileShell() {
         <div className="space-y-4">
           <button
             type="button"
-            onClick={() => selectTab(null, "push")}
+            onClick={backToSections}
             className="inline-flex min-h-10 items-center gap-1 text-sm text-dim hover:text-ink"
           >
             <ChevronLeft className="h-4 w-4" aria-hidden="true" />

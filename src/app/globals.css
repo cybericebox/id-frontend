@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import '../styles/ds-tokens.css';
 @import '../styles/ds-modal-motion.css';
+@import '../styles/layers.css';
 
 @custom-variant dark (&:is([data-theme="dark"] *));
 
@@ -188,12 +189,29 @@
 }
 
 @layer components {
+	/* Touch: a small control (32 px button, text link) gets a 44 px hit area around it; the look stays the same.
+	   A positioned element (absolute) keeps its own position: utilities win over this layer. */
+	@media (pointer: coarse) {
+		.ib-tap {
+			position: relative;
+		}
+		.ib-tap::after {
+			content: "";
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			width: max(100%, 44px);
+			height: max(100%, 44px);
+			transform: translate(-50%, -50%);
+		}
+	}
+
 	/* Skip link: off-screen until it takes focus, then the first thing on the page. */
 	.skip-link {
 		position: fixed;
 		left: 8px;
 		top: 8px;
-		z-index: 100;
+		z-index: var(--z-skip);
 		transform: translateY(-200%);
 		padding: 8px 12px;
 		border-radius: var(--radius-md);

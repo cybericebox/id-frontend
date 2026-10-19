@@ -37,6 +37,16 @@ export function Spinner({
   )
 }
 
+// The crest inside a busy button: decorative, the button's busy label says what runs.
+export function CrestMark() {
+  return (
+    <span aria-hidden="true" className="crest-loader crest-loader-sm ib-btn__mark">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={CREST_SRC} alt="" />
+    </span>
+  )
+}
+
 export function LoadingArea({ label, message, className }: { label?: string; message?: string; className?: string }) {
   return <div className={cn("loading-area", className)}><Spinner size="lg" label={label ?? message ?? t("common.loading")} />{message && <span className="loading-area-label" aria-hidden="true">{message}</span>}</div>
 }
@@ -44,7 +54,7 @@ export function LoadingArea({ label, message, className }: { label?: string; mes
 // Full-screen centered loader for page-level loading states.
 export function PageLoader({ label, message }: { label?: string; message?: string }) {
   return (
-    <div className="loading-area loading-area-page fixed inset-0 z-50 bg-paper">
+    <div className="loading-area loading-area-page fixed inset-0 z-[var(--z-popover)] bg-paper">
       <Spinner size="lg" label={label ?? message ?? t("common.loading")} />
       {message && <span className="loading-area-label" aria-hidden="true">{message}</span>}
     </div>

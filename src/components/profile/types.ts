@@ -1,5 +1,6 @@
 // Shape of GET /api/auth/account (daemon authModel.AccountInfo, PascalCase JSON).
 export interface Account {
+  ID: string
   FirstName: string
   LastName: string
   Email: string

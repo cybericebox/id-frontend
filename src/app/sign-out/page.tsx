@@ -7,6 +7,7 @@ import { Wordmark } from "@/components/brand/Wordmark"
 import { PageLoader, Spinner } from "@/components/ui/spinner"
 import { safeReturnTo } from "@/lib/auth"
 import { apiUrl } from "@/api/client"
+import { clearAccountDrafts } from "@/lib/drafts"
 import { t } from "@/i18n/t"
 
 // ---------------------------------------------------------------------------
@@ -31,6 +32,8 @@ function SignOut() {
   useEffect(() => {
     let cancelled = false
     const run = async () => {
+      // unsaved profile drafts never outlive the session in this tab
+      clearAccountDrafts()
       try {
         // Hits api.<domain> (apiUrl); clears master + local cookies via
         // DeAuthenticate. A bare relative path would 404 on the id origin.

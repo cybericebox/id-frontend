@@ -10,12 +10,14 @@ import { t } from "@/i18n/t"
 // consequence, «Скасувати» + the action. tone="danger" makes the action the
 // solid danger button. Focus starts on «Скасувати»; Esc and the backdrop
 // cancel unless the action is running. Errors stay inside the dialog.
-export function ConfirmDialog({ open, onCancel, title, description, confirmLabel, cancelLabel, tone = "default", busy = false, disabled = false, error, onConfirm, children }: {
+export function ConfirmDialog({ open, onCancel, title, description, confirmLabel, busyLabel, cancelLabel, tone = "default", busy = false, disabled = false, error, onConfirm, children }: {
   open: boolean
   onCancel: () => void
   title: string
   description?: React.ReactNode
   confirmLabel: string
+  /** The running operation in the present tense («Видаляємо…»), shown in the confirm button while busy. */
+  busyLabel: string
   cancelLabel?: string
   tone?: "default" | "danger"
   busy?: boolean
@@ -42,7 +44,7 @@ export function ConfirmDialog({ open, onCancel, title, description, confirmLabel
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
         <DialogFooter>
           <Button ref={cancelRef} type="button" variant="outline" disabled={busy} onClick={onCancel}>{cancelLabel ?? t("common.cancel")}</Button>
-          <Button type="submit" variant={tone === "danger" ? "destructive" : "default"} busy={busy} disabled={disabled}>{confirmLabel}</Button>
+          <Button type="submit" variant={tone === "danger" ? "destructive" : "default"} busy={busy} busyLabel={busyLabel} disabled={disabled}>{confirmLabel}</Button>
         </DialogFooter>
       </form>
     </DialogContent>

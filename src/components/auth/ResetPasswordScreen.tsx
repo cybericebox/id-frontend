@@ -81,7 +81,9 @@ export function ResetPasswordScreen() {
     defaultValues: { NewPassword: "", ConfirmPassword: "" },
   })
 
-  const signInHref = returnTo ? `/sign-in?return_to=${encodeURIComponent(returnTo)}` : "/sign-in"
+  const returnQuery = returnTo ? `?return_to=${encodeURIComponent(returnTo)}` : ""
+  const signInHref = `/sign-in${returnQuery}`
+  const forgotHref = `/forgot-password${returnQuery}`
 
   const onSubmit: SubmitHandler<ResetPasswordValues> = async (data) => {
     setFormError(null)
@@ -120,7 +122,7 @@ export function ResetPasswordScreen() {
             title={t("resetPassword.missingCodeTitle")}
             subtitle={t("resetPassword.missingCodeDescription")}
           />
-          <AuthSwitch href="/forgot-password" action={t("resetPassword.requestNewLink")} />
+          <AuthSwitch href={forgotHref} action={t("resetPassword.requestNewLink")} />
         </AuthPane>
       </AuthLayout>
     )
@@ -161,7 +163,6 @@ export function ResetPasswordScreen() {
                   <FormLabel>{t("resetPassword.newPassword")}</FormLabel>
                   <FormControl>
                     <PasswordInput
-                      placeholder={t("resetPassword.newPasswordPlaceholder")}
                       autoComplete="new-password"
                       {...field}
                       aria-describedby={[field.value ? strengthId : undefined, form.formState.errors.NewPassword && (!field.value || form.formState.errors.NewPassword?.type === "server") ? msgId : undefined].filter(Boolean).join(" ") || undefined}
@@ -183,7 +184,6 @@ export function ResetPasswordScreen() {
                   <FormLabel>{t("resetPassword.confirmPassword")}</FormLabel>
                   <FormControl>
                     <PasswordInput
-                      placeholder={t("resetPassword.confirmPasswordPlaceholder")}
                       autoComplete="new-password"
                       {...field}
                     />
@@ -195,13 +195,14 @@ export function ResetPasswordScreen() {
 
             <FormError message={formError} />
             {/* a used or expired link is only known after the submit: offer the way out next to the error */}
-            {formError && <AuthSwitch href="/forgot-password" action={t("resetPassword.requestNewLink")} />}
+            {formError && <AuthSwitch href={forgotHref} action={t("resetPassword.requestNewLink")} />}
 
             <Button
               type="submit"
               className="w-full"
               disabled={isSubmitting}
               busy={isSubmitting}
+              busyLabel={t("common.busy.saving")}
             >
               {t("resetPassword.submit")}
             </Button>

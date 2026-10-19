@@ -149,8 +149,8 @@ export function AuthSidePanel({
               ),
             }, { groupFrom: 1 })}
           </p>
-          <CookieSettingsLink className="text-on-brand-2 hover:text-on-brand" />
-          <EmailOff><FeedbackLink className="text-on-brand-2 hover:text-on-brand" /></EmailOff>
+          <CookieSettingsLink className="ib-tap text-on-brand-2 hover:text-on-brand" />
+          <EmailOff><FeedbackLink className="ib-tap text-on-brand-2 hover:text-on-brand" /></EmailOff>
           {/* bottom-left: the reCAPTCHA badge occupies the bottom-right corner */}
           <ThemeSwitch onMass className="-ml-1.5" />
         </footer>

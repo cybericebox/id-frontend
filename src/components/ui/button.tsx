@@ -3,7 +3,8 @@ import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/utils/cn"
-import { Spinner } from "@/components/ui/spinner"
+import { CrestMark } from "@/components/ui/spinner"
+import "./button.css"
 
 const buttonVariants = cva(
   // ds-v2 .ib-btn: 40 px default, radius 6, medium 14, no shadows.
@@ -24,7 +25,7 @@ const buttonVariants = cva(
       },
       size: {
         default: "h-10 px-4",
-        sm: "h-8 px-3 text-xs",
+        sm: "ib-tap h-8 px-3 text-xs",
         lg: "h-10 px-4",
         icon: "h-10 w-10",
       },
@@ -36,16 +37,20 @@ const buttonVariants = cva(
   }
 )
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  asChild?: boolean
-  /** Busy state: disables the button and shows the crest loader before the label. */
-  busy?: boolean
-}
+// A button that can be busy must say what it is doing: `busyLabel` is required whenever `busy` is passed.
+type BusyProps = { busy?: undefined; busyLabel?: undefined } | { busy: boolean; busyLabel: string }
 
+export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
+  VariantProps<typeof buttonVariants> &
+  BusyProps & {
+    asChild?: boolean
+  }
+
+// Busy state (AGENTS.md «Busy buttons show the operation»): the button is disabled and shows the crest with the
+// operation in the present tense («Зберігаємо…») in place of its label. Both faces share one grid cell, so the button
+// keeps the width of the wider one and never jumps; the hidden face stays out of the accessible name.
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, busy = false, disabled, children, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, busy = false, busyLabel, disabled, children, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
     return (
       <Comp
@@ -55,7 +60,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         aria-busy={busy || undefined}
         {...props}
       >
-        {busy && !asChild ? <><Spinner size="sm" />{children}</> : children}
+        {busyLabel === undefined || asChild ? children : (
+          <span className="ib-btn__faces">
+            <span className="ib-btn__face" aria-hidden={busy || undefined}>{children}</span>
+            <span className="ib-btn__face ib-btn__face--busy" aria-hidden={!busy || undefined}>
+              {busy ? <CrestMark /> : <span className="ib-btn__mark" />}
+              {busyLabel}
+            </span>
+          </span>
+        )}
       </Comp>
     )
   }

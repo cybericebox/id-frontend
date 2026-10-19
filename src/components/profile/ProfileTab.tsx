@@ -22,16 +22,18 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { toast } from "@/components/ui/toast"
 import { FormError, reportFormError } from "@/components/ui/form-error"
 import { apiPatch, apiUrl, mediaUrl } from "@/api/client"
+import { uploadWithProgress } from "@/api/upload"
 import { localizedError, localizedResponseError } from "@/i18n/apiError"
 import { t } from "@/i18n/t"
 import { initials } from "@/lib/initials"
 import type { Account } from "./types"
 
 import { AvatarCropDialog } from "./AvatarCropDialog"
-import { STORAGE_DRAFT_PROFILE_NAME } from "@/lib/storageKeys"
+import { profileNameDraftKey } from "@/lib/storageKeys"
 import { fitImage, fitImageMaxSide } from "@/lib/fitImage"
 
 const ProfileSchema = z.object({
@@ -54,7 +56,12 @@ export function ProfileTab({
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [photoError, setPhotoError] = useState<string | null>(null)
-  const [photoAction, setPhotoAction] = useState<"upload" | "remove" | null>(null)
+  // "prepare": the picked picture is being shrunk; "upload": the cropped photo is on its way (progress in %, null
+  // until the browser reports it)
+  const [photoAction, setPhotoAction] = useState<"prepare" | "upload" | "remove" | null>(null)
+  const [uploadPercent, setUploadPercent] = useState<number | null>(null)
+  const [removeOpen, setRemoveOpen] = useState(false)
+  const [removeError, setRemoveError] = useState("")
   const isPhotoBusy = photoAction !== null
   const [cropSrc, setCropSrc] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -62,6 +69,7 @@ export function ProfileTab({
   const baselineRef = useRef(baseline)
   const accountNamesRef = useRef(baseline)
   const submittingRef = useRef(false)
+  const draftKey = profileNameDraftKey(account.ID)
 
   const form = useForm<ProfileValues>({
     resolver: zodResolver(ProfileSchema),
@@ -76,7 +84,7 @@ export function ProfileTab({
   // Cleared on a successful save.
   useEffect(() => {
     try {
-      const raw = sessionStorage.getItem(STORAGE_DRAFT_PROFILE_NAME)
+      const raw = sessionStorage.getItem(draftKey)
       // keepDefaultValues: the restored text counts as a change against the saved name, so Save stays enabled
       if (raw) form.reset(JSON.parse(raw), { keepDefaultValues: true })
     } catch {
@@ -84,7 +92,7 @@ export function ProfileTab({
     }
     const sub = form.watch((values) => {
       try {
-        sessionStorage.setItem(STORAGE_DRAFT_PROFILE_NAME, JSON.stringify(values))
+        sessionStorage.setItem(draftKey, JSON.stringify(values))
       } catch {
         /* ignore */
       }
@@ -121,7 +129,7 @@ export function ProfileTab({
       return
     }
     // Oversized pictures are shrunk first; the size limit applies to the result.
-    setPhotoAction("upload")
+    setPhotoAction("prepare")
     let file: File
     try {
       file = await fitImage(picked)
@@ -144,17 +152,12 @@ export function ProfileTab({
     closeCropper()
     setPhotoError(null)
     setPhotoAction("upload")
+    setUploadPercent(null)
     try {
       const fd = new FormData()
       fd.append("file", blob, "avatar.jpg")
-      // Raw fetch: multipart body, let the browser set the Content-Type boundary.
-      // apiUrl keeps it on the API origin (api.<domain>) — a bare relative path
-      // would hit the id.<domain> frontend origin and 404.
-      const res = await fetch(apiUrl("/api/auth/account/avatar"), {
-        method: "POST",
-        credentials: "include",
-        body: fd,
-      })
+      // Multipart body (the browser sets the Content-Type boundary) on the API origin, with upload progress.
+      const res = await uploadWithProgress("/api/auth/account/avatar", fd, setUploadPercent)
       if (!res.ok) {
         setPhotoError(await localizedResponseError(res))
         return
@@ -168,8 +171,10 @@ export function ProfileTab({
     }
   }
 
+  // Runs from the confirmation dialog; its errors stay in the dialog.
   const onRemovePhoto = async () => {
     setPhotoError(null)
+    setRemoveError("")
     setPhotoAction("remove")
     try {
       const res = await fetch(apiUrl("/api/auth/account/avatar"), {
@@ -177,13 +182,14 @@ export function ProfileTab({
         credentials: "include",
       })
       if (!res.ok) {
-        setPhotoError(await localizedResponseError(res))
+        setRemoveError(await localizedResponseError(res))
         return
       }
+      setRemoveOpen(false)
       toast.success(t("profile.profile.photoRemoved"))
       onUpdated()
     } catch (err) {
-      reportFormError(err, setPhotoError)
+      reportFormError(err, setRemoveError)
     } finally {
       setPhotoAction(null)
     }
@@ -205,8 +211,8 @@ export function ProfileTab({
       form.reset(data, { keepValues })
       // A newer draft still needs to survive an auth redirect.
       try {
-        if (keepValues) sessionStorage.setItem(STORAGE_DRAFT_PROFILE_NAME, JSON.stringify(form.getValues()))
-        else sessionStorage.removeItem(STORAGE_DRAFT_PROFILE_NAME)
+        if (keepValues) sessionStorage.setItem(draftKey, JSON.stringify(form.getValues()))
+        else sessionStorage.removeItem(draftKey)
       } catch { /* storage may be unavailable */ }
       toast.success(t("profile.profile.saved"))
       onUpdated()
@@ -261,7 +267,10 @@ export function ProfileTab({
                 aria-describedby={photoError ? "profile-photo-error" : undefined}
                 onClick={onPickPhoto}
                 disabled={isPhotoBusy}
-                busy={photoAction === "upload"}
+                busy={photoAction === "prepare" || photoAction === "upload"}
+                busyLabel={photoAction === "prepare"
+                  ? t("common.busy.preparingPhoto")
+                  : uploadPercent === null ? t("common.busy.uploading") : t("common.busy.uploadingPercent", { percent: uploadPercent })}
               >
                 {account.Picture
                   ? t("profile.profile.changePhoto")
@@ -272,9 +281,8 @@ export function ProfileTab({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={onRemovePhoto}
+                  onClick={() => { setRemoveError(""); setRemoveOpen(true) }}
                   disabled={isPhotoBusy}
-                  busy={photoAction === "remove"}
                 >
                   {t("profile.profile.removePhoto")}
                 </Button>
@@ -284,6 +292,19 @@ export function ProfileTab({
             {photoError && <p id="profile-photo-error" role="alert" className="text-xs font-medium text-destructive">{photoError}</p>}
           </div>
         </div>
+
+        <ConfirmDialog
+          open={removeOpen}
+          onCancel={() => setRemoveOpen(false)}
+          tone="danger"
+          busy={photoAction === "remove"}
+          busyLabel={t("common.busy.removing")}
+          error={removeError}
+          title={t("profile.profile.removePhotoTitle")}
+          description={t("profile.profile.removePhotoBody")}
+          confirmLabel={t("profile.profile.removePhotoConfirm")}
+          onConfirm={() => void onRemovePhoto()}
+        />
 
         <AvatarCropDialog
           open={cropSrc !== null}
@@ -328,6 +349,7 @@ export function ProfileTab({
                 type="submit"
                 disabled={!dirty}
                 busy={isSubmitting}
+                busyLabel={t("common.busy.saving")}
               >
                 {t("profile.profile.save")}
               </Button>
