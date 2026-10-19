@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
+import { SECRET_PARAMS } from "@/lib/useUrlToken"
 
 /**
  * Reads a one-time URL flag (e.g. ?google_error=failed set by a backend
@@ -23,6 +24,8 @@ export function useOneShotParam(name: string, params: URLSearchParams | null): [
     setValue(params.get(name))
     const rest = new URLSearchParams(params.toString())
     rest.delete(name)
+    // a one-time token never comes back into the address (useUrlToken removes it too)
+    for (const secret of SECRET_PARAMS) rest.delete(secret)
     const query = rest.toString()
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
   }, [name, pathname, router, params])

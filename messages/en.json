@@ -81,7 +81,6 @@
   "signIn.orWithEmail": "or",
   "signIn.emailPlaceholder": "name@example.com",
   "signIn.submit": "Sign in",
-  "signOut.title": "Signing out",
   "signOut.inProgress": "Signing out…",
   "register.title": "Sign up",
   "register.subtitle": "One account for all events and labs.",
@@ -380,5 +379,9 @@
   "common.busy.resolving": "Marking…",
   "confirmEmail.title": "Confirm the new address",
   "confirmEmail.body": "After the confirmation, sign in with the new email address.",
-  "confirmEmail.confirm": "Confirm the new address"
+  "confirmEmail.confirm": "Confirm the new address",
+  "signOut.question": "Sign out of your account?",
+  "signOut.body": "You will be signed out on every platform site in this browser.",
+  "signOut.confirm": "Sign out",
+  "signOut.failed": "Could not sign out"
 }

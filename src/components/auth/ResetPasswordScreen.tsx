@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button"
 import { FormError, reportFieldOrFormError } from "@/components/ui/form-error"
 import { useUrlParams } from "@/lib/useUrlParams"
 import { useGuestOnly } from "@/lib/useGuestOnly"
+import { forgetUrlToken, useUrlToken } from "@/lib/useUrlToken"
 import { AuthLayout } from "./AuthLayout"
 import { AuthHeading, AuthPane, AuthSwitch } from "./parts"
 import { t } from "@/i18n/t"
@@ -56,8 +57,8 @@ type ResetPasswordValues = z.infer<ReturnType<typeof buildResetSchema>>
 export function ResetPasswordScreen() {
   const params = useUrlParams()
   // The reset email links to /reset-password?token=… (backend useCase/auth/password.go);
-  // ?code= is still accepted for links issued before that.
-  const code = params?.get("token") ?? params?.get("code") ?? ""
+  // ?code= is still accepted for links issued before that. The token leaves the address once read.
+  const code = useUrlToken(params) ?? ""
   const returnTo = params?.get("return_to") ?? undefined
   useGuestOnly(params !== null, returnTo, undefined)
 
@@ -101,6 +102,7 @@ export function ResetPasswordScreen() {
         undefined,
         { required: false }
       )
+      forgetUrlToken()
       setSucceeded(true)
       return
     } catch (err) {

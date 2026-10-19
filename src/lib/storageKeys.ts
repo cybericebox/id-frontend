@@ -20,6 +20,11 @@ export function profileNameDraftKey(userId: string): string {
   return `${ACCOUNT_DRAFT_PREFIXES[1]}_${userId}`
 }
 
+// A one-time token read from the address (reset, setup, email change), kept for the tab once the address drops it.
+export function urlTokenKey(pathname: string): string {
+  return `cib_url_token_${pathname}`
+}
+
 export function setupDraftKey(token: string): string {
   return `${SETUP_DRAFT}_${token}`
 }

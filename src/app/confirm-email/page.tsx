@@ -1,8 +1,7 @@
 "use client"
 
-import React, { Suspense, useState } from "react"
+import React, { useState } from "react"
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
 import { CircleCheck, LinkIcon } from "lucide-react"
 
 import { Wordmark } from "@/components/brand/Wordmark"
@@ -12,6 +11,8 @@ import { apiPost } from "@/api/client"
 import { localizedError } from "@/i18n/apiError"
 import { t } from "@/i18n/t"
 import { inlineLinkClass } from "@/components/auth/parts"
+import { useUrlParams } from "@/lib/useUrlParams"
+import { forgetUrlToken, useUrlToken } from "@/lib/useUrlToken"
 
 // ---------------------------------------------------------------------------
 // Email-change confirmation. The backend emails a link to
@@ -23,20 +24,21 @@ import { inlineLinkClass } from "@/components/auth/parts"
 
 type State = { kind: "ready" } | { kind: "busy" } | { kind: "ok" } | { kind: "error"; message: string }
 
-function ConfirmEmail() {
-  const searchParams = useSearchParams()
-  const code = searchParams.get("token") ?? searchParams.get("code") ?? ""
-  const [state, setState] = useState<State>(() =>
-    code ? { kind: "ready" } : { kind: "error", message: t("confirmEmail.missing") }
-  )
+export default function ConfirmEmailPage() {
+  // The token leaves the address once read (useUrlToken); null until the client knows the URL.
+  const code = useUrlToken(useUrlParams())
+  const [action, setAction] = useState<State>({ kind: "ready" })
+  if (code === null) return <PageLoader />
+  const state: State = !code && action.kind === "ready" ? { kind: "error", message: t("confirmEmail.missing") } : action
 
   const confirm = async () => {
-    setState({ kind: "busy" })
+    setAction({ kind: "busy" })
     try {
       await apiPost("/api/auth/account/email/confirm", { Code: code }, undefined, { required: false })
-      setState({ kind: "ok" })
+      forgetUrlToken()
+      setAction({ kind: "ok" })
     } catch (err) {
-      setState({ kind: "error", message: localizedError(err) })
+      setAction({ kind: "error", message: localizedError(err) })
     }
   }
 
@@ -79,14 +81,5 @@ function ConfirmEmail() {
         </div>
       </div>
     </main>
-  )
-}
-
-// Suspense — useSearchParams opts out of static prerendering (output: 'export').
-export default function ConfirmEmailPage() {
-  return (
-    <Suspense fallback={<PageLoader />}>
-      <ConfirmEmail />
-    </Suspense>
   )
 }
