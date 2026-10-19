@@ -9,7 +9,7 @@
 import errorsUk from "../../messages/errors.uk.json"
 import errorsEn from "../../messages/errors.en.json"
 import { ApiError } from "@/api/client"
-import { isOverloadError } from "@/api/retry"
+import { isOverloadCode, isOverloadError } from "@/api/retry"
 import { isUnavailableStatus } from "@/lib/serviceStatus"
 import { t } from "./t"
 
@@ -39,7 +39,8 @@ export function waitText(seconds: number): string {
 
 export function localizedError(err: unknown): string {
   // The server's overload signal (a 503 with Retry-After, an overload code) without a catalog message (reads were already retried).
-  if (err instanceof ApiError && isOverloadError(err) && !(err.code != null && (uk[String(err.code)] ?? en[String(err.code)]))) {
+  // The overload codes always read as the one overloaded line (with its retry), not as their catalog texts.
+  if (err instanceof ApiError && isOverloadError(err) && (isOverloadCode(err.code) || !(err.code != null && (uk[String(err.code)] ?? en[String(err.code)])))) {
     return t("error.overloaded")
   }
   if (isServiceUnavailable(err)) return t("error.unavailable")
