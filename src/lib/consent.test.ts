@@ -147,4 +147,27 @@ describe("cookie policy link", () => {
     expect(code).not.toContain("consent.rejectAll")
     expect(code).not.toContain("consent.acceptSelected")
   })
+
+  it("the GA config never carries the query or the hash of the page or the referrer", () => {
+    const w = { dataLayer: [] as unknown[] }
+    const loc = { origin: "https://id.cybericebox.local", pathname: "/reset-password/", href: "https://id.cybericebox.local/reset-password/?token=SECRET&return_to=https%3A%2F%2Fx#SECRET2" }
+    new Function("window", "document", "dataLayer", "location", consent.gtagBootScript("G-TEST"))(
+      w, { cookie: "cib_consent=analytics:granted", referrer: "https://admin.cybericebox.local/users?token=SECRET3" }, w.dataLayer, loc)
+    const calls = (w.dataLayer as ArrayLike<unknown>[]).map((a) => Array.from(a))
+    expect(JSON.stringify(calls)).not.toMatch(/SECRET|return_to|token/)
+    const config = calls.find((c) => c[0] === "config")!
+    expect(config[2]).toEqual({ page_location: "https://id.cybericebox.local/reset-password/", page_referrer: "https://admin.cybericebox.local/users" })
+  })
+
+  it("loads GA only after analytics consent", () => {
+    expect(consent.shouldLoadAnalytics("G-TEST", null)).toBe(false)
+    expect(consent.shouldLoadAnalytics("G-TEST", { analytics: false })).toBe(false)
+    expect(consent.shouldLoadAnalytics("", { analytics: true })).toBe(false)
+    expect(consent.shouldLoadAnalytics("G-TEST", { analytics: true })).toBe(true)
+  })
+
+  it("the page address for GA is the origin and the path only", () => {
+    expect(consent.analyticsPageLocation({ origin: "https://id.x", pathname: "/setup/" })).toBe("https://id.x/setup/")
+  })
 })
+

@@ -81,7 +81,6 @@
   "signIn.orWithEmail": "або",
   "signIn.emailPlaceholder": "name@example.com",
   "signIn.submit": "Увійти",
-  "signOut.title": "Вихід",
   "signOut.inProgress": "Виходимо…",
   "register.title": "Реєстрація",
   "register.subtitle": "Один обліковий запис для всіх заходів і лабораторій.",
@@ -380,5 +379,9 @@
   "common.busy.resolving": "Позначаємо…",
   "confirmEmail.title": "Підтвердження нової адреси",
   "confirmEmail.body": "Після підтвердження входьте з новою адресою електронної пошти.",
-  "confirmEmail.confirm": "Підтвердити нову адресу"
+  "confirmEmail.confirm": "Підтвердити нову адресу",
+  "signOut.question": "Вийти з облікового запису?",
+  "signOut.body": "Ви вийдете на всіх сайтах платформи в цьому браузері.",
+  "signOut.confirm": "Вийти",
+  "signOut.failed": "Не вдалося вийти"
 }

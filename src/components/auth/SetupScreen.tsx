@@ -26,6 +26,7 @@ import { ErrorScreen } from "@/components/ErrorPage"
 import { AuthLayout } from "./AuthLayout"
 import { useOneShotParam } from "@/lib/useOneShotParam"
 import { useUrlParams } from "@/lib/useUrlParams"
+import { forgetUrlToken, useUrlToken } from "@/lib/useUrlToken"
 import { mainOrigin } from "@/lib/origins"
 import { AuthHeading, AuthPane, AuthSwitch, GoogleIcon, inlineLinkClass } from "./parts"
 import { t } from "@/i18n/t"
@@ -114,7 +115,8 @@ function ErrorCard({
 // ---------------------------------------------------------------------------
 export function SetupScreen() {
   const params = useUrlParams()
-  const token = params?.get("token") ?? ""
+  // The token leaves the address once read (useUrlToken); the tab keeps it for a reload.
+  const token = useUrlToken(params) ?? ""
   const [linkError] = useOneShotParam("error", params)
   // Post-registration landing, carried from sign-up / Google (validated by the backend).
   const returnTo = params?.get("return_to") ?? ""
@@ -194,8 +196,10 @@ export function SetupScreen() {
   // ---------------------------------------------------------------------------
   // Fetch setup info on mount (or when token changes)
   // ---------------------------------------------------------------------------
+  // the URL being known, not the params object: dropping the token from the address must not fetch again
+  const urlKnown = params !== null
   useEffect(() => {
-    if (params === null) return
+    if (!urlKnown) return
     if (!token) {
       setIsFetching(false)
       return
@@ -262,7 +266,7 @@ export function SetupScreen() {
     return () => {
       cancelled = true
     }
-  }, [params, token, attempt]) // eslint-disable-line @eslint-react/exhaustive-deps
+  }, [urlKnown, token, attempt]) // eslint-disable-line @eslint-react/exhaustive-deps
 
   // ---------------------------------------------------------------------------
   // Persist non-secret fields to sessionStorage as they change, so the form
@@ -313,6 +317,7 @@ export function SetupScreen() {
       )
 
       clearDraft(draftKey) // registration complete — drop the saved draft
+      forgetUrlToken()
       // The button stays busy while the browser navigates, so a second click cannot submit the used token again.
       if (RedirectURL) {
         window.location.assign(RedirectURL)

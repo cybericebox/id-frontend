@@ -7,7 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 const post = vi.hoisted(() => vi.fn())
 vi.mock("@/api/client", async (orig) => ({ ...(await orig<typeof import("@/api/client")>()), apiPost: post }))
-vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams("token=abc") }))
+const replace = vi.hoisted(() => vi.fn())
+vi.mock("next/navigation", () => ({ usePathname: () => "/confirm-email/", useRouter: () => ({ replace }) }))
 
 import ConfirmEmailPage from "./page"
 
@@ -17,6 +18,7 @@ describe("/confirm-email", () => {
   let host: HTMLElement
   let root: ReturnType<typeof createRoot>
   beforeEach(() => {
+    window.history.replaceState(null, "", "/confirm-email/?token=abc")
     host = document.body.appendChild(document.createElement("div"))
     root = createRoot(host)
   })
@@ -30,6 +32,8 @@ describe("/confirm-email", () => {
     post.mockResolvedValue(undefined)
     await act(async () => { root.render(<ConfirmEmailPage />) })
     expect(post).not.toHaveBeenCalled()
+    // the token left the address
+    expect(replace).toHaveBeenCalledWith("/confirm-email/", { scroll: false })
     const confirm = host.querySelector<HTMLButtonElement>("button")!
     expect(confirm.querySelector(".ib-btn__face:not([aria-hidden])")?.textContent).toBe("Підтвердити нову адресу")
     await act(async () => { confirm.click() })
