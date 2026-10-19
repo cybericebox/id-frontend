@@ -3,13 +3,26 @@
 
 export const STORAGE_INBOX_READ = "cib_inbox_read"
 export const STORAGE_BACK = "cib_back"
-export const STORAGE_DRAFT_ACCOUNT_EMAIL = "cib_draft_account_email"
-export const STORAGE_DRAFT_PROFILE_NAME = "cib_draft_profile_name"
+// Profile drafts of one account (the scope is the user id), so another user in the same tab never gets them.
+export const ACCOUNT_DRAFT_PREFIXES = ["cib_draft_account_email", "cib_draft_profile_name"] as const
 const SITE_BANNER_DISMISSED = "cib_site_banner_dismissed"
 const SETUP_DRAFT = "cib_setup_draft"
 
 export function siteBannerDismissedKey(id: string | number, version: string | number = ""): string {
   return `${SITE_BANNER_DISMISSED}_${id}_${version}`
+}
+
+export function accountEmailDraftKey(userId: string): string {
+  return `${ACCOUNT_DRAFT_PREFIXES[0]}_${userId}`
+}
+
+export function profileNameDraftKey(userId: string): string {
+  return `${ACCOUNT_DRAFT_PREFIXES[1]}_${userId}`
+}
+
+// A one-time token read from the address (reset, setup, email change), kept for the tab once the address drops it.
+export function urlTokenKey(pathname: string): string {
+  return `cib_url_token_${pathname}`
 }
 
 export function setupDraftKey(token: string): string {

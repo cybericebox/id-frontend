@@ -12,7 +12,8 @@ import DOMPurify from "isomorphic-dompurify"
 import { Bell, Check, ChevronRight, X } from "lucide-react"
 import { EmptyState } from "@/components/ui/empty-state"
 import { LoadError } from "@/components/ui/load-error"
-import { Spinner } from "@/components/ui/spinner"
+import { CrestMark, Spinner } from "@/components/ui/spinner"
+import "@/components/ui/button.css"
 import { Tooltip } from "@/components/ui/tooltip"
 
 import { apiGet, apiPatch, apiPost } from "@/api/client"
@@ -23,7 +24,7 @@ import { NotificationMessageCard } from "./NotificationMessageCard"
 import { NotificationPopIn, popInDuration } from "./NotificationPopIn"
 import {
   INBOX_TABS, canResolve, countsAfterRead, countsAfterReadAll, countsAfterResolve, formatInboxTime, inTab, inboxQuery, isUnread, orderForTab,
-  bellCount, parseCounts, parseOtherEvents, resolutionKey, resolveDefaultTab, resolverName,
+  bellCount, bellLabel, needsAction, parseCounts, parseOtherEvents, resolutionKey, resolveDefaultTab, resolverName,
   type InboxCounts, type InboxDefaultTab, type InboxMessage as Message, type InboxTab,
 } from "./inboxModel"
 import { keepBrand } from "@/i18n/brand"
@@ -265,7 +266,8 @@ export function InboxButton({ defaultTab = "all", event }: InboxButtonProps = {}
   }, [openInbox])
 
   const badge = bellCount(unread, counts)
-  const label = badge ? t("inbox.titleUnread", { count: badge }) : t("inbox.title")
+  const bell = bellLabel(unread, counts)
+  const label = t(bell.key, bell.vars)
   const tabs = counts ? INBOX_TABS : []
   const tabHasUnread = items.some(isUnread) || (tab === "all" ? unread > 0 : tab !== "requests" && (counts?.[tab] ?? 0) > 0)
 
@@ -354,7 +356,7 @@ export function InboxButton({ defaultTab = "all", event }: InboxButtonProps = {}
       </button>
     </Popover.Trigger>
     <Popover.Portal>
-      <Popover.Content align="end" sideOffset={20} collisionPadding={12} aria-label={t("inbox.title")} className={`z-50 flex ${panelMaxHeight} w-[min(32rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-lg border border-line bg-surface text-ink outline-none`}>
+      <Popover.Content align="end" sideOffset={20} collisionPadding={12} aria-label={t("inbox.title")} className={`z-[var(--z-popover)] flex ${panelMaxHeight} w-[min(32rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-lg border border-line bg-surface text-ink outline-none`}>
         <div className="flex shrink-0 items-center justify-between gap-2 px-4 pt-3 pb-2">
           <h2 className="flex text-dim"><span className="sr-only">{t("inbox.title")}</span><Bell size={19} aria-hidden="true" /></h2>
           <div className="flex shrink-0 items-center gap-2">
@@ -369,7 +371,7 @@ export function InboxButton({ defaultTab = "all", event }: InboxButtonProps = {}
               const count = counts?.[value] ?? 0
               const selected = tab === value
               return <button key={value} type="button" role="tab" id={`inbox-tab-${value}`} aria-controls="inbox-tabpanel" aria-selected={selected} tabIndex={selected ? 0 : -1}
-                aria-label={count > 0 ? t("inbox.tabCount", { name: t(`inbox.tab.${value}`), count }) : undefined}
+                aria-label={count > 0 ? t(value === "requests" ? "inbox.tabCountRequests" : "inbox.tabCount", { name: t(`inbox.tab.${value}`), count }) : undefined}
                 onClick={() => { if (!selected) selectTab(value) }}
                 onKeyDown={(keyEvent) => {
                   const to = nextTabIndex(keyEvent, tabIndex, tabs.length, "horizontal")
@@ -397,7 +399,7 @@ export function InboxButton({ defaultTab = "all", event }: InboxButtonProps = {}
               <NotificationMessageCard
                 icon={item.Icon} tone={item.Tone} accentColor={item.AccentColor} title={item.Title}
                 body={item.Body ? <span dangerouslySetInnerHTML={{ __html: keepBrand(DOMPurify.sanitize(item.Body, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] })) }} /> : undefined}
-                unread={unreadItem} resolved={resolved} compact
+                unread={unreadItem} needsAction={needsAction(item)} resolved={resolved} compact
                 timestamp={<span className="flex min-w-0 items-center justify-between gap-2">
                   {resolved
                     ? <Tooltip content={formatInboxTime(item.CreatedAt)} align="start" className="min-w-0"><span className="min-w-0 truncate">{resolvedLine(item)}</span></Tooltip>
@@ -407,7 +409,10 @@ export function InboxButton({ defaultTab = "all", event }: InboxButtonProps = {}
                 actions={href || unreadItem || canResolve(item) ? <>
                   {href ? <a href={href} onClick={(clickEvent) => { clickEvent.preventDefault(); void followLink(item, href) }} className={`${rowActionClass} text-sm`}>{t("inbox.open")}</a> : unreadItem ? <button type="button" onClick={() => void markRead(item)} className={`${rowActionClass} text-xs`}>{t("inbox.markRead")}</button> : null}
                   {canResolve(item) && <button type="button" disabled={resolving === item.ID} aria-busy={resolving === item.ID} onClick={() => void resolve(item)} className={`${rowActionClass} gap-1 text-xs disabled:cursor-not-allowed disabled:opacity-60`}>
-                    {resolving === item.ID ? <Spinner size="sm" label={t("common.loading")} /> : <Check size={14} aria-hidden="true" />}{t("inbox.resolve")}
+                    <span className="ib-btn__faces">
+                      <span className="ib-btn__face" aria-hidden={resolving === item.ID || undefined}><Check size={14} aria-hidden="true" />{t("inbox.resolve")}</span>
+                      <span className="ib-btn__face ib-btn__face--busy" aria-hidden={resolving !== item.ID || undefined}>{resolving === item.ID ? <CrestMark /> : <span className="ib-btn__mark" />}{t("common.busy.resolving")}</span>
+                    </span>
                   </button>}
                 </> : undefined}
               />
@@ -422,7 +427,7 @@ export function InboxButton({ defaultTab = "all", event }: InboxButtonProps = {}
     </Popover.Portal>
   </Popover.Root>
   {/* the live region is mounted before the first pop-in, so screen readers announce what arrives in it */}
-  {typeof document !== "undefined" && createPortal(<div className="fixed right-4 top-20 z-[70] flex max-h-[calc(100dvh-6rem)] flex-col gap-3 overflow-y-auto" aria-live="polite">
+  {typeof document !== "undefined" && createPortal(<div className="fixed right-4 top-20 z-[var(--z-popin)] flex max-h-[calc(100dvh-6rem)] flex-col gap-3 overflow-y-auto" aria-live="polite">
     {popIns.slice(0, 3).map((item) => <NotificationPopIn key={item.ID} message={item} onClose={() => setPopIns((current) => current.filter((entry) => entry.ID !== item.ID))} onAction={(href) => { const safe = safeHref(href); if (safe) void followLink(item, safe) }} />)}
   </div>, document.body)}
   </>

@@ -157,7 +157,6 @@ export function SecurityTab({ account }: { account: Account }) {
                   <FormLabel>{t("profile.security.newPassword")}</FormLabel>
                   <FormControl>
                     <PasswordInput
-                      placeholder={t("profile.security.newPasswordPlaceholder")}
                       autoComplete="new-password"
                       {...field}
                     />
@@ -189,6 +188,7 @@ export function SecurityTab({ account }: { account: Account }) {
                 type="submit"
                 disabled={!ready}
                 busy={isSubmitting}
+                busyLabel={t("common.busy.saving")}
               >
                 {t("profile.security.save")}
               </Button>

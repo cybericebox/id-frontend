@@ -32,7 +32,7 @@ export function AuthDivider({ label }: { label: string }) {
 // Links inside running text are told apart by an underline (WCAG 1.4.1), not by colour or weight alone (DS .ib-link:
 // 1 px, 45 % of the text colour at rest, full colour on hover).
 export const inlineLinkClass =
-  "rounded-xs font-medium text-action underline decoration-current/45 decoration-1 underline-offset-3 hover:decoration-current"
+  "ib-tap rounded-xs font-medium text-action underline decoration-current/45 decoration-1 underline-offset-3 hover:decoration-current"
 
 export function AuthSwitch({ text, href, action }: { text?: string; href: string; action: string }) {
   return (

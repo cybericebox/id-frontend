@@ -47,8 +47,8 @@ export function AuthLayout({
         </main>
         {/* narrow screens: theme switch at the bottom (on wide screens it sits in the panel footer) */}
         <footer className="flex flex-col items-center gap-3 px-6 pb-5 text-xs text-dim lg:hidden">
-          <CookieSettingsLink className="hover:text-ink" />
-          <EmailOff><FeedbackLink className="hover:text-ink" /></EmailOff>
+          <CookieSettingsLink className="ib-tap hover:text-ink" />
+          <EmailOff><FeedbackLink className="ib-tap hover:text-ink" /></EmailOff>
           <ThemeSwitch />
         </footer>
       </div>

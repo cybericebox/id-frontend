@@ -17,7 +17,6 @@
 import { hosts } from "@/lib/hosts"
 import { apiGet, ApiError } from "@/api/client"
 import { COOKIE_RETURN_TO } from "@/lib/storageKeys"
-import { eventDomain } from "@/lib/origins"
 
 // ---------------------------------------------------------------------------
 // /me — identity object returned by the RP's /api/me endpoint.
@@ -69,37 +68,37 @@ export function redirectToSignIn(signInUrl?: string, returnTo?: string): void {
   window.location.href = url.toString()
 }
 
-/** A platform app host, or any host under the base domain (event sites). */
+// Our sites only, as strict as backLink.classifyBack: the landing, id, admin and exercises hosts, and the event sites
+// (<tag>.<eventDomain>, exactly one label). The API host and deeper subdomains are not destinations.
 function isPlatformHost(host: string): boolean {
   const h = host.toLowerCase()
-  const { main, id, admin, exercises } = hosts()
+  const { main, id, admin, exercises, api, eventDomain } = hosts()
   if ([main, id, admin, exercises].includes(h)) return true
-  return !!eventDomain && (h === eventDomain.toLowerCase() || h.endsWith("." + eventDomain.toLowerCase()))
+  if (h === api || !eventDomain || !h.endsWith("." + eventDomain.toLowerCase())) return false
+  const label = h.slice(0, -eventDomain.length - 1)
+  return label !== "" && !label.includes(".")
+}
+
+// The portless https form of a return_to on our sites, or null (other host, not https, credentials, unparseable).
+function platformTarget(value: string): string | null {
+  try {
+    const u = new URL(value)
+    if (u.protocol !== "https:" || u.username || u.password || !isPlatformHost(u.hostname)) return null
+    // The platform is always reached on its fixed external port: never keep one (e.g. a dev :3001).
+    return `https://${u.hostname}${u.pathname}${u.search}${u.hash}`
+  } catch {
+    return null
+  }
 }
 
 /**
- * safeReturnTo — open-redirect guard. Accepts a return_to only within the
- * platform domain (any subdomain), mirroring the backend's buildCallbackURL
- * guard; everything else (off-domain, relative-but-not-/, unparseable) falls
- * back to /profile. This prevents an attacker-supplied ?return_to=https://evil.com
- * from bouncing an authed user off-platform.
- *
- * Platform hosts are the configured app hosts plus every event site under
- * the base domain.
+ * safeReturnTo — open-redirect guard. Accepts a return_to only on our sites
+ * (landing, id, admin, exercises, event sites; see isPlatformHost), https, without
+ * credentials; everything else (the API host, other hosts, relative, unparseable)
+ * falls back to /profile.
  */
 export function safeReturnTo(returnTo?: string, fallback = "/profile/"): string {
-  if (!returnTo) return fallback
-  try {
-    const u = new URL(returnTo)
-    if (u.protocol === "https:" && isPlatformHost(u.hostname)) {
-      // Strip any port: the platform is always reached on its fixed external
-      // port, so a redirect target must never carry one (e.g. a dev :3001).
-      return `https://${u.hostname}${u.pathname}${u.search}${u.hash}`
-    }
-  } catch {
-    // not a valid URL — fall through to fallback
-  }
-  return fallback
+  return (returnTo && platformTarget(returnTo)) || fallback
 }
 
 /**
@@ -118,18 +117,9 @@ export function safeReturnTo(returnTo?: string, fallback = "/profile/"): string 
  * SSR/static-export safe: no-ops when `typeof window === "undefined"`.
  */
 export function rememberReturnTo(returnTo?: string): void {
-  if (typeof window === "undefined") return
-  if (!returnTo) return
-  try {
-    const u = new URL(returnTo)
-    if (u.protocol === "https:" && isPlatformHost(u.hostname)) {
-      // Force portless https — mirrors Task 7 writeReturnToCookie convention.
-      const portless = `https://${u.hostname}${u.pathname}${u.search}${u.hash}`
-      document.cookie = `${COOKIE_RETURN_TO}=${encodeURIComponent(portless)}; path=/; SameSite=Lax; Secure`
-    }
-  } catch {
-    // Unparseable URL — do nothing.
-  }
+  if (typeof window === "undefined" || !returnTo) return
+  const target = platformTarget(returnTo)
+  if (target) document.cookie = `${COOKIE_RETURN_TO}=${encodeURIComponent(target)}; path=/; SameSite=Lax; Secure`
 }
 
 /**

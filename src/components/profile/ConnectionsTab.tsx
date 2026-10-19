@@ -132,6 +132,7 @@ export function ConnectionsTab({
               variant="outline"
               size="sm"
               busy={isConnecting && !account.HasPassword}
+              busyLabel={t("common.busy.connecting")}
               disabled={isConnecting}
               onClick={() => {
                 if (account.HasPassword) {
@@ -155,6 +156,7 @@ export function ConnectionsTab({
           open={connectOpen}
           onCancel={() => setConnectOpen(false)}
           busy={isConnecting}
+          busyLabel={t("common.busy.connecting")}
           disabled={!connectPassword}
           error={connectError}
           title={t("profile.connections.connectTitle")}
@@ -176,6 +178,7 @@ export function ConnectionsTab({
           onCancel={() => setConfirmOpen(false)}
           tone="danger"
           busy={isBusy}
+          busyLabel={t("common.busy.unlinking")}
           disabled={account.HasPassword && !password}
           error={confirmError}
           title={t("profile.connections.unlinkTitle")}

@@ -1,7 +1,7 @@
 /* Cookie consent: fixed to the bottom, non-blocking, hairline border instead of a shadow.
    Banner = one line + two buttons; panel = categories with switches + two buttons.
    Stacks under 640 px. Tokens only. */
-.cb-consent{position:fixed;z-index:60;left:var(--ib-4);right:var(--ib-4);bottom:var(--ib-4);margin:0 auto;max-width:880px;display:flex;align-items:center;gap:var(--ib-6);padding:var(--ib-4) var(--ib-5);background:var(--ib-raised);border:1px solid var(--ib-line);border-radius:var(--ib-r);color:var(--ib-body);font-size:var(--ib-fs-14);line-height:var(--ib-lh-body)}
+.cb-consent{position:fixed;z-index:var(--z-consent);left:var(--ib-4);right:var(--ib-4);bottom:var(--ib-4);margin:0 auto;max-width:880px;display:flex;align-items:center;gap:var(--ib-6);padding:var(--ib-4) var(--ib-5);background:var(--ib-raised);border:1px solid var(--ib-line);border-radius:var(--ib-r);color:var(--ib-body);font-size:var(--ib-fs-14);line-height:var(--ib-lh-body)}
 .cb-consent:focus-visible{outline:2px solid var(--ib-action);outline-offset:2px}
 .cb-consent a{color:var(--ib-ink);text-decoration:underline;text-underline-offset:3px}
 .cb-consent__text{flex:1;min-width:0}

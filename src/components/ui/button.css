@@ -1,0 +1,5 @@
+/* Busy button faces: the idle label and «Зберігаємо…» share one grid cell, so the button keeps its width. */
+.ib-btn__faces{display:inline-grid;gap:inherit;align-items:center;justify-items:center;min-width:0;max-width:100%}
+.ib-btn__face{grid-area:1/1;display:inline-flex;align-items:center;justify-content:center;gap:inherit;min-width:0;max-width:100%}
+.ib-btn__face[aria-hidden="true"]{visibility:hidden}
+.ib-btn__mark{display:inline-block;flex:none;width:calc(16px * 128 / 125);height:16px}

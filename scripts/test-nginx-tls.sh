@@ -125,6 +125,8 @@ C=$(start plain) || { bad "container did not start"; exit 1; }
 check "A1 /healthz on 8080 -> 200" 200 "$(code "http://127.0.0.1:$(port "$C" 8080)/healthz")"
 hdr=$(curl -s -D - -o /dev/null --max-time 10 "http://127.0.0.1:$(port "$C" 8080)/")
 grep -qi '^content-security-policy:' <<<"$hdr" && ok "A2 CSP header present" || bad "A2 CSP header missing"
+grep -qi '^x-content-type-options: nosniff' <<<"$hdr" && ok "A2c nosniff header present" || bad "A2c nosniff header missing"
+grep -qi '^referrer-policy: strict-origin-when-cross-origin' <<<"$hdr" && ok "A2d Referrer-Policy header present" || bad "A2d Referrer-Policy header missing"
 # The page hashes (the per-URI map in csp.sh) must reach the header of every page, or its inline scripts (the RSC payload) are blocked.
 for page in / /sign-in/; do
   hdr=$(curl -s -D - -o /dev/null --max-time 10 "http://127.0.0.1:$(port "$C" 8080)$page")

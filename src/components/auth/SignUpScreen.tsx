@@ -223,6 +223,7 @@ export function SignUpScreen() {
                 className="w-full"
                 disabled={isSubmitting}
                 busy={isSubmitting}
+                busyLabel={t("common.busy.sending")}
               >
                 {t("register.submit")}
               </Button>
