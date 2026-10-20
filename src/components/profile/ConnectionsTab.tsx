@@ -28,12 +28,15 @@ export function ConnectionsTab({
   onUpdated,
 }: {
   account: Account
-  linkError: boolean
+  /** The error code the Google link callback returned (?error=): link_failed or email_mismatch. */
+  linkError: string | null
   onUpdated: () => void
 }) {
   const [errorMsg, setErrorMsg] = useState<string | null>(() =>
-    linkError ? t("profile.connections.linkFailed") : null
+    linkError === "link_failed" ? t("profile.connections.linkFailed") : null
   )
+  // Google returned an account with another address: the link takes only the account's own one.
+  const [emailMismatch, setEmailMismatch] = useState(linkError === "email_mismatch")
   const [isBusy, setIsBusy] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmError, setConfirmError] = useState("")
@@ -79,6 +82,7 @@ export function ConnectionsTab({
   // callback returns to /profile.
   const connect = async () => {
     setErrorMsg(null)
+    setEmailMismatch(false)
     setConnectError("")
     setConnectPasswordError(null)
     setIsConnecting(true)
@@ -131,6 +135,7 @@ export function ConnectionsTab({
             <Button
               variant="outline"
               size="sm"
+              aria-describedby={emailMismatch ? "connect-google-mismatch" : undefined}
               busy={isConnecting && !account.HasPassword}
               busyLabel={t("common.busy.connecting")}
               disabled={isConnecting}
@@ -149,6 +154,11 @@ export function ConnectionsTab({
             </Button>
           )}
         </div>
+        {!hasGoogle && emailMismatch && (
+          <p id="connect-google-mismatch" role="alert" className="text-sm font-medium text-destructive">
+            {t("profile.connections.emailMismatch", { email: account.Email })}
+          </p>
+        )}
         {hasGoogle && onlyMethod && (
           <p id="unlink-only-method" className="text-sm text-dim">{t("profile.connections.unlinkOnlyMethod")}</p>
         )}
