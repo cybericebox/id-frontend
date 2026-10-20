@@ -388,5 +388,6 @@
   "signOut.question": "Вийти з облікового запису?",
   "signOut.body": "Ви вийдете на всіх сайтах платформи в цьому браузері.",
   "signOut.confirm": "Вийти",
-  "signOut.failed": "Не вдалося вийти"
+  "signOut.failed": "Не вдалося вийти",
+  "setup.googleEmailMismatch": "Підключіть Google-акаунт з адресою {email}."
 }

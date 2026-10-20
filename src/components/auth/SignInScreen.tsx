@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import Link from "next/link"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -27,7 +27,8 @@ import { useGuestOnly } from "@/lib/useGuestOnly"
 import { AuthDivider, AuthHeading, AuthPane, AuthSwitch, GoogleIcon, authLinkClass } from "./parts"
 import { t } from "@/i18n/t"
 import { safeReturnTo } from "@/lib/auth"
-import { apiPost, apiUrl } from "@/api/client"
+import { apiPost } from "@/api/client"
+import { googleHint, googleStartUrl } from "@/lib/googleStart"
 
 // ---------------------------------------------------------------------------
 // Zod schema — mirrors the daemon's JSON body (Email, Password)
@@ -59,6 +60,14 @@ export function SignInScreen() {
     mode: "onSubmit",
     defaultValues: { Email: "", Password: "" },
   })
+
+  // A caller that knows the address (an invitation) passes ?login_hint=: it fills the field and preselects the
+  // Google account.
+  const callerHint = params?.get("login_hint") ?? null
+  useEffect(() => {
+    const hint = googleHint(undefined, callerHint)
+    if (hint && !form.getValues("Email")) form.setValue("Email", hint)
+  }, [callerHint, form])
 
   const onSubmit: SubmitHandler<SignInValues> = async (data) => {
     clearGoogleError()
@@ -129,8 +138,10 @@ export function SignInScreen() {
             className="w-full"
             type="button"
             onClick={() => {
-              const q = returnTo ? `?return_to=${encodeURIComponent(returnTo)}` : ""
-              window.location.href = apiUrl(`/api/auth/google${q}`)
+              window.location.href = googleStartUrl("/api/auth/google", {
+                returnTo,
+                loginHint: googleHint(form.getValues("Email"), callerHint),
+              })
             }}
           >
             <GoogleIcon />
