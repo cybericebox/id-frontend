@@ -73,7 +73,9 @@ function ProfileShell() {
   const router = useRouter()
   const pathname = usePathname()
   const isDesktop = useMediaQuery("(min-width: 768px)")
-  const linkError = searchParams.get("error") === "link_failed"
+  // The Google link callback's error code (?error=link_failed / email_mismatch).
+  const errorParam = searchParams.get("error")
+  const linkError = errorParam === "link_failed" || errorParam === "email_mismatch" ? errorParam : null
   // return_to: rendered as a "Back" affordance when present. Sanitized via
   // safeReturnTo (same-platform https only) to prevent open-redirect / javascript:
   // URL injection; an invalid value falls back to "" so the Back link is hidden.

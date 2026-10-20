@@ -26,7 +26,8 @@ import { useUrlParams } from "@/lib/useUrlParams"
 import { useGuestOnly } from "@/lib/useGuestOnly"
 import { AuthDivider, AuthHeading, AuthPane, AuthSwitch, GoogleIcon, inlineLinkClass } from "./parts"
 import { t, tRich } from "@/i18n/t"
-import { apiPost, apiUrl } from "@/api/client"
+import { apiPost } from "@/api/client"
+import { googleHint, googleStartUrl } from "@/lib/googleStart"
 
 // ---------------------------------------------------------------------------
 // Zod schema — mirrors the daemon's JSON body (Email only for registration)
@@ -166,8 +167,11 @@ export function SignUpScreen() {
             className="w-full"
             type="button"
             onClick={() => {
-              const q = returnTo ? `?return_to=${encodeURIComponent(returnTo)}` : ""
-              window.location.href = apiUrl(`/api/auth/google/register${q}`)
+              // The address typed in the form preselects that Google account.
+              window.location.href = googleStartUrl("/api/auth/google/register", {
+                returnTo,
+                loginHint: googleHint(form.getValues("Email"), params?.get("login_hint")),
+              })
             }}
           >
             <GoogleIcon />
