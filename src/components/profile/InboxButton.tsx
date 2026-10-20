@@ -24,7 +24,7 @@ import { NotificationMessageCard } from "./NotificationMessageCard"
 import { NotificationPopIn, popInDuration } from "./NotificationPopIn"
 import {
   INBOX_TABS, canResolve, countsAfterRead, countsAfterReadAll, countsAfterResolve, formatInboxTime, inTab, inboxQuery, isUnread, orderForTab,
-  bellCount, bellLabel, needsAction, parseCounts, parseOtherEvents, resolutionKey, resolveDefaultTab, resolverName,
+  bellCount, bellLabel, safeHref, needsAction, parseCounts, parseOtherEvents, resolutionKey, resolveDefaultTab, resolverName,
   type InboxCounts, type InboxDefaultTab, type InboxMessage as Message, type InboxTab,
 } from "./inboxModel"
 import { keepBrand } from "@/i18n/brand"
@@ -53,13 +53,6 @@ const rowActionClass = "inline-flex min-h-6 items-center rounded-sm px-1 font-me
 function EventLabel({ name }: { name?: string | null }) {
   if (!name) return null
   return <span className="max-w-[60%] shrink-0 truncate rounded bg-soft px-1.5 py-0.5 text-2xs font-medium text-dim">{name}</span>
-}
-
-function safeHref(value: string): string | null {
-  const href = value.trim()
-  if (href.startsWith("/") && !href.startsWith("//")) return href
-  if (href.startsWith("#") || /^https?:\/\/|^mailto:/i.test(href)) return href
-  return null
 }
 
 function resolvedLine(item: Message): string {
@@ -395,7 +388,7 @@ export function InboxButton({ defaultTab = "all", event }: InboxButtonProps = {}
             const href = safeHref(item.Link ?? "")
             const resolved = !!item.ResolvedAt
             const unreadItem = isUnread(item)
-            return <li key={item.ID} ref={index === items.length - 1 ? lastItemRef : undefined} className="px-4 py-3 hover:bg-hover">
+            return <li key={item.ID} ref={index === items.length - 1 ? lastItemRef : undefined} className={`relative px-4 py-3 hover:bg-hover ${href ? "cursor-pointer" : ""}`}>
               <NotificationMessageCard
                 icon={item.Icon} tone={item.Tone} accentColor={item.AccentColor} title={item.Title}
                 body={item.Body ? <span dangerouslySetInnerHTML={{ __html: keepBrand(DOMPurify.sanitize(item.Body, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] })) }} /> : undefined}
@@ -407,8 +400,8 @@ export function InboxButton({ defaultTab = "all", event }: InboxButtonProps = {}
                   {!event && <EventLabel name={item.EventName} />}
                 </span>}
                 actions={href || unreadItem || canResolve(item) ? <>
-                  {href ? <a href={href} onClick={(clickEvent) => { clickEvent.preventDefault(); void followLink(item, href) }} className={`${rowActionClass} text-sm`}>{t("inbox.open")}</a> : unreadItem ? <button type="button" onClick={() => void markRead(item)} className={`${rowActionClass} text-xs`}>{t("inbox.markRead")}</button> : null}
-                  {canResolve(item) && <button type="button" disabled={resolving === item.ID} aria-busy={resolving === item.ID} onClick={() => void resolve(item)} className={`${rowActionClass} gap-1 text-xs disabled:cursor-not-allowed disabled:opacity-60`}>
+                  {href ? <a href={href} onClick={(clickEvent) => { clickEvent.preventDefault(); void followLink(item, href) }} className={`${rowActionClass} text-sm after:absolute after:inset-0 after:content-['']`}>{t("inbox.open")}</a> : unreadItem ? <button type="button" onClick={() => void markRead(item)} className={`${rowActionClass} text-xs`}>{t("inbox.markRead")}</button> : null}
+                  {canResolve(item) && <button type="button" disabled={resolving === item.ID} aria-busy={resolving === item.ID} onClick={() => void resolve(item)} className={`${rowActionClass} relative gap-1 text-xs disabled:cursor-not-allowed disabled:opacity-60`}>
                     <span className="ib-btn__faces">
                       <span className="ib-btn__face" aria-hidden={resolving === item.ID || undefined}><Check size={14} aria-hidden="true" />{t("inbox.resolve")}</span>
                       <span className="ib-btn__face ib-btn__face--busy" aria-hidden={resolving !== item.ID || undefined}>{resolving === item.ID ? <CrestMark /> : <span className="ib-btn__mark" />}{t("common.busy.resolving")}</span>
