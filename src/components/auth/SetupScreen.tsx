@@ -242,12 +242,12 @@ export function SetupScreen() {
 
         if (!cancelled) {
           setSetupInfo(data)
-          // Restore a saved draft (e.g. after the Google-link redirect); fall
-          // back to the server's prefill. Passwords are never persisted.
+          // Restore a saved draft (e.g. after the Google-link redirect): what the user typed wins; an empty field
+          // takes the server's prefill (the invitation's name, or Google's after the link). Passwords are never persisted.
           const draft = readDraft(draftKey)
           form.reset({
-            FirstName: draft?.FirstName ?? data.FirstName ?? "",
-            LastName: draft?.LastName ?? data.LastName ?? "",
+            FirstName: draft?.FirstName || data.FirstName || "",
+            LastName: draft?.LastName || data.LastName || "",
             Password: "",
             ConfirmPassword: "",
             AcceptTos: draft?.AcceptTos ?? false,
@@ -468,10 +468,12 @@ export function SetupScreen() {
                     <Check size={16} className="text-ok" aria-hidden />
                   </div>
                 ) : (
+                  <>
                   <Button
                     variant="outline"
                     type="button"
                     className="w-full"
+                    aria-describedby={linkError === "email_mismatch" ? "setup-google-mismatch" : undefined}
                     onClick={() => {
                       // Must hit api.<domain> (the id origin has no /api routes).
                       window.location.href = apiUrl(`/api/auth/google/setup?token=${encodeURIComponent(token)}${returnTo ? `&return_to=${encodeURIComponent(returnTo)}` : ""}`)
@@ -480,6 +482,13 @@ export function SetupScreen() {
                     <GoogleIcon />
                     {t("setup.linkGoogle")}
                   </Button>
+                  {/* Google returned an account with another address: the link takes only the invited one */}
+                  {linkError === "email_mismatch" && (
+                    <p id="setup-google-mismatch" role="alert" className="text-sm font-medium text-destructive">
+                      {t("setup.googleEmailMismatch", { email: setupInfo.Email })}
+                    </p>
+                  )}
+                  </>
                 )}
 
                 {/* Password */}
