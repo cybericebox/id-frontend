@@ -389,5 +389,6 @@
   "signOut.body": "You will be signed out on every platform site in this browser.",
   "signOut.confirm": "Sign out",
   "signOut.failed": "Could not sign out",
-  "setup.googleEmailMismatch": "Connect the Google account with the address {email}."
+  "setup.googleEmailMismatch": "Connect the Google account with the address {email}.",
+  "profile.connections.emailMismatch": "Connect the Google account with the address {email}."
 }

@@ -389,5 +389,6 @@
   "signOut.body": "Ви вийдете на всіх сайтах платформи в цьому браузері.",
   "signOut.confirm": "Вийти",
   "signOut.failed": "Не вдалося вийти",
-  "setup.googleEmailMismatch": "Підключіть Google-акаунт з адресою {email}."
+  "setup.googleEmailMismatch": "Підключіть Google-акаунт з адресою {email}.",
+  "profile.connections.emailMismatch": "Підключіть Google-акаунт з адресою {email}."
 }
