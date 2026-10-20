@@ -5,6 +5,8 @@ import { ServiceStatusGate } from "@/components/ServiceStatusGate"
 import { Analytics } from "@/components/Analytics"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
+import { ChunkRecovery } from "@/components/ChunkRecovery"
+import { CHUNK_RECOVERY_BOOT_SCRIPT } from "@/lib/chunkRecovery"
 import { THEME_BOOT_SCRIPT } from "@/lib/theme"
 import { ToastProvider } from "@/components/ui/toast"
 import { SiteBanners } from "@/components/SiteBanners"
@@ -26,11 +28,14 @@ export default function RootLayout({
     // data-theme is set by the boot script before hydration — hence suppressHydrationWarning.
     <html lang="uk" className={`${GeistSans.variable} ${GeistMono.variable}`} suppressHydrationWarning>
       <head>
+        {/* eslint-disable-next-line @eslint-react/dom-no-dangerously-set-innerhtml */}
+        <script dangerouslySetInnerHTML={{ __html: CHUNK_RECOVERY_BOOT_SCRIPT }} />
         {/* static constant, no user input — runs before paint to avoid a light flash */}
         {/* eslint-disable-next-line @eslint-react/dom-no-dangerously-set-innerhtml */}
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       </head>
       <body>
+        <ChunkRecovery />
         {/* first tab stop: jumps over the banners and the page chrome to <main id="main"> */}
         <a href="#main" className="skip-link">{t("common.skipToContent")}</a>
         {/* site banners sit at the very top, above the split auth layout */}
