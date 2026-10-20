@@ -36,6 +36,15 @@ describe("pop-in", () => {
     expect(popIn).toContain("onTouchStart")
   })
 
+  it("«Вирішено» is positioned and follows the stretched card link, so it paints above it", () => {
+    const lines = src("./InboxButton.tsx").split("\n")
+    const link = lines.findIndex((l) => l.includes("after:absolute after:inset-0"))
+    const resolve = lines.findIndex((l) => l.includes("canResolve(item) && <button"))
+    expect(link).toBeGreaterThan(-1)
+    expect(resolve).toBeGreaterThan(link)
+    expect(lines[resolve]).toMatch(/\} relative /)
+  })
+
   it("resolving one row disables only its own button", () => {
     expect(src("./InboxButton.tsx")).toContain("disabled={resolving === item.ID}")
   })
