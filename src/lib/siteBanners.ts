@@ -74,8 +74,17 @@ export function rememberDismissed(banner: SiteBanner, storage: StorageLike | nul
   }
 }
 
-/** Tolerant parse of the response: anything that is not a list of banners with text yields nothing. */
+/** Tolerant parse of the response: anything that is not a list of banners with text yields nothing.
+ *  A personal banner may carry only a Title: it is shown as the text. */
 export function parseBanners(data: unknown): SiteBanner[] {
   if (!Array.isArray(data)) return []
-  return data.filter((item): item is SiteBanner => !!item && typeof item === "object" && typeof item.ID === "string" && typeof item.Text === "string" && item.Text !== "")
+  const out: SiteBanner[] = []
+  for (const item of data) {
+    if (!item || typeof item !== "object" || typeof item.ID !== "string") continue
+    const text = typeof item.Text === "string" ? item.Text : ""
+    const title = typeof item.Title === "string" ? item.Title : ""
+    if (text !== "") out.push(item as SiteBanner)
+    else if (item.Kind === "personal" && title !== "") out.push({ ...item, Text: title } as SiteBanner)
+  }
+  return out
 }
