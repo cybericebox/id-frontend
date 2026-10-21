@@ -4,10 +4,23 @@ import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { SiteBanners } from "./SiteBanners"
 
-const api = vi.hoisted(() => ({ get: vi.fn() }))
-vi.mock("@/api/client", () => ({ apiGet: api.get }))
+const api = vi.hoisted(() => ({ get: vi.fn(), patch: vi.fn() }))
+vi.mock("@/api/client", () => ({ apiGet: api.get, apiPatch: api.patch }))
 
-const banner = (ID: string, Text: string, Version = 1) => ({ ID, Text, Version, Dismissible: true, Level: "info" })
+// The pulse answers with a version; the banner list is fetched from its own URL.
+let version = "v1"
+let list: unknown[] | Error[] = []
+function serve(...lists: unknown[]) {
+  list = lists
+  api.get.mockImplementation(async (path: string) => {
+    if (path.startsWith("/api/notifications/pulse")) return { Banners: version, Inbox: null }
+    const next = list.length > 1 ? list.shift() : list[0]
+    if (next instanceof Error) throw next
+    return next
+  })
+}
+
+const banner = (ID: string, Text: string, Version = 1, Kind = "site") => ({ ID, Kind, Text, Version, Dismissible: true, Level: "info" })
 let container: HTMLDivElement
 let root: Root
 
@@ -15,6 +28,10 @@ beforeEach(() => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true })
   localStorage.clear()
   api.get.mockReset()
+  api.patch.mockReset()
+  api.patch.mockResolvedValue(undefined)
+  version = "v1"
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] })
   container = document.createElement("div")
   document.body.append(container)
   root = createRoot(container)
@@ -24,13 +41,15 @@ afterEach(async () => {
   await act(async () => root.unmount())
   container.remove()
   vi.unstubAllGlobals()
+  vi.useRealTimers()
+  vi.restoreAllMocks()
 })
 
 describe("live site announcements", () => {
   it("requests the ID site and retains the other announcement after dismissing one", async () => {
-    api.get.mockResolvedValue([banner("b1", "First"), banner("b2", "Second")])
+    serve([banner("b1", "First"), banner("b2", "Second")])
     await act(async () => root.render(<SiteBanners />))
-    expect(api.get).toHaveBeenCalledWith("/api/banners?site=id", undefined, { required: false })
+    expect(api.get).toHaveBeenCalledWith("/api/notifications/banners?site=id", undefined, { required: false })
     expect(container.querySelectorAll(".ib-site-banner__text")).toHaveLength(1)
     expect(container.textContent).toContain("Ще 1 оголошення")
     await act(async () => container.querySelector<HTMLButtonElement>(".ib-site-banner__x")!.click())
@@ -41,7 +60,7 @@ describe("live site announcements", () => {
   })
 
   it("reveals nine other announcements in server order and dismisses them individually", async () => {
-    api.get.mockResolvedValue(Array.from({ length: 10 }, (_, index) => banner(`b${index}`, `Announcement ${index}`)))
+    serve(Array.from({ length: 10 }, (_, index) => banner(`b${index}`, `Announcement ${index}`)))
     await act(async () => root.render(<SiteBanners />))
     expect(container.querySelectorAll(".ib-site-banner__text")).toHaveLength(1)
     expect(container.textContent).toContain("Ще 9 оголошень")
@@ -60,14 +79,33 @@ describe("live site announcements", () => {
     await vi.waitFor(() => expect(document.activeElement).toBe(container.querySelector(".ib-site-banner__more")))
   })
 
-  it("keeps visible content during an outage and refreshes on focus and network recovery", async () => {
-    api.get.mockResolvedValueOnce([banner("b1", "Before")]).mockRejectedValueOnce(new Error("down")).mockResolvedValueOnce([banner("b1", "After", 2)])
+  it("refetches the list only when the pulse reports a new version, and keeps content during an outage", async () => {
+    vi.spyOn(Math, "random").mockReturnValue(0.5)
+    serve([banner("b1", "Before")], new Error("down"), [banner("b1", "After", 2)])
     await act(async () => root.render(<SiteBanners />))
-    await act(async () => window.dispatchEvent(new Event("focus")))
-    expect(api.get).toHaveBeenCalledTimes(2)
+    const lists = () => api.get.mock.calls.filter(([path]) => String(path).startsWith("/api/notifications/banners")).length
+    expect(lists()).toBe(1)
     expect(container.textContent).toContain("Before")
-    await act(async () => window.dispatchEvent(new Event("online")))
+    // same version: no new list
+    await act(async () => { await vi.advanceTimersByTimeAsync(30_000) })
+    expect(lists()).toBe(1)
+    // new version, the list request fails: content stays, the next pulse retries
+    version = "v2"
+    await act(async () => { await vi.advanceTimersByTimeAsync(30_000) })
+    expect(lists()).toBe(2)
+    expect(container.textContent).toContain("Before")
+    await act(async () => { await vi.advanceTimersByTimeAsync(30_000) })
+    expect(lists()).toBe(3)
     expect(container.textContent).toContain("After")
     expect(container.textContent).not.toContain("Before")
+  })
+
+  it("dismisses a personal banner on the server and a site banner locally", async () => {
+    serve([banner("p1", "Personal", 1, "personal")])
+    await act(async () => root.render(<SiteBanners />))
+    await act(async () => container.querySelector<HTMLButtonElement>(".ib-site-banner__x")!.click())
+    expect(api.patch).toHaveBeenCalledWith("/api/notifications/banners/p1/dismiss", {}, undefined, { required: false })
+    expect(container.textContent).not.toContain("Personal")
+    expect(localStorage.getItem("cib_site_banner_dismissed_p1_1")).toBeNull()
   })
 })

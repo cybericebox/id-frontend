@@ -44,7 +44,7 @@ export type InboxMessage = {
   ResolvedBy?: { ID: string; Name: string } | null
 }
 
-/** Categories are on when the poll carries a Counts object (older backends omit it). */
+/** Categories are on when the inbox answer carries a Counts object (older backends omit it). */
 export function parseCounts(value: unknown): InboxCounts | null {
   if (!value || typeof value !== "object") return null
   const raw = value as Record<string, unknown>
@@ -158,13 +158,19 @@ export function resolutionKey(resolution: string | null | undefined, hasName: bo
   return `inbox.resolved.${known}${hasName && !SYSTEM_RESOLUTIONS.includes(known) ? "" : ".system"}`
 }
 
-/** API query for a tab (and the event scope on event sites). */
+/** Site of the notification API; the pulse and every inbox call carry it. */
+export const INBOX_SITE = "id"
+
+/** The cursor to ask "everything after" with when the inbox was empty at baseline (the empty cursor means baseline). */
+export const INBOX_EMPTY_CURSOR = "1970-01-01T00:00:00Z_00000000-0000-0000-0000-000000000000"
+
+/** API query for a tab: the site, the event scope on event sites, the category of a tab; extra = since / before. */
 export function inboxQuery(tab: InboxTab, eventId?: string, extra: Record<string, string> = {}): string {
-  const query = new URLSearchParams(extra)
-  if (tab !== "all") query.set("category", tab)
+  const query = new URLSearchParams({ site: INBOX_SITE })
   if (eventId) query.set("event", eventId)
-  const text = query.toString()
-  return text ? `?${text}` : ""
+  if (tab !== "all") query.set("category", tab)
+  for (const [key, value] of Object.entries(extra)) query.set(key, value)
+  return `?${query.toString()}`
 }
 
 /** Row time: HH:MM today, otherwise a short date with time. */

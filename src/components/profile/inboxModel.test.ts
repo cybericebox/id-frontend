@@ -136,10 +136,11 @@ test("optimistic counts", () => {
 })
 
 test("queries carry the category and the event scope", () => {
-  expect(inbox.inboxQuery("all")).toBe("")
-  expect(inbox.inboxQuery("requests")).toBe("?category=requests")
-  expect(inbox.inboxQuery("personal", "ev1")).toBe("?category=personal&event=ev1")
-  expect(inbox.inboxQuery("all", undefined, { since_id: "a" })).toBe("?since_id=a")
+  expect(inbox.inboxQuery("all")).toBe("?site=id")
+  expect(inbox.inboxQuery("requests")).toBe("?site=id&category=requests")
+  expect(inbox.inboxQuery("personal", "ev1")).toBe("?site=id&event=ev1&category=personal")
+  expect(inbox.inboxQuery("all", undefined, { since: "" })).toBe("?site=id&since=")
+  expect(inbox.inboxQuery("activity", undefined, { before: "c" })).toBe("?site=id&category=activity&before=c")
 })
 
 test("resolved line keys exist in both catalogs", () => {
