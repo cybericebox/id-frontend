@@ -33,6 +33,16 @@ describe("site banner model", () => {
     expect(ids).toEqual(["c", "w", "i1", "i2"])
   })
 
+  it("a personal banner with only a Title shows the Title; other kinds without text are dropped", () => {
+    const parsed = parseBanners([
+      { ID: "p1", Kind: "personal", Title: "Лише заголовок", Text: "" },
+      { ID: "p2", Kind: "personal", Title: "", Text: "" },
+      { ID: "s1", Kind: "site", Title: "Title", Text: "" },
+      { ID: "p3", Kind: "personal", Title: "T", Text: "Body" },
+    ])
+    expect(parsed.map((item) => [item.ID, item.Text])).toEqual([["p1", "Лише заголовок"], ["p3", "Body"]])
+  })
+
   it("dismiss persists under ID and Version; an edited banner reappears", () => {
     const storage = memoryStorage()
     expect(isDismissed(banner(), storage)).toBe(false)
