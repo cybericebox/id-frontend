@@ -100,6 +100,18 @@ describe("live site announcements", () => {
     expect(container.textContent).not.toContain("Before")
   })
 
+  it("fetches the list only after the first pulse answered, never independently on load", async () => {
+    let answerPulse: (value: unknown) => void = () => {}
+    api.get.mockImplementation((path: string) => path.startsWith("/api/notifications/pulse")
+      ? new Promise((resolve) => { answerPulse = resolve })
+      : Promise.resolve([banner("b1", "Listed")]))
+    await act(async () => root.render(<SiteBanners />))
+    expect(api.get.mock.calls.map(([path]) => String(path))).toEqual(["/api/notifications/pulse?site=id"])
+    await act(async () => answerPulse({ Banners: "v7", Inbox: null }))
+    expect(api.get.mock.calls.map(([path]) => String(path))).toEqual(["/api/notifications/pulse?site=id", "/api/notifications/banners?site=id"])
+    expect(container.textContent).toContain("Listed")
+  })
+
   it("dismisses a personal banner on the server and a site banner locally", async () => {
     serve([banner("p1", "Personal", 1, "personal")])
     await act(async () => root.render(<SiteBanners />))
