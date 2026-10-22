@@ -20,6 +20,14 @@ export type SiteBanner = {
   Version?: string | number
 }
 
+/** The pulse Banners version of an empty list (the first 16 hex of sha256 of nothing); a newer backend may send "". */
+export const EMPTY_BANNERS_VERSION = "e3b0c44298fc1c14"
+
+/** Whether a pulse Banners version stands for a non-empty list: only then is the list worth a request. */
+export function hasBanners(version: string): boolean {
+  return version !== "" && version !== EMPTY_BANNERS_VERSION
+}
+
 const SEVERITY: Record<BannerLevel, number> = { critical: 0, warning: 1, info: 2 }
 
 type StorageLike = Pick<Storage, "getItem" | "setItem">
