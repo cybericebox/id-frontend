@@ -2,7 +2,7 @@
 import { act } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { SiteBanners } from "./SiteBanners"
+import { forgetHeldBanners, SiteBanners } from "./SiteBanners"
 
 const api = vi.hoisted(() => ({ get: vi.fn(), patch: vi.fn() }))
 vi.mock("@/api/client", () => ({ apiGet: api.get, apiPatch: api.patch }))
@@ -31,6 +31,7 @@ beforeEach(() => {
   api.patch.mockReset()
   api.patch.mockResolvedValue(undefined)
   version = "v1"
+  forgetHeldBanners()
   vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] })
   container = document.createElement("div")
   document.body.append(container)
@@ -110,6 +111,35 @@ describe("live site announcements", () => {
     await act(async () => answerPulse({ Banners: "v7", Inbox: null }))
     expect(api.get.mock.calls.map(([path]) => String(path))).toEqual(["/api/notifications/pulse?site=id", "/api/notifications/banners?site=id"])
     expect(container.textContent).toContain("Listed")
+  })
+
+  it("never asks for the list while the pulse reports no banners, and clears it without a request", async () => {
+    vi.spyOn(Math, "random").mockReturnValue(0.5)
+    version = "e3b0c44298fc1c14"
+    serve([banner("b1", "Listed")])
+    await act(async () => root.render(<SiteBanners />))
+    const lists = () => api.get.mock.calls.filter(([path]) => String(path).startsWith("/api/notifications/banners")).length
+    expect(lists()).toBe(0)
+    version = ""
+    await act(async () => { await vi.advanceTimersByTimeAsync(30_000) })
+    expect(lists()).toBe(0)
+    version = "v2"
+    await act(async () => { await vi.advanceTimersByTimeAsync(30_000) })
+    expect(lists()).toBe(1)
+    expect(container.textContent).toContain("Listed")
+    version = "e3b0c44298fc1c14"
+    await act(async () => { await vi.advanceTimersByTimeAsync(30_000) })
+    expect(lists()).toBe(1)
+    expect(container.textContent).not.toContain("Listed")
+  })
+
+  it("a remount with the version already held shows the list without a request", async () => {
+    serve([banner("b1", "Listed")])
+    await act(async () => root.render(<SiteBanners />))
+    await act(async () => root.render(<></>))
+    await act(async () => root.render(<SiteBanners />))
+    expect(container.textContent).toContain("Listed")
+    expect(api.get.mock.calls.filter(([path]) => String(path).startsWith("/api/notifications/banners"))).toHaveLength(1)
   })
 
   it("dismisses a personal banner on the server and a site banner locally", async () => {

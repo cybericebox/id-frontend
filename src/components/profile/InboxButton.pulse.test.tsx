@@ -64,4 +64,42 @@ describe("inbox follows the pulse", () => {
     expect(calls("since=")).toHaveLength(1)
     expect(calls("/api/notifications/pulse").length).toBeGreaterThan(2)
   })
+
+  const lists = () => api.get.mock.calls.map(([path]) => String(path)).filter((path) => path.startsWith("/api/notifications/inbox") && !path.includes("since="))
+
+  it("never reads the list while the dropdown is closed, even when Unread moves without news", async () => {
+    await act(async () => root.render(<InboxButton />))
+    await act(async () => { await vi.advanceTimersByTimeAsync(0) })
+    const base = api.get.getMockImplementation()!
+    api.get.mockImplementation((path: string) => path.includes("since=c1") ? Promise.resolve({ Cursor: "c1", Items: [], Unread: 0, Counts: counts, OtherEventsCount: 0 }) : base(path))
+    pulse = { Banners: "v1", Inbox: { Cursor: "c1", Unread: 0 } }
+    await act(async () => { await vi.advanceTimersByTimeAsync(40_000) })
+    expect(calls("since=")).toHaveLength(2)
+    expect(lists()).toEqual([])
+  })
+
+  it("reads the list behind the crest when the dropdown opens", async () => {
+    await act(async () => root.render(<InboxButton />))
+    await act(async () => { await vi.advanceTimersByTimeAsync(0) })
+    let answer: () => void = () => {}
+    const base = api.get.getMockImplementation()!
+    api.get.mockImplementation((path: string) => path.startsWith("/api/notifications/inbox?") && !path.includes("since=")
+      ? new Promise((resolve) => { answer = () => resolve({ Items: [item("listed")], NextCursor: "" }) })
+      : base(path))
+    await act(async () => container.querySelector("button")!.click())
+    expect(lists()).toHaveLength(1)
+    expect(document.body.querySelector("[role=status]")).not.toBeNull()
+    await act(async () => { answer() })
+    expect(document.body.textContent).toContain("listed")
+  })
+
+  it("a read in another tab asks the pulse, not the inbox", async () => {
+    await act(async () => root.render(<InboxButton />))
+    await act(async () => { await vi.advanceTimersByTimeAsync(0) })
+    const pulses = calls("/api/notifications/pulse").length
+    await act(async () => { window.dispatchEvent(new StorageEvent("storage", { key: "cib_inbox_read" })) })
+    await act(async () => { await vi.advanceTimersByTimeAsync(0) })
+    expect(calls("/api/notifications/pulse").length).toBe(pulses + 1)
+    expect(calls("since=")).toHaveLength(1)
+  })
 })
