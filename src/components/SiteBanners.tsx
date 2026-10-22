@@ -6,7 +6,7 @@ import { X } from "lucide-react"
 import { apiGet, apiPatch } from "@/api/client"
 import { t } from "@/i18n/t"
 import { Tooltip } from "@/components/ui/tooltip"
-import { bannerHref, bannerLevel, dismissKey, isDismissed, parseBanners, rememberDismissed, type SiteBanner } from "@/lib/siteBanners"
+import { bannerHref, bannerLevel, dismissKey, hasBanners, isDismissed, parseBanners, rememberDismissed, type SiteBanner } from "@/lib/siteBanners"
 import { PULSE_SITE, scopeQuery, subscribePulse } from "@/lib/pulse"
 import "@/styles/site-banner.css"
 import { keepBrand } from "@/i18n/brand"
@@ -59,16 +59,21 @@ export function SiteBannerList({ banners, onDismiss }: { banners: SiteBanner[]; 
   )
 }
 
+// The list last fetched in this tab and the pulse version it stands for: a remount (another layout) reuses it.
+let held: { version: string; banners: SiteBanner[] } | null = null
+
+/** Test helper: forget the held list, as on a fresh page load. */
+export function forgetHeldBanners(): void { held = null }
+
 // Site banners: GET /api/notifications/banners, fetched once on load and then only when the shared pulse
-// reports a new Banners version. A banner outage never blocks the page: errors are ignored and nothing
-// renders until data arrives.
+// reports a new Banners version; never for a version of an empty list. A banner outage never blocks the page:
+// errors are ignored and nothing renders until data arrives.
 export function SiteBanners() {
-  const [banners, setBanners] = useState<SiteBanner[]>([])
+  const [banners, setBanners] = useState<SiteBanner[]>(() => held?.banners ?? [])
   const [dismissed, setDismissed] = useState<ReadonlySet<string>>(() => new Set())
 
   useEffect(() => {
     let active = true
-    let loaded: string | null = null
     let wanted: string | null = null
     let busy = false
     const scope = { site: PULSE_SITE }
@@ -76,13 +81,16 @@ export function SiteBanners() {
       if (busy) return
       busy = true
       try {
-        while (active && wanted !== null && wanted !== loaded) {
+        while (active && wanted !== null && wanted !== held?.version) {
           const target = wanted
+          // No banners at all: nothing to ask, the list is simply empty.
+          if (!hasBanners(target)) { held = { version: target, banners: [] }; setBanners([]); continue }
           try {
             const data = await apiGet<unknown>(`/api/notifications/banners${scopeQuery(scope)}`, undefined, { required: false })
+            const list = parseBanners(data)
+            held = { version: target, banners: list }
             if (!active) return
-            setBanners(parseBanners(data))
-            loaded = target
+            setBanners(list)
           } catch {
             return // retried on the next pulse
           }

@@ -176,7 +176,7 @@ export function InboxButton({ defaultTab = "all", event }: InboxButtonProps = {}
         applyCounts(parseCounts(result.Counts))
         setOtherEvents(parseOtherEvents(result.OtherEventsCount))
         initialized = true
-        await refresh()
+        // The list itself is read only when the dropdown opens (openInbox → refresh).
         return cursor !== (pulseCursor ?? cursor)
       }
       const news = result.Items ?? []
@@ -190,7 +190,7 @@ export function InboxButton({ defaultTab = "all", event }: InboxButtonProps = {}
         })
       }
       let poppable = fresh.filter((item) => popInDuration(item.AutoDismissMs) > 0)
-      if (result.Unread !== unreadCountRef.current + fresh.length) {
+      if (result.Unread !== unreadCountRef.current + fresh.length && openRef.current) {
         const latest = await refresh()
         poppable = latest ? poppable.filter((item) => latest.some((entry) => entry.ID === item.ID && isUnread(entry))) : []
       } else {
@@ -228,8 +228,8 @@ export function InboxButton({ defaultTab = "all", event }: InboxButtonProps = {}
       seen = pulse.Inbox
       void sync()
     })
-    // After the user's own action or a read in another tab: ask again whatever the pulse said.
-    syncNowRef.current = () => { pulseNow(scope); void sync() }
+    // After the user's own action or a read in another tab: pulse now; only a changed pulse then asks for news.
+    syncNowRef.current = () => { pulseNow(scope) }
     const onStorage = (event: StorageEvent) => { if (event.key === STORAGE_INBOX_READ) { syncNowRef.current(); if (openRef.current) void refresh() } }
     window.addEventListener("storage", onStorage)
     return () => {
