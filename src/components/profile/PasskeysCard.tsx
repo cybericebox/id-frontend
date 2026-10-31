@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useCallback, useEffect, useState } from "react"
-import { KeyRound, Pencil, Trash2 } from "lucide-react"
+import { KeyRound, Trash2 } from "lucide-react"
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -13,7 +13,8 @@ import { EmptyState } from "@/components/ui/empty-state"
 import { LoadError } from "@/components/ui/load-error"
 import { fieldErrorMessage } from "@/components/ui/form-error"
 import { toast } from "@/components/ui/toast"
-import { apiGet, apiPost, apiPatch, apiDelete } from "@/api/client"
+import { apiGet, apiPost, apiDelete, ApiError } from "@/api/client"
+import { redirectToSignIn } from "@/lib/auth"
 import { localizedError } from "@/i18n/apiError"
 import { t, locale } from "@/i18n/t"
 import { createPasskey, isPasskeyDismissed, passkeysSupported, type PasskeyCeremony } from "@/lib/passkey"
@@ -30,6 +31,7 @@ interface Passkey {
 
 const NAME_MAX = 64
 const WRONG_PASSWORD = 20410
+const REAUTH_REQUIRED = 60429
 
 function formatDate(value: string): string {
   return new Date(value).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" })
@@ -92,47 +94,34 @@ export function PasskeysCard({ account }: { account: Account }) {
     }
   }
 
-  // rename
-  const [renameTarget, setRenameTarget] = useState<Passkey | null>(null)
-  const [renameValue, setRenameValue] = useState("")
-  const [renameBusy, setRenameBusy] = useState(false)
-  const [renameError, setRenameError] = useState("")
-  const [renameFieldError, setRenameFieldError] = useState<string | null>(null)
-
-  const rename = async () => {
-    if (!renameTarget) return
-    const name = renameValue.trim()
-    if (!name) { setRenameFieldError(t("validation.required")); return }
-    setRenameBusy(true)
-    setRenameError("")
-    setRenameFieldError(null)
-    try {
-      await apiPatch(`/api/auth/passkeys/${encodeURIComponent(renameTarget.ID)}`, { Name: name })
-      setItems((list) => (list ?? []).map((p) => (p.ID === renameTarget.ID ? { ...p, Name: name } : p)))
-      setRenameTarget(null)
-    } catch (err) {
-      setRenameError(localizedError(err))
-    } finally {
-      setRenameBusy(false)
-    }
-  }
-
   // remove
   const [removeTarget, setRemoveTarget] = useState<Passkey | null>(null)
   const [removeBusy, setRemoveBusy] = useState(false)
   const [removeError, setRemoveError] = useState("")
+  const [removePassword, setRemovePassword] = useState("")
+  const [removePasswordError, setRemovePasswordError] = useState<string | null>(null)
 
   const remove = async () => {
     if (!removeTarget) return
     setRemoveBusy(true)
     setRemoveError("")
+    setRemovePasswordError(null)
     try {
-      await apiDelete(`/api/auth/passkeys/${encodeURIComponent(removeTarget.ID)}`)
+      await apiDelete(
+        `/api/auth/passkeys/${encodeURIComponent(removeTarget.ID)}`,
+        undefined,
+        undefined,
+        account.HasPassword ? { CurrentPassword: removePassword } : undefined,
+      )
       setItems((list) => (list ?? []).filter((p) => p.ID !== removeTarget.ID))
       setRemoveTarget(null)
       toast.success(t("profile.passkeys.removed"))
     } catch (err) {
-      setRemoveError(localizedError(err))
+      const passwordError = account.HasPassword ? fieldErrorMessage(err, [WRONG_PASSWORD]) : null
+      if (passwordError) setRemovePasswordError(passwordError)
+      // An account without a password needs a fresh sign-in: sign in again and come back here.
+      else if (err instanceof ApiError && err.code === REAUTH_REQUIRED) redirectToSignIn(err.signInUrl, window.location.href)
+      else setRemoveError(localizedError(err))
     } finally {
       setRemoveBusy(false)
     }
@@ -172,16 +161,8 @@ export function PasskeysCard({ account }: { account: Account }) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    aria-label={t("profile.passkeys.renameLabel", { name: p.Name })}
-                    onClick={() => { setRenameError(""); setRenameFieldError(null); setRenameValue(p.Name); setRenameTarget(p) }}
-                  >
-                    <Pencil aria-hidden="true" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
                     aria-label={t("profile.passkeys.removeLabel", { name: p.Name })}
-                    onClick={() => { setRemoveError(""); setRemoveTarget(p) }}
+                    onClick={() => { setRemoveError(""); setRemovePasswordError(null); setRemovePassword(""); setRemoveTarget(p) }}
                   >
                     <Trash2 aria-hidden="true" />
                   </Button>
@@ -241,31 +222,6 @@ export function PasskeysCard({ account }: { account: Account }) {
         </ConfirmDialog>
 
         <ConfirmDialog
-          open={renameTarget !== null}
-          onCancel={() => setRenameTarget(null)}
-          busy={renameBusy}
-          busyLabel={t("common.busy.saving")}
-          error={renameError}
-          title={t("profile.passkeys.renameTitle")}
-          confirmLabel={t("profile.passkeys.renameConfirm")}
-          onConfirm={() => void rename()}
-        >
-          <div className="space-y-2">
-            <Label htmlFor="passkey-rename">{t("profile.passkeys.name")}</Label>
-            <Input
-              id="passkey-rename"
-              value={renameValue}
-              maxLength={NAME_MAX}
-              aria-invalid={Boolean(renameFieldError)}
-              aria-describedby={renameFieldError ? "passkey-rename-error" : undefined}
-              disabled={renameBusy}
-              onChange={(e) => { setRenameValue(e.target.value); setRenameFieldError(null) }}
-            />
-            {renameFieldError && <p id="passkey-rename-error" role="alert" className="text-xs font-medium text-destructive">{renameFieldError}</p>}
-          </div>
-        </ConfirmDialog>
-
-        <ConfirmDialog
           open={removeTarget !== null}
           onCancel={() => setRemoveTarget(null)}
           tone="danger"
@@ -275,8 +231,20 @@ export function PasskeysCard({ account }: { account: Account }) {
           title={t("profile.passkeys.removeTitle")}
           description={removeTarget ? <>{t("profile.passkeys.removeBody")} <b className="font-medium text-ink">{removeTarget.Name}</b></> : undefined}
           confirmLabel={t("profile.passkeys.removeConfirm")}
+          disabled={account.HasPassword && !removePassword}
           onConfirm={() => void remove()}
-        />
+        >
+          {account.HasPassword && (
+            <ReauthPasswordField
+              id="passkey-remove-password"
+              hint={t("profile.passkeys.passwordHint")}
+              value={removePassword}
+              error={removePasswordError}
+              onChange={(value) => { setRemovePassword(value); setRemovePasswordError(null) }}
+              disabled={removeBusy}
+            />
+          )}
+        </ConfirmDialog>
       </CardContent>
     </Card>
   )
