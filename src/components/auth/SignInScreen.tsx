@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -29,6 +29,10 @@ import { t } from "@/i18n/t"
 import { safeReturnTo } from "@/lib/auth"
 import { apiPost } from "@/api/client"
 import { googleHint, googleStartUrl } from "@/lib/googleStart"
+import { signInWithPasskey } from "@/api/passkeySignIn"
+import { conditionalPasskeysAvailable, isPasskeyDismissed, passkeysSupported } from "@/lib/passkey"
+import { localizedError } from "@/i18n/apiError"
+import { KeyRound } from "lucide-react"
 
 // ---------------------------------------------------------------------------
 // Zod schema — mirrors the daemon's JSON body (Email, Password)
@@ -56,6 +60,46 @@ export function SignInScreen() {
   const [googleError, clearGoogleError] = useOneShotParam("google_error", params)
   // The sign-out menu item lands here with ?signed_out=1: a short notice, gone on the first edit of the form.
   const [signedOut, clearSignedOut] = useOneShotParam("signed_out", params)
+
+  // Passkeys: the button appears when the browser supports them (known only on the client); where the autofill can
+  // offer them, a conditional ceremony waits behind the email field and the button's modal ceremony replaces it.
+  const [passkeyReady, setPasskeyReady] = useState(false)
+  const [passkeyBusy, setPasskeyBusy] = useState(false)
+  const conditionalRef = useRef<AbortController | null>(null)
+  const finishPasskey = (redirectUrl: string) => {
+    // The button stays busy while the browser navigates: a second click would open a second session.
+    window.location.assign(redirectUrl || safeReturnTo(returnTo || undefined))
+  }
+  useEffect(() => {
+    if (params === null || !passkeysSupported()) return
+    setPasskeyReady(true)
+    const controller = new AbortController()
+    conditionalRef.current = controller
+    void conditionalPasskeysAvailable().then(async (available) => {
+      if (!available || controller.signal.aborted) return
+      try {
+        finishPasskey(await signInWithPasskey({ returnTo: returnTo || undefined, conditional: true, signal: controller.signal }))
+      } catch (err) {
+        if (!isPasskeyDismissed(err) && !controller.signal.aborted) setFormError(localizedError(err))
+      }
+    })
+    return () => controller.abort()
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
+  }, [params === null])
+
+  const onPasskey = async () => {
+    conditionalRef.current?.abort()
+    clearGoogleError()
+    clearSignedOut()
+    setFormError(null)
+    setPasskeyBusy(true)
+    try {
+      finishPasskey(await signInWithPasskey({ returnTo: returnTo || undefined }))
+    } catch (err) {
+      if (!isPasskeyDismissed(err)) setFormError(localizedError(err))
+      setPasskeyBusy(false)
+    }
+  }
 
   const form = useForm<SignInValues>({
     resolver: zodResolver(SignInSchema),
@@ -151,6 +195,20 @@ export function SignInScreen() {
             {t("signIn.continueWithGoogle")}
           </Button>
 
+          {passkeyReady && (
+            <Button
+              variant="outline"
+              className="w-full"
+              type="button"
+              busy={passkeyBusy}
+              busyLabel={t("common.busy.signingIn")}
+              onClick={() => void onPasskey()}
+            >
+              <KeyRound aria-hidden="true" />
+              {t("signIn.withPasskey")}
+            </Button>
+          )}
+
           <AuthDivider label={t("signIn.orWithEmail")} />
 
 
@@ -196,7 +254,7 @@ export function SignInScreen() {
                       <Input
                         type="email"
                         placeholder={t("common.emailPlaceholder")}
-                        autoComplete="email"
+                        autoComplete="email webauthn"
                         {...field}
                       />
                     </FormControl>
