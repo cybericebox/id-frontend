@@ -20,18 +20,15 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form"
-import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Input } from "@/components/ui/input"
 import { PasswordInput } from "@/components/ui/password-input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { FormError, reportFieldOrFormError, fieldErrorMessage } from "@/components/ui/form-error"
-import { ReauthPasswordField } from "./ReauthPasswordField"
+import { FormError, reportFieldOrFormError } from "@/components/ui/form-error"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/toast"
-import { apiPost, apiDelete } from "@/api/client"
+import { apiPost } from "@/api/client"
 import { t, tRich } from "@/i18n/t"
 import type { Account } from "./types"
-import { extractError } from "./ProfileTab"
 import { accountEmailDraftKey } from "@/lib/storageKeys"
 
 
@@ -42,14 +39,9 @@ const EmailSchema = z.object({
 })
 type EmailValues = z.infer<typeof EmailSchema>
 
-export function AccountTab({ account }: { account: Account }) {
+export function EmailCard({ account }: { account: Account }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [emailError, setEmailError] = useState<string | null>(null)
-  const [deleteOpen, setDeleteOpen] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [deleteError, setDeleteError] = useState("")
-  const [deletePasswordError, setDeletePasswordError] = useState<string | null>(null)
-  const [deletePassword, setDeletePassword] = useState("")
   const submittingRef = useRef(false)
   const draftKey = accountEmailDraftKey(account.ID)
 
@@ -103,30 +95,8 @@ export function AccountTab({ account }: { account: Account }) {
     }
   }
 
-  const onDelete = async () => {
-    setIsDeleting(true)
-    setDeleteError("")
-    setDeletePasswordError(null)
-    try {
-      await apiDelete(
-        "/api/auth/account",
-        undefined,
-        undefined,
-        account.HasPassword ? { CurrentPassword: deletePassword } : undefined
-      )
-      toast.success(t("profile.account.deleted"))
-      // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Reload after account deletion to discard authenticated client state.
-      window.location.href = "/sign-in/"
-    } catch (err) {
-      const passwordError = account.HasPassword ? fieldErrorMessage(err, [20410]) : null
-      if (passwordError) setDeletePasswordError(passwordError)
-      else setDeleteError(extractError(err))
-      setIsDeleting(false)
-    }
-  }
-
   return (
-    <div className="space-y-6">
+    <>
       <Card>
         <CardHeader>
           <CardTitle>{t("profile.account.title")}</CardTitle>
@@ -170,7 +140,7 @@ export function AccountTab({ account }: { account: Account }) {
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder={t("profile.account.newEmailPlaceholder")}
+                        placeholder={t("common.emailPlaceholder")}
                         autoComplete="email"
                         disabled={!account.HasPassword}
                         {...field}
@@ -195,7 +165,9 @@ export function AccountTab({ account }: { account: Account }) {
                   )}
                 />
               )}
-              <p className="text-sm text-dim">{t("profile.account.emailGoogleNote")}</p>
+              {account.Providers.includes("google") && (
+                <p className="text-sm text-dim">{t("profile.account.emailGoogleNote")}</p>
+              )}
               <FormError message={emailError} />
               <div className="flex min-h-10 flex-wrap gap-2">
                 <Button
@@ -220,47 +192,6 @@ export function AccountTab({ account }: { account: Account }) {
           </Form>
         </CardContent>
       </Card>
-
-      <Card className="border-danger/40">
-        <CardHeader>
-          <CardTitle className="text-danger">
-            {t("profile.account.dangerTitle")}
-          </CardTitle>
-          <CardDescription>
-            {t("profile.account.dangerDescription")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button variant="destructive" onClick={() => { setDeleteError(""); setDeletePasswordError(null); setDeletePassword(""); setDeleteOpen(true) }}>
-            {t("profile.account.deleteButton")}
-          </Button>
-        </CardContent>
-      </Card>
-
-      <ConfirmDialog
-        open={deleteOpen}
-        onCancel={() => setDeleteOpen(false)}
-        tone="danger"
-        busy={isDeleting}
-        busyLabel={t("common.busy.deleting")}
-        error={deleteError}
-        title={t("profile.account.deleteConfirmTitle")}
-        description={t("profile.account.deleteConfirmBody")}
-        confirmLabel={t("profile.account.deleteConfirmButton")}
-        disabled={account.HasPassword && !deletePassword}
-        onConfirm={() => void onDelete()}
-      >
-        {account.HasPassword && (
-          <ReauthPasswordField
-            id="delete-account-password"
-            hint={t("profile.account.deletePasswordHint")}
-            value={deletePassword}
-            error={deletePasswordError}
-            onChange={(value) => { setDeletePassword(value); setDeletePasswordError(null) }}
-            disabled={isDeleting}
-          />
-        )}
-      </ConfirmDialog>
-    </div>
+    </>
   )
 }

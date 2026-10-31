@@ -54,6 +54,8 @@ export function SignInScreen() {
   const [formError, setFormError] = useState<string | null>(null)
 
   const [googleError, clearGoogleError] = useOneShotParam("google_error", params)
+  // The sign-out menu item lands here with ?signed_out=1: a short notice, gone on the first edit of the form.
+  const [signedOut, clearSignedOut] = useOneShotParam("signed_out", params)
 
   const form = useForm<SignInValues>({
     resolver: zodResolver(SignInSchema),
@@ -71,6 +73,7 @@ export function SignInScreen() {
 
   const onSubmit: SubmitHandler<SignInValues> = async (data) => {
     clearGoogleError()
+    clearSignedOut()
     setFormError(null)
     setIsSubmitting(true)
 
@@ -151,6 +154,12 @@ export function SignInScreen() {
           <AuthDivider label={t("signIn.orWithEmail")} />
 
 
+          {signedOut && (
+            <Alert>
+              <AlertDescription>{t("signedOut.notice")}</AlertDescription>
+            </Alert>
+          )}
+
           {googleError === "failed" && (
             <Alert variant="destructive">
               <AlertDescription>{t("signIn.googleFailed")}</AlertDescription>
@@ -186,7 +195,7 @@ export function SignInScreen() {
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder={t("signIn.emailPlaceholder")}
+                        placeholder={t("common.emailPlaceholder")}
                         autoComplete="email"
                         {...field}
                       />

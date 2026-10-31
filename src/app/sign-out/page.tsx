@@ -11,6 +11,7 @@ import { safeReturnTo } from "@/lib/auth"
 import { apiUrl } from "@/api/client"
 import { clearAccountDrafts } from "@/lib/drafts"
 import { t } from "@/i18n/t"
+import { PageFooter } from "@/components/PageFooter"
 
 // ---------------------------------------------------------------------------
 // SSO sign-out
@@ -60,7 +61,8 @@ function SignOut() {
   }
 
   return (
-    <main id="main" tabIndex={-1} className="flex min-h-dvh items-center justify-center p-4 outline-none">
+    <div className="flex min-h-dvh flex-col">
+    <main id="main" tabIndex={-1} className="flex flex-1 items-center justify-center p-4 outline-none">
       <div className="flex w-full max-w-md flex-col">
         <div className="mb-6 flex justify-center">
           <Wordmark size="lg" />
@@ -80,6 +82,8 @@ function SignOut() {
         </div>
       </div>
     </main>
+    <PageFooter />
+    </div>
   )
 }
 

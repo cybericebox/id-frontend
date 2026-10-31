@@ -210,7 +210,7 @@ export function SignUpScreen() {
                       <Input
                         type="email"
                         required
-                        placeholder={t("register.emailPlaceholder")}
+                        placeholder={t("common.emailPlaceholder")}
                         autoComplete="email"
                         {...field}
                       />

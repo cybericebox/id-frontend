@@ -65,7 +65,7 @@ type SecurityValues = {
   ConfirmPassword: string
 }
 
-export function SecurityTab({ account }: { account: Account }) {
+export function PasswordCard({ account }: { account: Account }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const submittingRef = useRef(false)

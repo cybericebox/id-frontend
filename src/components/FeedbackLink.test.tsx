@@ -40,7 +40,7 @@ describe("FeedbackLink", () => {
 
   it("lives in both auth footers and the account menu, not in the root layout", () => {
     const read = (f: string) => readFileSync(join(__dirname, "..", f), "utf8")
-    for (const f of ["components/auth/AuthLayout.tsx", "components/auth/AuthSidePanel.tsx", "components/profile/AccountMenu.tsx"]) {
+    for (const f of ["components/PageFooter.tsx", "components/auth/AuthSidePanel.tsx", "components/profile/AccountMenu.tsx"]) {
       expect(read(f)).toContain("<FeedbackLink")
     }
     expect(read("app/layout.tsx")).not.toContain("FeedbackLink")

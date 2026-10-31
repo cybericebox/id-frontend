@@ -1,18 +1,27 @@
 "use client"
 
 import { useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { fetchMe } from "@/lib/auth"
 import { t } from "@/i18n/t"
+import { PageLoader } from "@/components/ui/spinner"
 
-// Root route: redirect immediately to /sign-in.
-// This is a client component so useRouter is available in the static export.
+// Root route: a signed-in visitor goes straight to /profile, everyone else (and an unanswered check) to /sign-in.
+// This is a client component so the check can run in the static export.
 export default function RootPage() {
-  const router = useRouter()
-
   useEffect(() => {
-    router.replace("/sign-in")
-  }, [router])
+    let cancelled = false
+    fetchMe()
+      .then((me) => me ? "/profile/" : "/sign-in/")
+      .catch(() => "/sign-in/")
+      .then((to) => { if (!cancelled) window.location.replace(to) })
+    return () => { cancelled = true }
+  }, [])
 
   // without JavaScript the redirect never runs: a plain link to the sign-in page
-  return <noscript><a href="/sign-in/">{t("common.signIn")}</a></noscript>
+  return (
+    <>
+      <PageLoader />
+      <noscript><a href="/sign-in/">{t("common.signIn")}</a></noscript>
+    </>
+  )
 }

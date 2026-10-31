@@ -14,6 +14,7 @@ import { Logo } from "@/components/brand/Logo"
 import { ThemeSwitch } from "@/components/ThemeToggle"
 import { FeedbackLink } from "@/components/FeedbackLink"
 import { EmailOff } from "@/components/EmailOff"
+import { LegalLinks } from "@/components/PageFooter"
 import { CookieSettingsLink } from "@/components/CookieSettingsLink"
 import { Tooltip } from "@/components/ui/tooltip"
 import { cn } from "@/utils/cn"
@@ -149,6 +150,7 @@ export function AuthSidePanel({
               ),
             }, { groupFrom: 1 })}
           </p>
+          <LegalLinks className="ib-tap text-on-brand-2 hover:text-on-brand" />
           <CookieSettingsLink className="ib-tap text-on-brand-2 hover:text-on-brand" />
           <EmailOff><FeedbackLink className="ib-tap text-on-brand-2 hover:text-on-brand" /></EmailOff>
           {/* bottom-left: the reCAPTCHA badge occupies the bottom-right corner */}
