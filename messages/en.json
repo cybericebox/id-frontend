@@ -427,5 +427,8 @@
   "profile.account.linkSentTo": "A confirmation link was sent to {email}.",
   "profile.account.resendTitle": "Send the email again?",
   "profile.account.resendBody": "We will send a new link to {email}.",
-  "profile.account.resendPasswordHint": "Enter your current password to confirm."
+  "profile.account.resendPasswordHint": "Enter your current password to confirm.",
+  "profile.passkeys.compromised": "Possibly compromised",
+  "profile.passkeys.compromisedNote": "Signing in with this key is blocked, remove it.",
+  "profile.passkeys.compromisedNoteDate": "Signing in with this key has been blocked since {date}, remove it."
 }
