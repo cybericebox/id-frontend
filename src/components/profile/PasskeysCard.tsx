@@ -27,6 +27,9 @@ interface Passkey {
   Name: string
   CreatedAt: string
   LastUsedAt: string | null
+  // A counter rollback marks the key for good: signing in with it is refused, it stays listed until removed.
+  Compromised: boolean
+  CompromisedAt: string | null
 }
 
 const NAME_MAX = 64
@@ -149,6 +152,18 @@ export function PasskeysCard({ account }: { account: Account }) {
                     <KeyRound className="h-4 w-4 shrink-0 text-dim" aria-hidden="true" />
                     <span className="break-words [overflow-wrap:anywhere]">{p.Name}</span>
                   </p>
+                  {p.Compromised && (
+                    <div className="mt-1.5 space-y-1">
+                      <span className="inline-block rounded-sm bg-danger-bg px-2 py-0.5 text-xs font-medium text-danger">
+                        {t("profile.passkeys.compromised")}
+                      </span>
+                      <p className="text-xs text-danger">
+                        {p.CompromisedAt
+                          ? t("profile.passkeys.compromisedNoteDate", { date: formatDate(p.CompromisedAt) })
+                          : t("profile.passkeys.compromisedNote")}
+                      </p>
+                    </div>
+                  )}
                   <p className="mt-1 text-xs text-dim">
                     {p.LastUsedAt
                       ? t("profile.passkeys.lastUsed", { date: formatDate(p.LastUsedAt) })

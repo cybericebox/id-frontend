@@ -427,5 +427,8 @@
   "profile.account.linkSentTo": "Посилання для підтвердження надіслано на {email}.",
   "profile.account.resendTitle": "Надіслати лист ще раз?",
   "profile.account.resendBody": "Ми надішлемо нове посилання на {email}.",
-  "profile.account.resendPasswordHint": "Введіть поточний пароль, щоб підтвердити."
+  "profile.account.resendPasswordHint": "Введіть поточний пароль, щоб підтвердити.",
+  "profile.passkeys.compromised": "Можливо скомпрометований",
+  "profile.passkeys.compromisedNote": "Вхід цим ключем заборонено, видаліть його.",
+  "profile.passkeys.compromisedNoteDate": "Вхід цим ключем заборонено з {date}, видаліть його."
 }
