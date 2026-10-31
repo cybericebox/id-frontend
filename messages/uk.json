@@ -422,5 +422,9 @@
   "profile.passkeys.removeBody": "Входити цим ключем більше не вийде:",
   "profile.passkeys.removeConfirm": "Видалити",
   "common.busy.adding": "Додаємо…",
-  "signIn.withPasskey": "Увійти з ключем доступу"
+  "signIn.withPasskey": "Увійти з ключем доступу",
+  "mail.resend": "Надіслати ще раз",
+  "mail.resendIn": "Надіслати ще раз через {seconds} с",
+  "mail.changeAddress": "Змінити адресу",
+  "mail.resent": "Лист надіслано ще раз."
 }

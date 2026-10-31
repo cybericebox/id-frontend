@@ -422,5 +422,9 @@
   "profile.passkeys.removeBody": "You will no longer be able to sign in with it:",
   "profile.passkeys.removeConfirm": "Remove",
   "common.busy.adding": "Adding…",
-  "signIn.withPasskey": "Sign in with a passkey"
+  "signIn.withPasskey": "Sign in with a passkey",
+  "mail.resend": "Send again",
+  "mail.resendIn": "Send again in {seconds} s",
+  "mail.changeAddress": "Change address",
+  "mail.resent": "The email was sent again."
 }
