@@ -16,13 +16,13 @@ export const RESEND_COOLDOWN_SECONDS = 60
 export class CaptchaError extends Error {}
 
 /**
- * The seconds the backend asks to wait: its RetryAfterSeconds in the error body (or Status), else the Retry-After header.
+ * The seconds the backend asks to wait: its RetryAfterSeconds in the error body (Status.Context), else the Retry-After header.
  * Undefined when the refusal carries no wait.
  */
 export function retryAfterSeconds(err: unknown): number | undefined {
   if (!(err instanceof ApiError)) return undefined
-  const body = err.body as { Data?: { RetryAfterSeconds?: unknown }; Status?: { RetryAfterSeconds?: unknown }; RetryAfterSeconds?: unknown } | null
-  const fromBody = body?.Data?.RetryAfterSeconds ?? body?.Status?.RetryAfterSeconds ?? body?.RetryAfterSeconds
+  const body = err.body as { Data?: { RetryAfterSeconds?: unknown }; Status?: { RetryAfterSeconds?: unknown; Context?: { RetryAfterSeconds?: unknown } }; RetryAfterSeconds?: unknown } | null
+  const fromBody = body?.Status?.Context?.RetryAfterSeconds ?? body?.Data?.RetryAfterSeconds ?? body?.Status?.RetryAfterSeconds ?? body?.RetryAfterSeconds
   const seconds = typeof fromBody === "number" ? fromBody : err.retryAfter
   return typeof seconds === "number" && seconds > 0 ? Math.ceil(seconds) : undefined
 }

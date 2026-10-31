@@ -11,6 +11,7 @@ import { ResendMail, retryAfterSeconds } from "./ResendMail"
 describe("retryAfterSeconds", () => {
   it("reads the backend's RetryAfterSeconds, then the Retry-After header", () => {
     expect(retryAfterSeconds(new ApiError(429, { Status: { Code: 1 }, Data: { RetryAfterSeconds: 42 } }))).toBe(42)
+    expect(retryAfterSeconds(new ApiError(429, { Status: { Code: 70428, Context: { RetryAfterSeconds: 33 } } }))).toBe(33)
     expect(retryAfterSeconds(new ApiError(429, {}, undefined, undefined, undefined, 17))).toBe(17)
     expect(retryAfterSeconds(new ApiError(400, {}))).toBeUndefined()
     expect(retryAfterSeconds(new Error("x"))).toBeUndefined()

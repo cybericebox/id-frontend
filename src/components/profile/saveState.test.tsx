@@ -126,7 +126,7 @@ describe("profile save actions", () => {
     await change("Email", " NEW@EXAMPLE.TEST ")
     expect(action("Змінити пошту")?.disabled).toBe(false)
     await submit()
-    expect(post).toHaveBeenCalledWith("/api/auth/account/email", { Email: "new@example.test", CurrentPassword: "Password1" })
+    expect(post).toHaveBeenCalledWith("/api/auth/account/email", { Email: "new@example.test", CurrentPassword: "Password1", RecaptchaToken: "none" })
     expect(action("Змінити пошту")?.disabled).toBe(true)
   })
 
