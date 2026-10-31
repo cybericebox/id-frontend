@@ -5,7 +5,7 @@ import { act } from "react"
 import { createRoot } from "react-dom/client"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams("return_to=https%3A%2F%2Fadmin.cybericebox.local%2F") }))
+vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams("return_to=https%3A%2F%2Fadmin.cybericebox.local%2F"), usePathname: () => "/sign-out/" }))
 
 import SignOutPage from "./page"
 import { profileNameDraftKey } from "@/lib/storageKeys"
@@ -18,6 +18,7 @@ describe("/sign-out", () => {
   const fetchMock = vi.fn()
   const location = { href: "https://id.cybericebox.local/sign-out/" }
   beforeEach(() => {
+    window.matchMedia = (() => ({ matches: false, addEventListener() {}, removeEventListener() {} })) as unknown as typeof window.matchMedia
     fetchMock.mockReset()
     location.href = "https://id.cybericebox.local/sign-out/"
     vi.stubGlobal("fetch", fetchMock)

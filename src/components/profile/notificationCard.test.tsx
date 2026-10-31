@@ -57,7 +57,7 @@ describe("links in text and busy states", () => {
   })
 
   it("the email change button shows the crest busy state, not «Завантаження…»", () => {
-    const account = src("./AccountTab.tsx")
+    const account = src("./EmailCard.tsx")
     expect(account).not.toContain("common.loading")
     expect(account).toContain("busy={isSubmitting}")
   })

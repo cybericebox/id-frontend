@@ -5,13 +5,13 @@ import { act } from "react"
 import { createRoot } from "react-dom/client"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
-import { ConnectionsTab } from "./ConnectionsTab"
+import { GoogleCard } from "./GoogleCard"
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 const account = { ID: "u1", FirstName: "A", LastName: "B", Email: "olena@example.com", Picture: "", EmailConfirmed: true, Role: "user", Providers: [], HasPassword: true, CreatedAt: "" }
 
-describe("ConnectionsTab link errors", () => {
+describe("GoogleCard link errors", () => {
   let host: HTMLElement
   let root: ReturnType<typeof createRoot>
   beforeEach(() => {
@@ -24,7 +24,7 @@ describe("ConnectionsTab link errors", () => {
   })
 
   it("email_mismatch: an inline error with the account address, tied to the connect button", async () => {
-    await act(async () => { root.render(<ConnectionsTab account={account} linkError="email_mismatch" onUpdated={() => {}} />) })
+    await act(async () => { root.render(<GoogleCard account={account} linkError="email_mismatch" onUpdated={() => {}} />) })
     const error = host.querySelector("#connect-google-mismatch")
     expect(error?.getAttribute("role")).toBe("alert")
     expect(error?.textContent).toContain("Підключіть Google-акаунт з адресою olena@example.com")
@@ -34,10 +34,10 @@ describe("ConnectionsTab link errors", () => {
   })
 
   it("link_failed keeps the general error; no error without a code", async () => {
-    await act(async () => { root.render(<ConnectionsTab account={account} linkError="link_failed" onUpdated={() => {}} />) })
+    await act(async () => { root.render(<GoogleCard account={account} linkError="link_failed" onUpdated={() => {}} />) })
     expect(host.querySelector("#connect-google-mismatch")).toBeNull()
     expect(host.querySelector('[role="alert"]')).not.toBeNull()
-    await act(async () => { root.render(<ConnectionsTab key="none" account={account} linkError={null} onUpdated={() => {}} />) })
+    await act(async () => { root.render(<GoogleCard key="none" account={account} linkError={null} onUpdated={() => {}} />) })
     expect(host.querySelector('[role="alert"]')).toBeNull()
   })
 })

@@ -7,10 +7,9 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowLeft,
-  AtSign,
   ShieldCheck,
   MonitorSmartphone,
-  Link2,
+  DatabaseZap,
   User as UserIcon,
   type LucideIcon,
 } from "lucide-react"
@@ -25,12 +24,12 @@ import { ErrorScreen } from "@/components/ErrorPage"
 import { isBackendUnreachable, onServiceRestored, reportServiceUnavailable } from "@/lib/serviceStatus"
 import { PageLoader } from "@/components/ui/spinner"
 import { t, locale } from "@/i18n/t"
+import { PageFooter } from "@/components/PageFooter"
 import type { Account } from "@/components/profile/types"
 import { ProfileTab } from "@/components/profile/ProfileTab"
-import { AccountTab } from "@/components/profile/AccountTab"
-import { SecurityTab } from "@/components/profile/SecurityTab"
+import { LoginSecurityTab } from "@/components/profile/LoginSecurityTab"
 import { SessionsTab } from "@/components/profile/SessionsTab"
-import { ConnectionsTab } from "@/components/profile/ConnectionsTab"
+import { PrivacyTab } from "@/components/profile/PrivacyTab"
 import { InboxButton } from "@/components/profile/InboxButton"
 import { AccountMenu } from "@/components/profile/AccountMenu"
 import { initials } from "@/lib/initials"
@@ -41,15 +40,17 @@ import { clearAccountDrafts } from "@/lib/drafts"
 
 const BACK_ARROW_CLASS = "ib-tap inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-dim hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-action"
 
-type TabKey = "profile" | "account" | "security" | "sessions" | "connections"
+type TabKey = "profile" | "security" | "sessions" | "privacy"
 
 const TABS: { key: TabKey; label: string; desc: string; icon: LucideIcon }[] = [
   { key: "profile", label: "profile.tab.profile", desc: "profile.tab.profile.desc", icon: UserIcon },
-  { key: "account", label: "profile.tab.account", desc: "profile.tab.account.desc", icon: AtSign },
   { key: "security", label: "profile.tab.security", desc: "profile.tab.security.desc", icon: ShieldCheck },
   { key: "sessions", label: "profile.tab.sessions", desc: "profile.tab.sessions.desc", icon: MonitorSmartphone },
-  { key: "connections", label: "profile.tab.connections", desc: "profile.tab.connections.desc", icon: Link2 },
+  { key: "privacy", label: "profile.tab.privacy", desc: "profile.tab.privacy.desc", icon: DatabaseZap },
 ]
+
+// Sections of earlier versions (old ?tab= links, the Google link callback) now live inside «Вхід і безпека».
+const LEGACY_TABS: Record<string, TabKey> = { account: "security", connections: "security" }
 
 // Format the join date for "Member since"; returns "" for missing/invalid input.
 function memberSince(createdAt: string): string {
@@ -88,9 +89,9 @@ function ProfileShell() {
   // The section lives in the URL (?tab=): reload, Back and a shared link keep the place. Without ?tab= desktop shows
   // the first section and mobile shows the list of sections.
   const requestedTab = searchParams.get("tab")
-  const urlTab = TABS.find((x) => x.key === requestedTab)?.key ?? null
-  // Coming back from a failed «Підключити Google» lands on the connections section.
-  const tab: TabKey | null = urlTab ?? (linkError ? "connections" : null)
+  const urlTab = TABS.find((x) => x.key === requestedTab)?.key ?? (requestedTab ? LEGACY_TABS[requestedTab] ?? null : null)
+  // Coming back from a failed «Підключити Google» lands on the sign-in and security section.
+  const tab: TabKey | null = urlTab ?? (linkError ? "security" : null)
   const active: TabKey = tab ?? "profile"
 
   const selectTab = (key: TabKey | null, mode: "push" | "replace") => {
@@ -185,20 +186,17 @@ function ProfileShell() {
     switch (key) {
       case "profile":
         return <ProfileTab account={account} onUpdated={load} />
-      case "account":
-        return <AccountTab account={account} />
       case "security":
-        return <SecurityTab account={account} />
+        return <LoginSecurityTab account={account} linkError={linkError} onUpdated={load} />
       case "sessions":
         return <SessionsTab />
-      case "connections":
-        return (
-          <ConnectionsTab account={account} linkError={linkError} onUpdated={load} />
-        )
+      case "privacy":
+        return <PrivacyTab account={account} />
     }
   }
 
   return (
+    <>
     <main id="main" tabIndex={-1} className="mx-auto max-w-4xl px-4 py-6 outline-none sm:px-6">
       <header className="mb-6">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b border-line pb-4">
@@ -346,6 +344,8 @@ function ProfileShell() {
         </div>
       )}
     </main>
+    <PageFooter />
+    </>
   )
 }
 

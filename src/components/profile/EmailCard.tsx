@@ -20,18 +20,20 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form"
-import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Input } from "@/components/ui/input"
 import { PasswordInput } from "@/components/ui/password-input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { FormError, reportFieldOrFormError, fieldErrorMessage } from "@/components/ui/form-error"
-import { ReauthPasswordField } from "./ReauthPasswordField"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/toast"
-import { apiPost, apiDelete } from "@/api/client"
+import { apiPost } from "@/api/client"
 import { t, tRich } from "@/i18n/t"
+import { executeCaptcha } from "@/lib/captcha"
+import { localizedError } from "@/i18n/apiError"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { ReauthPasswordField } from "./ReauthPasswordField"
+import { ResendMail, CaptchaError } from "@/components/auth/ResendMail"
 import type { Account } from "./types"
-import { extractError } from "./ProfileTab"
 import { accountEmailDraftKey } from "@/lib/storageKeys"
 
 
@@ -42,14 +44,9 @@ const EmailSchema = z.object({
 })
 type EmailValues = z.infer<typeof EmailSchema>
 
-export function AccountTab({ account }: { account: Account }) {
+export function EmailCard({ account }: { account: Account }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [emailError, setEmailError] = useState<string | null>(null)
-  const [deleteOpen, setDeleteOpen] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [deleteError, setDeleteError] = useState("")
-  const [deletePasswordError, setDeletePasswordError] = useState<string | null>(null)
-  const [deletePassword, setDeletePassword] = useState("")
   const submittingRef = useRef(false)
   const draftKey = accountEmailDraftKey(account.ID)
 
@@ -82,13 +79,57 @@ export function AccountTab({ account }: { account: Account }) {
     // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, [])
 
+  // The change mail; the same request again is «Надіслати ще раз» (the backend limits the pace and asks the bot check).
+  const sendChange = async (newEmail: string, password: string) => {
+    let recaptchaToken: string | undefined
+    try {
+      recaptchaToken = await executeCaptcha("emailChange")
+    } catch {
+      throw new CaptchaError(t("error.captcha"))
+    }
+    await apiPost("/api/auth/account/email", { Email: newEmail, CurrentPassword: password, ...(recaptchaToken ? { RecaptchaToken: recaptchaToken } : {}) })
+  }
+
+  // The address the last link went to, kept in memory with the password that confirmed it: resend repeats the request.
+  const [pending, setPending] = useState<{ email: string; password: string } | null>(null)
+  const changeAddress = () => {
+    if (pending) form.setValue("Email", pending.email, { shouldDirty: true })
+    setPending(null)
+    window.setTimeout(() => form.setFocus("Email"), 0)
+  }
+
+  // «Не підтверджено» without a request of this visit: resend asks for the password first.
+  const [resendOpen, setResendOpen] = useState(false)
+  const [resendPassword, setResendPassword] = useState("")
+  const [resendBusy, setResendBusy] = useState(false)
+  const [resendError, setResendError] = useState("")
+  const [resendPasswordError, setResendPasswordError] = useState<string | null>(null)
+  const resendUnconfirmed = async () => {
+    setResendBusy(true)
+    setResendError("")
+    setResendPasswordError(null)
+    try {
+      await sendChange(account.Email, resendPassword)
+      setPending({ email: account.Email, password: resendPassword })
+      setResendOpen(false)
+      toast.success(t("mail.resent"))
+    } catch (err) {
+      const passwordError = fieldErrorMessage(err, [20410])
+      if (passwordError) setResendPasswordError(passwordError)
+      else setResendError(err instanceof CaptchaError ? err.message : localizedError(err))
+    } finally {
+      setResendBusy(false)
+    }
+  }
+
   const onSubmit: SubmitHandler<EmailValues> = async (data) => {
     if (submittingRef.current || !account.HasPassword || data.Email === account.Email.trim().toLowerCase()) return
     submittingRef.current = true
     setEmailError(null)
     setIsSubmitting(true)
     try {
-      await apiPost("/api/auth/account/email", { Email: data.Email, CurrentPassword: data.CurrentPassword })
+      await sendChange(data.Email, data.CurrentPassword)
+      setPending({ email: data.Email, password: data.CurrentPassword })
       const current = form.getValues()
       if (current.Email.trim().toLowerCase() === data.Email && current.CurrentPassword === data.CurrentPassword) {
         form.reset({ Email: "", CurrentPassword: "" })
@@ -96,6 +137,7 @@ export function AccountTab({ account }: { account: Account }) {
       }
       toast.success(t("profile.account.emailSent"))
     } catch (err) {
+      if (err instanceof CaptchaError) { setEmailError(err.message); return }
       reportFieldOrFormError(err, setEmailError, form.setError, { 20426: "Email", 20302: "Email", 20410: "CurrentPassword" })
     } finally {
       submittingRef.current = false
@@ -103,30 +145,8 @@ export function AccountTab({ account }: { account: Account }) {
     }
   }
 
-  const onDelete = async () => {
-    setIsDeleting(true)
-    setDeleteError("")
-    setDeletePasswordError(null)
-    try {
-      await apiDelete(
-        "/api/auth/account",
-        undefined,
-        undefined,
-        account.HasPassword ? { CurrentPassword: deletePassword } : undefined
-      )
-      toast.success(t("profile.account.deleted"))
-      // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Reload after account deletion to discard authenticated client state.
-      window.location.href = "/sign-in/"
-    } catch (err) {
-      const passwordError = account.HasPassword ? fieldErrorMessage(err, [20410]) : null
-      if (passwordError) setDeletePasswordError(passwordError)
-      else setDeleteError(extractError(err))
-      setIsDeleting(false)
-    }
-  }
-
   return (
-    <div className="space-y-6">
+    <>
       <Card>
         <CardHeader>
           <CardTitle>{t("profile.account.title")}</CardTitle>
@@ -149,6 +169,20 @@ export function AccountTab({ account }: { account: Account }) {
           </div>
 
 
+          {pending ? (
+            <div className="space-y-3 rounded-md border p-3">
+              <p className="text-sm">{t("profile.account.linkSentTo", { email: pending.email })}</p>
+              <ResendMail resend={() => sendChange(pending.email, pending.password)} onChangeAddress={changeAddress} />
+            </div>
+          ) : !account.EmailConfirmed && account.HasPassword ? (
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" onClick={() => { setResendError(""); setResendPasswordError(null); setResendPassword(""); setResendOpen(true) }}>
+                {t("mail.resend")}
+              </Button>
+              <Button type="button" variant="ghost" onClick={changeAddress}>{t("mail.changeAddress")}</Button>
+            </div>
+          ) : null}
+
           {!account.HasPassword && (
             <Alert variant="warn">
               <AlertDescription>{t("profile.account.emailNeedsPassword")}</AlertDescription>
@@ -170,7 +204,7 @@ export function AccountTab({ account }: { account: Account }) {
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder={t("profile.account.newEmailPlaceholder")}
+                        placeholder={t("common.emailPlaceholder")}
                         autoComplete="email"
                         disabled={!account.HasPassword}
                         {...field}
@@ -195,7 +229,9 @@ export function AccountTab({ account }: { account: Account }) {
                   )}
                 />
               )}
-              <p className="text-sm text-dim">{t("profile.account.emailGoogleNote")}</p>
+              {account.Providers.includes("google") && (
+                <p className="text-sm text-dim">{t("profile.account.emailGoogleNote")}</p>
+              )}
               <FormError message={emailError} />
               <div className="flex min-h-10 flex-wrap gap-2">
                 <Button
@@ -221,46 +257,27 @@ export function AccountTab({ account }: { account: Account }) {
         </CardContent>
       </Card>
 
-      <Card className="border-danger/40">
-        <CardHeader>
-          <CardTitle className="text-danger">
-            {t("profile.account.dangerTitle")}
-          </CardTitle>
-          <CardDescription>
-            {t("profile.account.dangerDescription")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button variant="destructive" onClick={() => { setDeleteError(""); setDeletePasswordError(null); setDeletePassword(""); setDeleteOpen(true) }}>
-            {t("profile.account.deleteButton")}
-          </Button>
-        </CardContent>
-      </Card>
-
       <ConfirmDialog
-        open={deleteOpen}
-        onCancel={() => setDeleteOpen(false)}
-        tone="danger"
-        busy={isDeleting}
-        busyLabel={t("common.busy.deleting")}
-        error={deleteError}
-        title={t("profile.account.deleteConfirmTitle")}
-        description={t("profile.account.deleteConfirmBody")}
-        confirmLabel={t("profile.account.deleteConfirmButton")}
-        disabled={account.HasPassword && !deletePassword}
-        onConfirm={() => void onDelete()}
+        open={resendOpen}
+        onCancel={() => setResendOpen(false)}
+        busy={resendBusy}
+        busyLabel={t("common.busy.sending")}
+        disabled={!resendPassword}
+        error={resendError}
+        title={t("profile.account.resendTitle")}
+        description={t("profile.account.resendBody", { email: account.Email })}
+        confirmLabel={t("mail.resend")}
+        onConfirm={() => void resendUnconfirmed()}
       >
-        {account.HasPassword && (
-          <ReauthPasswordField
-            id="delete-account-password"
-            hint={t("profile.account.deletePasswordHint")}
-            value={deletePassword}
-            error={deletePasswordError}
-            onChange={(value) => { setDeletePassword(value); setDeletePasswordError(null) }}
-            disabled={isDeleting}
-          />
-        )}
+        <ReauthPasswordField
+          id="resend-email-password"
+          hint={t("profile.account.resendPasswordHint")}
+          value={resendPassword}
+          error={resendPasswordError}
+          onChange={(value) => { setResendPassword(value); setResendPasswordError(null) }}
+          disabled={resendBusy}
+        />
       </ConfirmDialog>
-    </div>
+    </>
   )
 }

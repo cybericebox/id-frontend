@@ -14,8 +14,8 @@ vi.mock("@/components/ui/toast", () => ({ toast: { success: vi.fn(), error: vi.f
 import { ApiError } from "@/api/client"
 import { localizedError } from "@/i18n/apiError"
 import { ProfileTab } from "./ProfileTab"
-import { AccountTab } from "./AccountTab"
-import { SecurityTab } from "./SecurityTab"
+import { EmailCard } from "./EmailCard"
+import { PasswordCard } from "./PasswordCard"
 import { profileNameDraftKey } from "@/lib/storageKeys"
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
@@ -117,7 +117,7 @@ describe("profile save actions", () => {
   })
 
   it("compares email to the normalized account address and guards a no-change submit", async () => {
-    await render(<AccountTab account={account} />)
+    await render(<EmailCard account={account} />)
     await change("Email", " OLENA@EXAMPLE.TEST ")
     await change("CurrentPassword", "Password1")
     expect(action("Змінити пошту")?.disabled).toBe(true)
@@ -126,14 +126,14 @@ describe("profile save actions", () => {
     await change("Email", " NEW@EXAMPLE.TEST ")
     expect(action("Змінити пошту")?.disabled).toBe(false)
     await submit()
-    expect(post).toHaveBeenCalledWith("/api/auth/account/email", { Email: "new@example.test", CurrentPassword: "Password1" })
+    expect(post).toHaveBeenCalledWith("/api/auth/account/email", { Email: "new@example.test", CurrentPassword: "Password1", RecaptchaToken: "none" })
     expect(action("Змінити пошту")?.disabled).toBe(true)
   })
 
   it("does not erase a newer email request after an older request succeeds", async () => {
     let resolve: () => void = () => undefined
     post.mockReturnValueOnce(new Promise<void>((done) => { resolve = done }))
-    await render(<AccountTab account={account} />)
+    await render(<EmailCard account={account} />)
     await change("Email", "first@example.test")
     await change("CurrentPassword", "Password1")
     await submit()
@@ -144,7 +144,7 @@ describe("profile save actions", () => {
   })
 
   it("keeps password Save visible and enables it for a valid new password operation", async () => {
-    await render(<SecurityTab account={account} />)
+    await render(<PasswordCard account={account} />)
     expect(action("Зберегти пароль")?.disabled).toBe(true)
     await change("OldPassword", "OldPassword1")
     expect(action("Зберегти пароль")?.disabled).toBe(true)
@@ -160,7 +160,7 @@ describe("profile save actions", () => {
   it.each([[20410, "OldPassword"], [20409, "NewPassword"]])("places backend password error %s beside %s", async (code, name) => {
     const error = new ApiError(400, null, undefined, undefined, code)
     post.mockRejectedValueOnce(error)
-    await render(<SecurityTab account={account} />)
+    await render(<PasswordCard account={account} />)
     await change("OldPassword", "OldPassword1")
     await change("NewPassword", "NewPassword1")
     await change("ConfirmPassword", "NewPassword1")
@@ -177,7 +177,7 @@ describe("profile save actions", () => {
   it("puts a claimed email error at the email and keeps the draft", async () => {
     const error = new ApiError(400, null, undefined, undefined, 20302)
     post.mockRejectedValueOnce(error)
-    await render(<AccountTab account={account} />)
+    await render(<EmailCard account={account} />)
     await change("Email", "taken@example.test")
     await change("CurrentPassword", "Password1")
     await submit()

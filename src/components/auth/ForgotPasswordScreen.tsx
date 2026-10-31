@@ -22,6 +22,7 @@ import { useGuestOnly } from "@/lib/useGuestOnly"
 import { MailCheck } from "lucide-react"
 import { AuthLayout } from "./AuthLayout"
 import { AuthHeading, AuthPane, AuthSwitch } from "./parts"
+import { ResendMail, CaptchaError } from "./ResendMail"
 import { t } from "@/i18n/t"
 import { apiPost } from "@/api/client"
 
@@ -43,7 +44,7 @@ export function ForgotPasswordScreen() {
   useGuestOnly(params !== null, returnTo, undefined)
 
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+  const [submittedEmail, setSubmittedEmail] = useState<string | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
 
   const form = useForm<ForgotPasswordValues>({
@@ -60,27 +61,13 @@ export function ForgotPasswordScreen() {
     setIsSubmitting(true)
 
     try {
-      // The bot check is mandatory on the backend. Always obtain a token (provider none yields a fixed one).
-      let recaptchaToken: string | undefined
       try {
-        recaptchaToken = await executeCaptcha("forgotPassword")
-      } catch {
-        setFormError(t("error.captcha"))
-        return
+        await sendResetMail(data.Email)
+      } catch (err) {
+        if (err instanceof CaptchaError) { setFormError(err.message); return }
+        throw err
       }
-
-      const body: Record<string, string> = {
-        Email: data.Email,
-      }
-      if (recaptchaToken) {
-        body.RecaptchaToken = recaptchaToken
-      }
-
-      // required:false — surface a 4xx (e.g. reCAPTCHA failure) inline. The daemon
-      // otherwise ALWAYS returns success without revealing whether the account
-      // exists, so a 2xx is a neutral confirmation, NOT proof the email is registered.
-      await apiPost("/api/auth/password/reset-request", body, undefined, { required: false })
-      setSubmitted(true)
+      setSubmittedEmail(data.Email)
       return
     } catch (err) {
       reportFieldOrFormError(err, setFormError, form.setError, { 20426: "Email" })
@@ -89,15 +76,33 @@ export function ForgotPasswordScreen() {
     }
   }
 
+  // The recovery mail; the same request again is «Надіслати ще раз» (the backend limits the pace).
+  const sendResetMail = async (email: string) => {
+    // The bot check is mandatory on the backend. Always obtain a token (provider none yields a fixed one).
+    let recaptchaToken: string | undefined
+    try {
+      recaptchaToken = await executeCaptcha("forgotPassword")
+    } catch {
+      throw new CaptchaError(t("error.captcha"))
+    }
+    const body: Record<string, string> = { Email: email }
+    if (recaptchaToken) body.RecaptchaToken = recaptchaToken
+    // required:false — surface a 4xx (e.g. reCAPTCHA failure) inline. The daemon
+    // otherwise ALWAYS returns success without revealing whether the account
+    // exists, so a 2xx is a neutral confirmation, NOT proof the email is registered.
+    await apiPost("/api/auth/password/reset-request", body, undefined, { required: false })
+  }
+
   // ---------------------------------------------------------------------------
   // Success state: neutral confirmation — does NOT confirm the account exists.
   // ---------------------------------------------------------------------------
-  if (submitted) {
+  if (submittedEmail !== null) {
     return (
       <AuthLayout reversed={true} variant="recover">
         <AuthPane>
           <MailCheck size={32} className="text-action" aria-hidden />
           <AuthHeading title={t("forgotPassword.checkEmailTitle")} subtitle={t("forgotPassword.checkEmailBody")} />
+          <ResendMail resend={() => sendResetMail(submittedEmail)} onChangeAddress={() => setSubmittedEmail(null)} />
           <AuthSwitch href={signInHref} action={t("forgotPassword.backToSignIn")} />
         </AuthPane>
       </AuthLayout>
@@ -125,7 +130,7 @@ export function ForgotPasswordScreen() {
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder={t("forgotPassword.emailPlaceholder")}
+                        placeholder={t("common.emailPlaceholder")}
                         autoComplete="email"
                         {...field}
                       />

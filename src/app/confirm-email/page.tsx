@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { apiPost } from "@/api/client"
 import { localizedError } from "@/i18n/apiError"
 import { t } from "@/i18n/t"
+import { PageFooter } from "@/components/PageFooter"
 import { inlineLinkClass } from "@/components/auth/parts"
 import { useUrlParams } from "@/lib/useUrlParams"
 import { forgetUrlToken, useUrlToken } from "@/lib/useUrlToken"
@@ -43,7 +44,8 @@ export default function ConfirmEmailPage() {
   }
 
   return (
-    <main id="main" tabIndex={-1} className="flex min-h-dvh items-center justify-center p-4 outline-none">
+    <div className="flex min-h-dvh flex-col">
+    <main id="main" tabIndex={-1} className="flex flex-1 items-center justify-center p-4 outline-none">
       <div className="flex w-full max-w-md flex-col">
         <div className="mb-6 flex justify-center">
           <Wordmark size="lg" />
@@ -81,5 +83,7 @@ export default function ConfirmEmailPage() {
         </div>
       </div>
     </main>
+    <PageFooter />
+    </div>
   )
 }

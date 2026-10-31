@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { apiGet, mediaUrl } from "@/api/client"
 import { t } from "@/i18n/t"
+import { signOutNow } from "@/lib/signOut"
+import { toast } from "@/components/ui/toast"
 import { ACCOUNT_MENU_ICON_PROPS, ACCOUNT_MENU_ICONS, ACCOUNT_MENU_LABELS, accountMenu, catalogAllowed } from "@/lib/accountMenu"
 import { adminOrigin, exercisesOrigin } from "@/lib/origins"
 import type { Account } from "@/components/profile/types"
@@ -40,6 +42,17 @@ export function AccountMenu({ account }: { account: Account }) {
       .catch(() => { if (!cancelled) setStaff(false) })
     return () => { cancelled = true }
   }, [adminTier])
+
+  // One POST, no confirmation page; the sign-in page greets with «Ви вийшли». A failure stays here with a toast.
+  const doSignOut = async () => {
+    try {
+      await signOutNow()
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- A full load discards the authenticated client state.
+      window.location.assign("/sign-in/?signed_out=1")
+    } catch {
+      toast.error(t("signOut.failed"))
+    }
+  }
 
   const entries = accountMenu(
     "id",
@@ -134,10 +147,8 @@ export function AccountMenu({ account }: { account: Account }) {
           const key = "signOut"
           const Icon = ACCOUNT_MENU_ICONS[key]
           return (
-            <DropdownMenuItem key={key} asChild className="group gap-2">
-              <a href="/sign-out/">
-                <Icon {...ACCOUNT_MENU_ICON_PROPS} className={ICON_CLASS} /><span className="account-menu__label">{t(ACCOUNT_MENU_LABELS[key])}</span>
-              </a>
+            <DropdownMenuItem key={key} className="group gap-2" onSelect={() => void doSignOut()}>
+              <Icon {...ACCOUNT_MENU_ICON_PROPS} className={ICON_CLASS} /><span className="account-menu__label">{t(ACCOUNT_MENU_LABELS[key])}</span>
             </DropdownMenuItem>
           )
         })}

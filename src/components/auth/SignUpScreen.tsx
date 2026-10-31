@@ -27,6 +27,7 @@ import { useGuestOnly } from "@/lib/useGuestOnly"
 import { AuthDivider, AuthHeading, AuthPane, AuthSwitch, GoogleIcon, inlineLinkClass } from "./parts"
 import { t, tRich } from "@/i18n/t"
 import { apiPost } from "@/api/client"
+import { ResendMail, CaptchaError } from "./ResendMail"
 import { googleHint, googleStartUrl } from "@/lib/googleStart"
 
 // ---------------------------------------------------------------------------
@@ -76,33 +77,12 @@ export function SignUpScreen() {
     setIsSubmitting(true)
 
     try {
-      // The bot check is mandatory on the backend. Always obtain a token (provider none yields a fixed one).
-      let recaptchaToken: string | undefined
       try {
-        recaptchaToken = await executeCaptcha("signUp")
-      } catch {
-        setFormError(t("error.captcha"))
-        return
+        await sendSignUpMail(data.Email)
+      } catch (err) {
+        if (err instanceof CaptchaError) { setFormError(err.message); return }
+        throw err
       }
-
-      const body: Record<string, string> = {
-        Email: data.Email,
-      }
-      if (recaptchaToken) {
-        body.RecaptchaToken = recaptchaToken
-      }
-      // Carried into the emailed setup link (backend validates it) so the user
-      // lands back where they came from after finishing registration.
-      if (returnTo) {
-        body.Redirect = returnTo
-      }
-
-      // Route through the API client so the request hits api.<domain> (absolute
-      // BASE_URL) with credentials — NOT a relative "/api/..." that would resolve
-      // against the id.<domain> frontend origin and 404. required:false keeps a
-      // 401 as a thrown ApiError instead of a sign-in redirect (sign-up is anon).
-      await apiPost("/api/auth/sign-up", body, undefined, { required: false })
-
       // Show "check your email" confirmation — no redirect.
       setSubmittedEmail(data.Email)
       return
@@ -112,6 +92,25 @@ export function SignUpScreen() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  // The mail with the setup link; the same request again is «Надіслати ще раз» (the backend limits the pace).
+  const sendSignUpMail = async (email: string) => {
+    // The bot check is mandatory on the backend. Always obtain a token (provider none yields a fixed one).
+    let recaptchaToken: string | undefined
+    try {
+      recaptchaToken = await executeCaptcha("signUp")
+    } catch {
+      throw new CaptchaError(t("error.captcha"))
+    }
+    const body: Record<string, string> = { Email: email }
+    if (recaptchaToken) body.RecaptchaToken = recaptchaToken
+    // Carried into the emailed setup link (backend validates it) so the user
+    // lands back where they came from after finishing registration.
+    if (returnTo) body.Redirect = returnTo
+    // Route through the API client so the request hits api.<domain> (absolute BASE_URL) with credentials.
+    // required:false keeps a 401 as a thrown ApiError instead of a sign-in redirect (sign-up is anon).
+    await apiPost("/api/auth/sign-up", body, undefined, { required: false })
   }
 
   // Build /sign-in link preserving return_to if present
@@ -131,6 +130,7 @@ export function SignUpScreen() {
             title={t("register.checkEmailTitle")}
             subtitle={withEmail(t("register.checkEmailBody"), submittedEmail)}
           />
+          <ResendMail resend={() => sendSignUpMail(submittedEmail)} onChangeAddress={() => setSubmittedEmail(null)} />
           <AuthSwitch text={t("register.haveAccount")} href={signInHref} action={t("register.signIn")} />
         </AuthPane>
       </AuthLayout>
@@ -210,7 +210,7 @@ export function SignUpScreen() {
                       <Input
                         type="email"
                         required
-                        placeholder={t("register.emailPlaceholder")}
+                        placeholder={t("common.emailPlaceholder")}
                         autoComplete="email"
                         {...field}
                       />
