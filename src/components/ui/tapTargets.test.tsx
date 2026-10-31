@@ -25,7 +25,7 @@ describe("touch targets", () => {
 
   it("the profile back arrow and the auth footer links carry it", () => {
     expect(src("../profile/ProfileScreen.tsx")).toMatch(/const BACK_ARROW_CLASS = "ib-tap /)
-    for (const file of ["../auth/AuthLayout.tsx", "../auth/AuthSidePanel.tsx"]) {
+    for (const file of ["../PageFooter.tsx", "../auth/AuthSidePanel.tsx"]) {
       expect(src(file).match(/<(?:CookieSettingsLink|FeedbackLink) className="ib-tap /g), file).toHaveLength(2)
     }
   })

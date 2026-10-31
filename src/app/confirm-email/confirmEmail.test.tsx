@@ -18,6 +18,7 @@ describe("/confirm-email", () => {
   let host: HTMLElement
   let root: ReturnType<typeof createRoot>
   beforeEach(() => {
+    window.matchMedia = (() => ({ matches: false, addEventListener() {}, removeEventListener() {} })) as unknown as typeof window.matchMedia
     window.history.replaceState(null, "", "/confirm-email/?token=abc")
     host = document.body.appendChild(document.createElement("div"))
     root = createRoot(host)

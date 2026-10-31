@@ -125,7 +125,7 @@ export function ForgotPasswordScreen() {
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder={t("forgotPassword.emailPlaceholder")}
+                        placeholder={t("common.emailPlaceholder")}
                         autoComplete="email"
                         {...field}
                       />

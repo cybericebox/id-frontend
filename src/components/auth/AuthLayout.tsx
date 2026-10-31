@@ -1,10 +1,7 @@
 import * as React from "react"
 import { AuthSidePanel, type AuthVariant } from "./AuthSidePanel"
 import { cn } from "@/utils/cn"
-import { ThemeSwitch } from "@/components/ThemeToggle"
-import { FeedbackLink } from "@/components/FeedbackLink"
-import { EmailOff } from "@/components/EmailOff"
-import { CookieSettingsLink } from "@/components/CookieSettingsLink"
+import { PageFooter } from "@/components/PageFooter"
 import { Wordmark } from "@/components/brand/Wordmark"
 
 // Split auth layout (ds-v2 auth-split): brand-mass panel + form on paper.
@@ -46,11 +43,7 @@ export function AuthLayout({
           {children}
         </main>
         {/* narrow screens: theme switch at the bottom (on wide screens it sits in the panel footer) */}
-        <footer className="flex flex-col items-center gap-3 px-6 pb-5 text-xs text-dim lg:hidden">
-          <CookieSettingsLink className="ib-tap hover:text-ink" />
-          <EmailOff><FeedbackLink className="ib-tap hover:text-ink" /></EmailOff>
-          <ThemeSwitch />
-        </footer>
+        <PageFooter className="pt-0 lg:hidden" />
       </div>
       <AuthSidePanel variant={variant} className={reversed ? "lg:order-1" : "lg:order-2"} />
     </div>

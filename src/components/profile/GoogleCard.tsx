@@ -22,7 +22,7 @@ import type { Account } from "./types"
 import { extractError } from "./ProfileTab"
 import { ReauthPasswordField } from "./ReauthPasswordField"
 
-export function ConnectionsTab({
+export function GoogleCard({
   account,
   linkError,
   onUpdated,
