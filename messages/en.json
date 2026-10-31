@@ -426,5 +426,9 @@
   "mail.resend": "Send again",
   "mail.resendIn": "Send again in {seconds} s",
   "mail.changeAddress": "Change address",
-  "mail.resent": "The email was sent again."
+  "mail.resent": "The email was sent again.",
+  "profile.account.linkSentTo": "A confirmation link was sent to {email}.",
+  "profile.account.resendTitle": "Send the email again?",
+  "profile.account.resendBody": "We will send a new link to {email}.",
+  "profile.account.resendPasswordHint": "Enter your current password to confirm."
 }

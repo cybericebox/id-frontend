@@ -14,7 +14,8 @@ import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { FormError, fieldErrorMessage } from "@/components/ui/form-error"
 import { toast } from "@/components/ui/toast"
-import { apiGet, apiDelete } from "@/api/client"
+import { apiUrl, apiDelete, ApiError } from "@/api/client"
+import { redirectToSignIn } from "@/lib/auth"
 import { t } from "@/i18n/t"
 import { COOKIE_POLICY_HREF } from "@/components/CookieSettingsLink"
 import { LegalLinks } from "@/components/PageFooter"
@@ -25,9 +26,44 @@ import type { Account } from "./types"
 import { extractError } from "./ProfileTab"
 import { ReauthPasswordField } from "./ReauthPasswordField"
 
-// GET returns a JSON of everything the platform keeps about the signed-in user.
+// GET answers with the file itself (application/json, Content-Disposition: attachment), not the usual envelope.
+// A sign-in older than 15 minutes is refused (403, code 60429): the person signs in again and comes back here.
 const EXPORT_PATH = "/api/auth/account/export"
-const EXPORT_FILE = "cyber-ice-box-data.json"
+const EXPORT_FALLBACK_FILE = "cyber-ice-box-my-data.json"
+const REAUTH_REQUIRED = 60429
+
+function fileNameOf(res: Response): string {
+  const match = /filename="?([^";]+)"?/i.exec(res.headers.get("Content-Disposition") ?? "")
+  return match?.[1] ?? EXPORT_FALLBACK_FILE
+}
+
+async function downloadMyData(): Promise<void> {
+  const res = await fetch(apiUrl(EXPORT_PATH), { credentials: "include" })
+  if (!res.ok) {
+    let body: unknown
+    try { body = await res.json() } catch { body = undefined }
+    const status = (body as { Status?: { Code?: number; Message?: string } } | undefined)?.Status
+    const err = new ApiError(res.status, body, status?.Message, res.headers.get("X-Sign-In-URL") ?? undefined, status?.Code, parseRetryAfter(res.headers.get("Retry-After")))
+    if (err.code === REAUTH_REQUIRED || res.status === 401) {
+      redirectToSignIn(err.signInUrl, window.location.href)
+      return new Promise<never>(() => {})
+    }
+    throw err
+  }
+  const url = URL.createObjectURL(await res.blob())
+  const link = document.createElement("a")
+  link.href = url
+  link.download = fileNameOf(res)
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+}
+
+function parseRetryAfter(value: string | null): number | undefined {
+  const seconds = value ? Number(value) : NaN
+  return Number.isFinite(seconds) && seconds > 0 ? seconds : undefined
+}
 
 function DataExportCard() {
   const [busy, setBusy] = useState(false)
@@ -37,15 +73,7 @@ function DataExportCard() {
     setBusy(true)
     setError(null)
     try {
-      const data = await apiGet<unknown>(EXPORT_PATH)
-      const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }))
-      const link = document.createElement("a")
-      link.href = url
-      link.download = EXPORT_FILE
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      URL.revokeObjectURL(url)
+      await downloadMyData()
     } catch (err) {
       setError(localizedError(err))
     } finally {

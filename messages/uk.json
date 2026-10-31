@@ -426,5 +426,9 @@
   "mail.resend": "Надіслати ще раз",
   "mail.resendIn": "Надіслати ще раз через {seconds} с",
   "mail.changeAddress": "Змінити адресу",
-  "mail.resent": "Лист надіслано ще раз."
+  "mail.resent": "Лист надіслано ще раз.",
+  "profile.account.linkSentTo": "Посилання для підтвердження надіслано на {email}.",
+  "profile.account.resendTitle": "Надіслати лист ще раз?",
+  "profile.account.resendBody": "Ми надішлемо нове посилання на {email}.",
+  "profile.account.resendPasswordHint": "Введіть поточний пароль, щоб підтвердити."
 }
