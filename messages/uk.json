@@ -388,7 +388,7 @@
   "footer.terms": "Умови використання",
   "signedOut.notice": "Ви вийшли",
   "profile.tab.privacy": "Дані та приватність",
-  "profile.tab.privacy.desc": "Завантаження даних, cookie, видалення облікового запису",
+  "profile.tab.privacy.desc": "Мої дані, cookie, видалення",
   "profile.privacy.exportTitle": "Мої дані",
   "profile.privacy.exportDescription": "Файл JSON з усім, що платформа зберігає про вас.",
   "profile.privacy.exportButton": "Завантажити мої дані",

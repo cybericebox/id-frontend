@@ -77,10 +77,12 @@ export function SignInScreen() {
     conditionalRef.current = controller
     void conditionalPasskeysAvailable().then(async (available) => {
       if (!available || controller.signal.aborted) return
+      // Opportunistic: nothing is shown unless the person actually used a key and the backend refused it.
+      let used = false
       try {
-        finishPasskey(await signInWithPasskey({ returnTo: returnTo || undefined, conditional: true, signal: controller.signal }))
+        finishPasskey(await signInWithPasskey({ returnTo: returnTo || undefined, conditional: true, signal: controller.signal, onAssertion: () => { used = true } }))
       } catch (err) {
-        if (!isPasskeyDismissed(err) && !controller.signal.aborted) setFormError(localizedError(err))
+        if (used && !controller.signal.aborted) setFormError(localizedError(err))
       }
     })
     return () => controller.abort()

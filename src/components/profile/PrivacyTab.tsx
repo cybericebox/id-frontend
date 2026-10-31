@@ -18,6 +18,7 @@ import { apiGet, apiDelete } from "@/api/client"
 import { t } from "@/i18n/t"
 import { COOKIE_POLICY_HREF } from "@/components/CookieSettingsLink"
 import { LegalLinks } from "@/components/PageFooter"
+import { inlineLinkClass } from "@/components/auth/parts"
 import { openConsentSettings } from "@/lib/consent"
 import { localizedError } from "@/i18n/apiError"
 import type { Account } from "./types"
@@ -77,10 +78,10 @@ function CookiesAndLegalCard() {
         <CardDescription>{t("profile.privacy.legalDescription")}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-        <a href={COOKIE_POLICY_HREF} className="text-action underline-offset-4 hover:underline" onClick={(e) => { e.preventDefault(); openConsentSettings() }}>
+        <a href={COOKIE_POLICY_HREF} className={inlineLinkClass} onClick={(e) => { e.preventDefault(); openConsentSettings() }}>
           {t("consent.settings")}
         </a>
-        <LegalLinks className="text-action underline-offset-4 hover:underline" />
+        <LegalLinks className={inlineLinkClass} />
       </CardContent>
     </Card>
   )

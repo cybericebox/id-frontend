@@ -388,7 +388,7 @@
   "footer.terms": "Terms of Use",
   "signedOut.notice": "You have signed out",
   "profile.tab.privacy": "Data and privacy",
-  "profile.tab.privacy.desc": "Download your data, cookies, delete account",
+  "profile.tab.privacy.desc": "My data, cookies, deletion",
   "profile.privacy.exportTitle": "My data",
   "profile.privacy.exportDescription": "A JSON file with everything the platform keeps about you.",
   "profile.privacy.exportButton": "Download my data",
