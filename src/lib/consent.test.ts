@@ -18,8 +18,10 @@ function fakeBrowser(protocol = "https:") {
     },
   })
   vi.stubGlobal("location", { protocol })
+  const fetched: string[] = []
+  vi.stubGlobal("fetch", (url: string, init: { method?: string }) => { fetched.push(`${init.method} ${url}`); return Promise.resolve(new Response()) })
   vi.stubGlobal("window", { gtag, dispatchEvent: () => true })
-  return { writes, gtag, jar }
+  return { writes, gtag, jar, fetched }
 }
 
 afterEach(() => {
@@ -56,22 +58,22 @@ describe("consent", () => {
     const { gtag } = fakeBrowser()
     consent.saveConsent(consent.ACCEPT_ALL)
     expect(gtag.mock.calls).toEqual([["consent", "update", { analytics_storage: "granted" }]])
-    expect(consent.readConsent()).toEqual({ analytics: true })
+    expect(consent.readConsent()).toEqual({ analytics: true, functional: true })
   })
 
   it("customize: save choice with analytics on grants it", () => {
     const { gtag } = fakeBrowser()
-    consent.saveConsent({ analytics: true })
+    consent.saveConsent({ analytics: true, functional: true })
     expect(gtag.mock.calls).toEqual([["consent", "update", { analytics_storage: "granted" }]])
-    expect(consent.readConsent()).toEqual({ analytics: true })
+    expect(consent.readConsent()).toEqual({ analytics: true, functional: true })
   })
 
   it("customize: save choice with analytics off keeps everything denied", () => {
     const { gtag, jar } = fakeBrowser()
     jar.set("_ga", "GA1.1.1")
-    consent.saveConsent({ analytics: false })
+    consent.saveConsent({ analytics: false, functional: false })
     expect(gtag.mock.calls).toEqual([["consent", "update", { analytics_storage: "denied" }]])
-    expect(consent.readConsent()).toEqual({ analytics: false })
+    expect(consent.readConsent()).toEqual({ analytics: false, functional: false })
     expect(jar.has("_ga")).toBe(false)
   })
 
@@ -79,37 +81,62 @@ describe("consent", () => {
     const { gtag, jar } = fakeBrowser()
     jar.set("_ga", "GA1.1.1")
     jar.set("_ga_TEST", "GS1.1")
-    consent.saveConsent({ analytics: false })
+    consent.saveConsent({ analytics: false, functional: false })
     expect(gtag.mock.calls).toEqual([["consent", "update", { analytics_storage: "denied" }]])
-    expect(consent.readConsent()).toEqual({ analytics: false })
+    expect(consent.readConsent()).toEqual({ analytics: false, functional: false })
     expect(jar.has("_ga") || jar.has("_ga_TEST")).toBe(false)
   })
 
   it("writes the choice per category to one cookie on the parent domain", () => {
     expect(consent.consentCookie(consent.ACCEPT_ALL, { domain: "cybericebox.com", secure: true })).toBe(
-      "cib_consent=analytics:granted; path=/; max-age=31536000; SameSite=Lax; domain=.cybericebox.com; Secure",
+      "cib_consent=analytics:granted,functional:granted; path=/; max-age=31536000; SameSite=Lax; domain=.cybericebox.com; Secure",
     )
-    expect(consent.consentCookie({ analytics: false }, { secure: false })).toBe("cib_consent=analytics:denied; path=/; max-age=31536000; SameSite=Lax")
+    expect(consent.consentCookie({ analytics: false, functional: false }, { secure: false })).toBe("cib_consent=analytics:denied,functional:denied; path=/; max-age=31536000; SameSite=Lax")
     vi.stubEnv("NEXT_PUBLIC_DOMAIN", "cybericebox.com")
     const { writes } = fakeBrowser()
     consent.saveConsent(consent.ACCEPT_ALL)
-    expect(writes[0]).toMatch(/^cib_consent=analytics:granted; .*domain=\.cybericebox\.com; Secure$/)
+    expect(writes[0]).toMatch(/^cib_consent=analytics:granted,functional:granted; .*domain=\.cybericebox\.com; Secure$/)
   })
 
   it("reads the stored choice back from the cookie string", () => {
-    expect(consent.parseConsent("cib_theme=dark; cib_consent=analytics:granted")).toEqual({ analytics: true })
-    expect(consent.parseConsent("cib_consent=analytics:denied")).toEqual({ analytics: false })
-    expect(consent.parseConsent("xcib_consent=analytics:granted")).toBeNull()
+    expect(consent.parseConsent("cib_theme=dark; cib_consent=analytics:granted,functional:denied")).toEqual({ analytics: true, functional: false })
+    expect(consent.parseConsent("cib_consent=analytics:denied,functional:granted")).toEqual({ analytics: false, functional: true })
+    expect(consent.parseConsent("xcib_consent=analytics:granted,functional:granted")).toBeNull()
+    // the older format (analytics only) counts as no choice: the visitor is asked again
+    expect(consent.parseConsent("cib_consent=analytics:granted")).toBeNull()
     expect(consent.parseConsent("cib_consent=granted")).toBeNull()
     expect(consent.parseConsent("")).toBeNull()
   })
 
-  it("shows the banner only when GA is configured and no choice exists", () => {
-    expect(consent.shouldShowBanner("G-TEST", null)).toBe(true)
-    expect(consent.shouldShowBanner("G-TEST", { analytics: true })).toBe(false)
-    expect(consent.shouldShowBanner("G-TEST", { analytics: false })).toBe(false)
-    expect(consent.shouldShowBanner(undefined, null)).toBe(false)
-    expect(consent.shouldShowBanner("", null)).toBe(false)
+  it("shows the banner until a choice exists", () => {
+    expect(consent.shouldShowBanner(null)).toBe(true)
+    expect(consent.shouldShowBanner({ analytics: true, functional: false })).toBe(false)
+    expect(consent.shouldShowBanner({ analytics: false, functional: false })).toBe(false)
+  })
+
+  it("writes functional data only with functional consent and removes it when it is withdrawn", () => {
+    const { jar, fetched } = fakeBrowser()
+    expect(consent.functionalAllowed()).toBe(false)
+    consent.saveConsent({ analytics: false, functional: true })
+    expect(consent.functionalAllowed()).toBe(true)
+    expect(fetched).toEqual([])
+    const removed: string[] = []
+    const store = (keys: string[]) => ({ length: keys.length, key: (i: number) => keys[i] ?? null, removeItem: (k: string) => { removed.push(k) } })
+    vi.stubGlobal("window", {
+      gtag: vi.fn(), dispatchEvent: () => true,
+      localStorage: store(["cib_inbox_read", "cib_site_banner_dismissed_1_"]),
+      sessionStorage: store(["cib_back", "cib_draft_profile_name_u1", "cib_setup_draft_t", "cib_url_token_/reset-password/"]),
+    })
+    jar.set("cib_signed_in", "1")
+    consent.saveConsent({ analytics: false, functional: false })
+    expect(consent.functionalAllowed()).toBe(false)
+    expect(removed).toEqual(expect.arrayContaining(["cib_inbox_read", "cib_back", "cib_draft_profile_name_u1", "cib_setup_draft_t"]))
+    // necessary keys stay: the user's own banner choice and the one-time link token
+    expect(removed).not.toContain("cib_site_banner_dismissed_1_")
+    expect(removed).not.toContain("cib_url_token_/reset-password/")
+    expect(jar.has("cib_signed_in")).toBe(false)
+    expect(fetched).toHaveLength(1)
+    expect(fetched[0]).toMatch(/^DELETE https:\/\/api\..*\/api\/auth\/last-email$/)
   })
 })
 
@@ -161,9 +188,9 @@ describe("cookie policy link", () => {
 
   it("loads GA only after analytics consent", () => {
     expect(consent.shouldLoadAnalytics("G-TEST", null)).toBe(false)
-    expect(consent.shouldLoadAnalytics("G-TEST", { analytics: false })).toBe(false)
-    expect(consent.shouldLoadAnalytics("", { analytics: true })).toBe(false)
-    expect(consent.shouldLoadAnalytics("G-TEST", { analytics: true })).toBe(true)
+    expect(consent.shouldLoadAnalytics("G-TEST", { analytics: false, functional: false })).toBe(false)
+    expect(consent.shouldLoadAnalytics("", { analytics: true, functional: false })).toBe(false)
+    expect(consent.shouldLoadAnalytics("G-TEST", { analytics: true, functional: false })).toBe(true)
   })
 
   it("the page address for GA is the origin and the path only", () => {

@@ -1,5 +1,6 @@
 "use client"
 
+import { functionalAllowed } from "@/lib/consent"
 import { useEffect, useState } from "react"
 import { adminOrigin, apiOrigin, eventDomain, exercisesOrigin, idOrigin, mainHost } from "@/lib/origins"
 import { backHosts, resolveBack, type BackLink } from "@/lib/backLink"
@@ -11,9 +12,10 @@ const HOSTS = backHosts({ main: mainHost, eventDomain }, {
   api: apiOrigin,
 })
 
+// The remembered source is functional storage: without functional consent nothing is kept (the link lives for the page).
 function tabStorage(): Storage | null {
   try {
-    return window.sessionStorage
+    return functionalAllowed() ? window.sessionStorage : null
   } catch {
     return null
   }

@@ -1,5 +1,6 @@
 "use client"
 
+import { functionalAllowed } from "@/lib/consent"
 import React, { useState, useEffect, useRef } from "react"
 import { useForm, useWatch, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -70,7 +71,8 @@ export function EmailCard({ account }: { account: Account }) {
     }
     const sub = form.watch((values) => {
       try {
-        sessionStorage.setItem(draftKey, JSON.stringify({ Email: values.Email ?? "" }))
+        // drafts are functional storage: written only with functional consent
+        if (functionalAllowed()) sessionStorage.setItem(draftKey, JSON.stringify({ Email: values.Email ?? "" }))
       } catch {
         /* ignore */
       }

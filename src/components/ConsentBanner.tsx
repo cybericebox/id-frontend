@@ -23,7 +23,7 @@ function subscribe(onChange: () => void) {
 // A primitive snapshot: "none" = no choice yet; "ssr" = server render, cookie unknown (render nothing).
 const snapshot = () => {
   const prefs = readConsent()
-  return prefs ? (prefs.analytics ? "granted" : "denied") : "none"
+  return prefs ? `${prefs.analytics ? "a" : "-"}${prefs.functional ? "f" : "-"}` : "none"
 }
 const serverSnapshot = () => "ssr"
 
@@ -56,6 +56,7 @@ export function ConsentBanner({ gaId }: { gaId?: string }) {
   // null = follow the stored choice; "panel" = preferences open.
   const [layer, setLayer] = useState<"banner" | "panel" | null>(null)
   const [analytics, setAnalytics] = useState(false)
+  const [functional, setFunctional] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const returnToRef = useRef<HTMLElement | null>(null)
 
@@ -63,6 +64,7 @@ export function ConsentBanner({ gaId }: { gaId?: string }) {
     const onOpen = () => {
       returnToRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
       setAnalytics(readConsent()?.analytics ?? false)
+      setFunctional(readConsent()?.functional ?? false)
       setLayer("panel")
     }
     window.addEventListener(CONSENT_OPEN_EVENT, onOpen)
@@ -85,7 +87,7 @@ export function ConsentBanner({ gaId }: { gaId?: string }) {
   }
 
   if (stored === "ssr") return null
-  const asking = shouldShowBanner(gaId, stored === "none" ? null : { analytics: stored === "granted" })
+  const asking = shouldShowBanner(stored === "none" ? null : { analytics: stored[0] === "a", functional: stored[1] === "f" })
   const shown = layer ?? (asking ? "banner" : null)
   if (!shown) return null
 
@@ -133,18 +135,29 @@ export function ConsentBanner({ gaId }: { gaId?: string }) {
         <li>
           <label className="cb-consent__cat">
             <span>
-              <span className="cb-consent__name">{t("consent.analytics.title")}</span>
-              <span className="cb-consent__desc">{t("consent.analytics.text")}</span>
+              <span className="cb-consent__name">{t("consent.functional.title")}</span>
+              <span className="cb-consent__desc">{t("consent.functional.text")}</span>
             </span>
-            <input type="checkbox" role="switch" className="cb-switch" checked={analytics} onChange={(e) => setAnalytics(e.target.checked)} />
+            <input type="checkbox" role="switch" className="cb-switch" checked={functional} onChange={(e) => setFunctional(e.target.checked)} />
           </label>
         </li>
+        {gaId && (
+          <li>
+            <label className="cb-consent__cat">
+              <span>
+                <span className="cb-consent__name">{t("consent.analytics.title")}</span>
+                <span className="cb-consent__desc">{t("consent.analytics.text")}</span>
+              </span>
+              <input type="checkbox" role="switch" className="cb-switch" checked={analytics} onChange={(e) => setAnalytics(e.target.checked)} />
+            </label>
+          </li>
+        )}
       </ul>
       <p className="cb-consent__policy">
         <WithPolicyLink k="consent.policy" />
       </p>
       <div className="cb-consent__actions cb-consent__actions--panel">
-        <Button variant="secondary" size="sm" onClick={() => choose({ analytics })}>{t("consent.saveChoice")}</Button>
+        <Button variant="secondary" size="sm" onClick={() => choose({ analytics: Boolean(gaId) && analytics, functional })}>{t("consent.saveChoice")}</Button>
         <Button size="sm" onClick={() => choose(ACCEPT_ALL)}>{t("consent.acceptAll")}</Button>
       </div>
     </div>

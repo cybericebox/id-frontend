@@ -293,7 +293,7 @@
   "profile.sessions.revoked": "Session ended.",
   "profile.sessions.revokedOthers": "Other sessions ended.",
   "consent.label": "Cookie consent",
-  "consent.text": "We use cookies to make the site work and, with your consent, to improve it. {link}",
+  "consent.text": "We use cookies to make the site work and, with your consent, for convenience and to improve it. {link}",
   "consent.policyLink": "Cookie Policy",
   "consent.policyLinkNewTab": "Cookie Policy (opens in a new tab)",
   "consent.policy": "Details: {link}.",
@@ -447,5 +447,7 @@
   "googleConfirm.linking": "This Google account will be linked",
   "googleConfirm.loadError": "Could not load the link request",
   "signIn.notYou": "Not you?",
-  "signIn.useOtherAddress": "Sign in with another address"
+  "signIn.useOtherAddress": "Sign in with another address",
+  "consent.functional.title": "Functional",
+  "consent.functional.text": "Remember conveniences: that you are signed in, your last email address, form drafts."
 }

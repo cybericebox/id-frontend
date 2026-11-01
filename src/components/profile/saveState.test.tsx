@@ -45,6 +45,8 @@ describe("profile save actions", () => {
     patch.mockResolvedValue(undefined)
     post.mockResolvedValue(undefined)
     sessionStorage.clear()
+    // drafts are functional storage: only written with functional consent
+    document.cookie = "cib_consent=analytics:denied,functional:granted; path=/"
     host = document.body.appendChild(document.createElement("div"))
     root = createRoot(host)
   })

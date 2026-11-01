@@ -37,16 +37,16 @@ describe("Analytics", () => {
   it("renders no GA script before a choice and after a «no»", async () => {
     await act(async () => { root.render(<Analytics gaId="G-TEST" />) })
     expect(scripts()).toHaveLength(0)
-    await act(async () => { setConsent("analytics:denied") })
+    await act(async () => { setConsent("analytics:denied,functional:denied") })
     expect(scripts()).toHaveLength(0)
   })
 
   it("loads GA once analytics is allowed, and a later «no» turns it off", async () => {
     await act(async () => { root.render(<Analytics gaId="G-TEST" />) })
-    await act(async () => { setConsent("analytics:granted") })
+    await act(async () => { setConsent("analytics:granted,functional:denied") })
     expect(scripts()).toHaveLength(2)
     expect((window as unknown as Record<string, unknown>)[gaDisableKey("G-TEST")]).toBeFalsy()
-    await act(async () => { setConsent("analytics:denied") })
+    await act(async () => { setConsent("analytics:denied,functional:denied") })
     expect((window as unknown as Record<string, unknown>)[gaDisableKey("G-TEST")]).toBe(true)
   })
 })

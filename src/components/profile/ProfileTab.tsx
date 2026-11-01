@@ -1,5 +1,6 @@
 "use client"
 
+import { functionalAllowed } from "@/lib/consent"
 import React, { useState, useRef, useEffect } from "react"
 import { useForm, useWatch, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -92,7 +93,8 @@ export function ProfileTab({
     }
     const sub = form.watch((values) => {
       try {
-        sessionStorage.setItem(draftKey, JSON.stringify(values))
+        // drafts are functional storage: written only with functional consent
+        if (functionalAllowed()) sessionStorage.setItem(draftKey, JSON.stringify(values))
       } catch {
         /* ignore */
       }
@@ -211,7 +213,7 @@ export function ProfileTab({
       form.reset(data, { keepValues })
       // A newer draft still needs to survive an auth redirect.
       try {
-        if (keepValues) sessionStorage.setItem(draftKey, JSON.stringify(form.getValues()))
+        if (keepValues) { if (functionalAllowed()) sessionStorage.setItem(draftKey, JSON.stringify(form.getValues())) }
         else sessionStorage.removeItem(draftKey)
       } catch { /* storage may be unavailable */ }
       toast.success(t("profile.profile.saved"))

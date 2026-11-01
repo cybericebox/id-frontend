@@ -29,3 +29,13 @@ export function setupDraftKey(token: string): string {
   return `${SETUP_DRAFT}_${token}`
 }
 export const COOKIE_RETURN_TO = "cib_return_to"
+
+export const COOKIE_SIGNED_IN = "cib_signed_in"
+// Functional category (conveniences): written only with functional consent, removed when it is withdrawn.
+export const FUNCTIONAL_STORAGE = {
+  local: [STORAGE_INBOX_READ],
+  localPrefixes: [] as string[],
+  session: [STORAGE_BACK],
+  sessionPrefixes: [...ACCOUNT_DRAFT_PREFIXES, SETUP_DRAFT] as string[],
+  cookies: [COOKIE_SIGNED_IN],
+} as const
