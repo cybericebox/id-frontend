@@ -3,10 +3,10 @@ import { act } from "react"
 import { createRoot } from "react-dom/client"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-const confirmPassword = vi.hoisted(() => vi.fn())
+const confirmFn = vi.hoisted(() => vi.fn())
 const sendCode = vi.hoisted(() => vi.fn())
 const pendingLink = vi.hoisted(() => vi.fn())
-vi.mock("@/api/googleConfirm", () => ({ getPendingGoogleLink: pendingLink, confirmGoogleWithPassword: confirmPassword, sendGoogleConfirmCode: sendCode, confirmGoogleWithCode: vi.fn() }))
+vi.mock("@/api/googleConfirm", () => ({ getPendingGoogleLink: pendingLink, confirmGoogle: confirmFn, sendGoogleConfirmCode: sendCode, declineGoogleLink: vi.fn(), GOOGLE_PENDING_GONE: 30436 }))
 const search = vi.hoisted(() => ({ value: "" }))
 vi.mock("@/lib/useUrlParams", () => ({ useUrlParams: () => new URLSearchParams(search.value) }))
 vi.mock("next/navigation", () => ({ usePathname: () => "/google-confirm/", useRouter: () => ({ replace: vi.fn() }) }))
@@ -21,7 +21,7 @@ describe("GoogleConfirmScreen", () => {
   let root: ReturnType<typeof createRoot>
   beforeEach(() => {
     vi.clearAllMocks()
-    pendingLink.mockResolvedValue({ GoogleEmail: "o@corp.example", GoogleName: "Олена", HasPassword: true })
+    pendingLink.mockResolvedValue({ Email: "o***@example.org", GoogleEmail: "o@corp.example", GoogleName: "Олена", HasPassword: true, CodeSentAt: null, ExpiresAt: "2030-01-01T00:00:00Z" })
     window.matchMedia = (() => ({ matches: false, addEventListener() {}, removeEventListener() {} })) as unknown as typeof window.matchMedia
     host = document.body.appendChild(document.createElement("div"))
     root = createRoot(host)
@@ -31,7 +31,7 @@ describe("GoogleConfirmScreen", () => {
   const buttons = () => Array.from(host.querySelectorAll<HTMLButtonElement>("button"))
 
   it("a wrong password shows beside the password field, not at the end of the form", async () => {
-    confirmPassword.mockRejectedValue(new ApiError(401, {}, undefined, undefined, 20410))
+    confirmFn.mockRejectedValue(new ApiError(401, {}, undefined, undefined, 50401))
     await act(async () => { root.render(<GoogleConfirmScreen />) })
     const input = host.querySelector<HTMLInputElement>("#google-confirm-password")!
     await act(async () => {
@@ -39,7 +39,7 @@ describe("GoogleConfirmScreen", () => {
       input.dispatchEvent(new Event("input", { bubbles: true }))
     })
     await act(async () => { buttons().find((b) => b.type === "submit")!.click() })
-    expect(confirmPassword).toHaveBeenCalledWith("x")
+    expect(confirmFn).toHaveBeenCalledWith({ Password: "x" })
     expect(input.getAttribute("aria-invalid")).toBe("true")
     expect(host.querySelector("#google-confirm-password-error")).not.toBeNull()
   })
@@ -47,6 +47,7 @@ describe("GoogleConfirmScreen", () => {
   it("shows which Google account will be linked before the form", async () => {
     await act(async () => { root.render(<GoogleConfirmScreen />) })
     expect(host.textContent).toContain("Олена · o@corp.example")
+    expect(host.textContent).toContain("o***@example.org")
   })
 
   it("without a pending link it says the link is not valid", async () => {
@@ -56,7 +57,7 @@ describe("GoogleConfirmScreen", () => {
   })
 
   it("an account without a password sees only the code path", async () => {
-    pendingLink.mockResolvedValue({ GoogleEmail: "o@corp.example", GoogleName: "", HasPassword: false })
+    pendingLink.mockResolvedValue({ Email: "o***@example.org", GoogleEmail: "o@corp.example", GoogleName: "", HasPassword: false, CodeSentAt: null, ExpiresAt: "2030-01-01T00:00:00Z" })
     await act(async () => { root.render(<GoogleConfirmScreen />) })
     expect(host.querySelector("#google-confirm-password")).toBeNull()
     expect(host.querySelector("#google-confirm-code")).not.toBeNull()
@@ -68,5 +69,24 @@ describe("GoogleConfirmScreen", () => {
     await act(async () => { buttons().find((b) => b.textContent?.includes("код на пошту"))!.click() })
     expect(sendCode).toHaveBeenCalled()
     expect(buttons().some((b) => b.disabled && b.textContent?.includes("60"))).toBe(true)
+  })
+
+  it("a code already mailed opens the code field with the wait that is left", async () => {
+    pendingLink.mockResolvedValue({ Email: "o***@example.org", GoogleEmail: "o@corp.example", GoogleName: "", HasPassword: true, CodeSentAt: new Date(Date.now() - 20_000).toISOString(), ExpiresAt: "2030-01-01T00:00:00Z" })
+    await act(async () => { root.render(<GoogleConfirmScreen />) })
+    expect(host.querySelector("#google-confirm-code")).not.toBeNull()
+    expect(buttons().some((b) => b.disabled && /\b4\d\b/.test(b.textContent ?? ""))).toBe(true)
+  })
+
+  it("a dead ticket on confirm turns the screen into «request expired»", async () => {
+    confirmFn.mockRejectedValue(new ApiError(404, {}, undefined, undefined, 30436))
+    await act(async () => { root.render(<GoogleConfirmScreen />) })
+    const input = host.querySelector<HTMLInputElement>("#google-confirm-password")!
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, "x")
+      input.dispatchEvent(new Event("input", { bubbles: true }))
+    })
+    await act(async () => { buttons().find((b) => b.type === "submit")!.click() })
+    expect(host.querySelector("form")).toBeNull()
   })
 })

@@ -10,8 +10,7 @@ import { PasswordInput } from "@/components/ui/password-input"
 import { FormError, fieldErrorMessage } from "@/components/ui/form-error"
 import { AuthLayout } from "./AuthLayout"
 import { AuthHeading, AuthPane, AuthSwitch } from "./parts"
-import { ResendMail, CaptchaError } from "./ResendMail"
-import { executeCaptcha } from "@/lib/captcha"
+import { ResendMail } from "./ResendMail"
 import { useUrlParams } from "@/lib/useUrlParams"
 import { safeReturnTo } from "@/lib/auth"
 import { localizedError } from "@/i18n/apiError"
@@ -19,11 +18,12 @@ import { t } from "@/i18n/t"
 import { LoadingArea } from "@/components/ui/spinner"
 import { LoadError } from "@/components/ui/load-error"
 import { ApiError } from "@/api/client"
-import { confirmGoogleWithCode, confirmGoogleWithPassword, getPendingGoogleLink, sendGoogleConfirmCode, type PendingGoogleLink } from "@/api/googleConfirm"
+import { confirmGoogle, declineGoogleLink, getPendingGoogleLink, GOOGLE_PENDING_GONE, sendGoogleConfirmCode, type PendingGoogleLink } from "@/api/googleConfirm"
+import { setSignedHint } from "@/lib/signedHint"
+import { RESEND_COOLDOWN_SECONDS } from "./ResendMail"
 
-const WRONG_PASSWORD = 20410
-// TODO(contract): the backend's code for a wrong or expired mailed code.
-const WRONG_CODE: number[] = []
+const WRONG_PASSWORD = 50401 // ErrAuthInvalidUserCredentials, as in sign-in
+const WRONG_CODE = 20437
 
 type Mode = "password" | "code"
 
@@ -39,12 +39,17 @@ export function GoogleConfirmScreen() {
   const [pending, setPending] = useState<PendingGoogleLink | "none" | { error: unknown } | null>(null)
   const load = () => {
     setPending(null)
-    getPendingGoogleLink().then(setPending).catch((err: unknown) => {
+    getPendingGoogleLink().then((data) => {
+      setPending(data)
+      // a code was already mailed: go straight to the code field, with the wait that is left
+      if (data.CodeSentAt) { setMode("code"); setCodeSent(true); setCodeWait(waitLeft(data.CodeSentAt)) }
+    }).catch((err: unknown) => {
       setPending(err instanceof ApiError && err.status >= 400 && err.status < 500 ? "none" : { error: err })
     })
   }
   // eslint-disable-next-line @eslint-react/exhaustive-deps
   useEffect(load, [])
+  const [codeWait, setCodeWait] = useState(RESEND_COOLDOWN_SECONDS)
   const link = pending !== null && pending !== "none" && !("error" in pending) ? pending : null
   const hasPassword = link?.HasPassword ?? false
 
@@ -65,15 +70,11 @@ export function GoogleConfirmScreen() {
     window.location.assign(redirectUrl || safeReturnTo(returnTo))
   }
 
-  const sendCode = async (): Promise<number | void> => {
-    let token: string | undefined
-    try {
-      token = await executeCaptcha("googleConfirm")
-    } catch {
-      throw new CaptchaError(t("error.captcha"))
-    }
-    return sendGoogleConfirmCode(token ?? "")
-  }
+  // No captcha: the backend limits the mail itself (60 s between mails, 5 an hour).
+  const sendCode = (): Promise<number | void> => sendGoogleConfirmCode()
+
+  // The ticket is gone (expired, used, other browser): the page says so instead of failing field by field.
+  const gone = (err: unknown) => err instanceof ApiError && (err.code === GOOGLE_PENDING_GONE || err.status === 404)
 
   const startCode = async () => {
     setFormError(null)
@@ -84,7 +85,8 @@ export function GoogleConfirmScreen() {
       setCodeSent(true)
       setMode("code")
     } catch (err) {
-      setFormError(err instanceof CaptchaError ? err.message : localizedError(err))
+      if (gone(err)) setPending("none")
+      else setFormError(localizedError(err))
     } finally {
       setSending(false)
     }
@@ -99,12 +101,12 @@ export function GoogleConfirmScreen() {
     if (effectiveMode === "code" && !code.trim()) { setFieldError(t("validation.required")); return }
     setBusy(true)
     try {
-      const { RedirectURL } = effectiveMode === "password"
-        ? await confirmGoogleWithPassword(password)
-        : await confirmGoogleWithCode(code.trim())
+      const { RedirectURL } = await confirmGoogle(effectiveMode === "password" ? { Password: password } : { Code: code.trim() })
+      setSignedHint()
       finish(RedirectURL)
     } catch (err) {
-      const message = fieldErrorMessage(err, effectiveMode === "password" ? [WRONG_PASSWORD] : WRONG_CODE)
+      if (gone(err)) { setPending("none"); setBusy(false); return }
+      const message = fieldErrorMessage(err, effectiveMode === "password" ? [WRONG_PASSWORD] : [WRONG_CODE])
       if (message) setFieldError(message)
       else setFormError(localizedError(err))
       setBusy(false)
@@ -135,6 +137,10 @@ export function GoogleConfirmScreen() {
     )
   }
 
+  // «Це не я»: the link was not started by the owner; drop it and go to sign-in.
+  // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- A full load drops the pending client state.
+  const notMe = () => { void declineGoogleLink().catch(() => {}).finally(() => window.location.assign(signInHref)) }
+
   const fieldId = effectiveMode === "password" ? "google-confirm-password" : "google-confirm-code"
   return (
     <AuthLayout reversed={false} variant="signin">
@@ -147,6 +153,8 @@ export function GoogleConfirmScreen() {
           <p className="rounded-md border border-line bg-soft p-3 text-sm">
             <span className="block text-xs text-dim">{t("googleConfirm.linking")}</span>
             <span className="block break-words font-medium">{link.GoogleName ? `${link.GoogleName} · ${link.GoogleEmail}` : link.GoogleEmail}</span>
+            <span className="mt-2 block text-xs text-dim">{t("googleConfirm.toAccount")}</span>
+            <span className="block break-words font-medium">{link.Email}</span>
           </p>
         )}
         <form onSubmit={(event) => void submit(event)} noValidate className="space-y-4">
@@ -190,7 +198,7 @@ export function GoogleConfirmScreen() {
           // the first mail goes out with the button below when the account has no password; later ones are resends
           <ResendMail
             resend={sendCode}
-            initialSeconds={codeSent ? undefined : 0}
+            initialSeconds={codeSent ? codeWait : 0}
             resendLabel={codeSent ? t("googleConfirm.resendCode") : t("googleConfirm.sendCode")}
             resendInLabel={(seconds) => t("googleConfirm.resendCodeIn", { seconds })}
           />
@@ -200,8 +208,20 @@ export function GoogleConfirmScreen() {
             {t("googleConfirm.usePassword")}
           </Button>
         )}
+        <p className="text-center text-xs text-dim">
+          {t("googleConfirm.notMe")}{" "}
+          <button type="button" className="ib-tap rounded-xs font-medium text-action underline decoration-current/45 decoration-1 underline-offset-3 hover:decoration-current" onClick={notMe}>
+            {t("googleConfirm.notMeAction")}
+          </button>
+        </p>
         <AuthSwitch href={signInHref} action={t("forgotPassword.backToSignIn")} />
       </AuthPane>
     </AuthLayout>
   )
+}
+
+// Seconds left of the 60 s pause after the last mailed code.
+function waitLeft(sentAt: string): number {
+  const elapsed = (Date.now() - new Date(sentAt).getTime()) / 1000
+  return Math.max(0, Math.ceil(RESEND_COOLDOWN_SECONDS - elapsed))
 }
