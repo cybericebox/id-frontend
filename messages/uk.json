@@ -293,7 +293,7 @@
   "profile.sessions.revoked": "Сеанс завершено.",
   "profile.sessions.revokedOthers": "Інші сеанси завершено.",
   "consent.label": "Згода на використання файлів cookie",
-  "consent.text": "Ми використовуємо файли cookie, щоб сайт працював, і — за вашою згодою — щоб покращувати його. {link}",
+  "consent.text": "Ми використовуємо файли cookie, щоб сайт працював, і — за вашою згодою — для зручності та щоб покращувати його. {link}",
   "consent.policyLink": "Політика файлів cookie",
   "consent.policyLinkNewTab": "Політика файлів cookie (відкриється в новій вкладці)",
   "consent.policy": "Докладніше: {link}.",
@@ -447,5 +447,7 @@
   "googleConfirm.linking": "Буде підключено обліковий запис Google",
   "googleConfirm.loadError": "Не вдалося завантажити запит на підключення",
   "signIn.notYou": "Не ви?",
-  "signIn.useOtherAddress": "Увійти з іншою адресою"
+  "signIn.useOtherAddress": "Увійти з іншою адресою",
+  "consent.functional.title": "Функціональні",
+  "consent.functional.text": "Запамʼятовують зручності: що ви вже увійшли, останню адресу пошти, чернетки форм."
 }

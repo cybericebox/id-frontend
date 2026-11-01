@@ -5,6 +5,7 @@
 // Categorized inbox (docs/INBOX-DESIGN.md §3). The reference implementation: copied one-to-one
 // to id, admin, exercises and event; each app only sets the props below.
 
+import { functionalAllowed } from "@/lib/consent"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import * as Popover from "@radix-ui/react-popover"
@@ -276,6 +277,7 @@ export function InboxButton({ defaultTab = "all", event }: InboxButtonProps = {}
   const tabHasUnread = items.some(isUnread) || (tab === "all" ? unread > 0 : tab !== "requests" && (counts?.[tab] ?? 0) > 0)
 
   function announceRead() {
+    if (!functionalAllowed()) return
     try {
       const previous = window.localStorage.getItem(STORAGE_INBOX_READ)
       window.localStorage.setItem(STORAGE_INBOX_READ, previous === "1" ? "0" : "1")

@@ -21,6 +21,8 @@ describe("sign-in: last address", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     search.value = ""
+    // the last address is functional: it is asked for only with functional consent
+    document.cookie = "cib_consent=analytics:denied,functional:granted; path=/"
     del.mockResolvedValue(undefined)
     window.matchMedia = (() => ({ matches: false, addEventListener() {}, removeEventListener() {} })) as unknown as typeof window.matchMedia
     host = document.body.appendChild(document.createElement("div"))
@@ -50,6 +52,14 @@ describe("sign-in: last address", () => {
     search.value = ""
     get.mockRejectedValue(new Error("down"))
     await act(async () => { root.render(<SignInScreen />) })
+    expect(email().value).toBe("")
+  })
+
+  it("asks for nothing without functional consent", async () => {
+    document.cookie = "cib_consent=analytics:denied,functional:denied; path=/"
+    get.mockResolvedValue({ Email: "olena@example.com" })
+    await act(async () => { root.render(<SignInScreen />) })
+    expect(get).not.toHaveBeenCalled()
     expect(email().value).toBe("")
   })
 })

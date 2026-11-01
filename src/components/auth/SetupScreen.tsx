@@ -1,5 +1,6 @@
 "use client"
 
+import { functionalAllowed } from "@/lib/consent"
 import React, { useId, useState, useEffect, useRef, useMemo } from "react"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -72,7 +73,8 @@ function readDraft(key: string): SetupDraft | null {
 function writeDraft(key: string, draft: SetupDraft) {
   if (!key || typeof window === "undefined") return
   try {
-    window.sessionStorage.setItem(key, JSON.stringify(draft))
+    // functional storage: the draft is kept only with functional consent
+    if (functionalAllowed()) window.sessionStorage.setItem(key, JSON.stringify(draft))
   } catch {
     // storage full / disabled — non-fatal, drafting is best-effort
   }

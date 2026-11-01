@@ -1,5 +1,6 @@
 "use client"
 
+import { functionalAllowed } from "@/lib/consent"
 import React, { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { useForm, type SubmitHandler } from "react-hook-form"
@@ -122,7 +123,8 @@ export function SignInScreen() {
   // already typed wins; a failed answer just leaves the field empty. PROVISIONAL contract: GET → { Email } | empty.
   const [lastEmail, setLastEmail] = useState<string | null>(null)
   useEffect(() => {
-    if (params === null) return
+    // the last address is functional: nothing to ask for without functional consent
+    if (params === null || !functionalAllowed()) return
     let cancelled = false
     apiGet<{ Email?: string } | null>("/api/auth/last-email", undefined, { required: false })
       .then((data) => {
