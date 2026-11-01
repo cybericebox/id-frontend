@@ -301,7 +301,7 @@
   "consent.customize": "Налаштувати",
   "consent.panelTitle": "Налаштування файлів cookie",
   "consent.necessary.title": "Необхідні",
-  "consent.necessary.text": "Потрібні для входу, безпеки та збереження вашого вибору.",
+  "consent.necessary.text": "Потрібні для входу, безпеки та виконання ваших власних дій (обрана тема, закрите повідомлення), а також для збереження вашого вибору.",
   "consent.necessary.switch": "Необхідні файли cookie завжди ввімкнені",
   "consent.analytics.title": "Аналітика",
   "consent.analytics.text": "Допомагає нам зрозуміти, як покращувати сайт.",
@@ -449,7 +449,7 @@
   "signIn.notYou": "Не ви?",
   "signIn.useOtherAddress": "Увійти з іншою адресою",
   "consent.functional.title": "Функціональні",
-  "consent.functional.text": "Запамʼятовують зручності: що ви вже увійшли, останню адресу пошти, чернетки форм.",
+  "consent.functional.text": "Запамʼятовують зручності: що ви вже увійшли, останню адресу пошти, прочитані повідомлення, чернетки форм, вигляд таблиць.",
   "googleConfirm.toAccount": "До облікового запису",
   "googleConfirm.notMe": "Це не ви?",
   "googleConfirm.notMeAction": "Скасувати підключення"

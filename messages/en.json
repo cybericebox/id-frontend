@@ -301,7 +301,7 @@
   "consent.customize": "Customize",
   "consent.panelTitle": "Cookie settings",
   "consent.necessary.title": "Necessary",
-  "consent.necessary.text": "Needed for sign-in, security and remembering your choice.",
+  "consent.necessary.text": "Needed for sign-in, security and carrying out your own actions (the theme you chose, a notice you closed), and for remembering your choice.",
   "consent.necessary.switch": "Necessary cookies are always on",
   "consent.analytics.title": "Analytics",
   "consent.analytics.text": "Helps us understand how to improve the site.",
@@ -449,7 +449,7 @@
   "signIn.notYou": "Not you?",
   "signIn.useOtherAddress": "Sign in with another address",
   "consent.functional.title": "Functional",
-  "consent.functional.text": "Remember conveniences: that you are signed in, your last email address, form drafts.",
+  "consent.functional.text": "Remember conveniences: that you are signed in, your last email address, read messages, form drafts, table layouts.",
   "googleConfirm.toAccount": "To the account",
   "googleConfirm.notMe": "Not you?",
   "googleConfirm.notMeAction": "Cancel the link"
