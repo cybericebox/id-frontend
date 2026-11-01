@@ -443,5 +443,7 @@
   "googleConfirm.resendCodeIn": "Надіслати код ще раз через {seconds} с",
   "googleConfirm.usePassword": "Підтвердити паролем",
   "googleConfirm.missingTitle": "Посилання недійсне",
-  "googleConfirm.missingBody": "Почніть вхід через Google ще раз."
+  "googleConfirm.missingBody": "Почніть вхід через Google ще раз.",
+  "googleConfirm.linking": "Буде підключено обліковий запис Google",
+  "googleConfirm.loadError": "Не вдалося завантажити запит на підключення"
 }

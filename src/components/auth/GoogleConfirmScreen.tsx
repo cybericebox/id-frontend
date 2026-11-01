@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { LinkIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -12,12 +12,14 @@ import { AuthLayout } from "./AuthLayout"
 import { AuthHeading, AuthPane, AuthSwitch } from "./parts"
 import { ResendMail, CaptchaError } from "./ResendMail"
 import { executeCaptcha } from "@/lib/captcha"
-import { forgetUrlToken, useUrlToken } from "@/lib/useUrlToken"
 import { useUrlParams } from "@/lib/useUrlParams"
 import { safeReturnTo } from "@/lib/auth"
 import { localizedError } from "@/i18n/apiError"
 import { t } from "@/i18n/t"
-import { confirmGoogleWithCode, confirmGoogleWithPassword, sendGoogleConfirmCode } from "@/api/googleConfirm"
+import { LoadingArea } from "@/components/ui/spinner"
+import { LoadError } from "@/components/ui/load-error"
+import { ApiError } from "@/api/client"
+import { confirmGoogleWithCode, confirmGoogleWithPassword, getPendingGoogleLink, sendGoogleConfirmCode, type PendingGoogleLink } from "@/api/googleConfirm"
 
 const WRONG_PASSWORD = 20410
 // TODO(contract): the backend's code for a wrong or expired mailed code.
@@ -30,12 +32,23 @@ type Mode = "password" | "code"
 // is signed in. Accounts without a password (passkey only, Google-less) can use the code only.
 export function GoogleConfirmScreen() {
   const params = useUrlParams()
-  const ticket = useUrlToken(params) ?? ""
-  // TODO(contract): whether the account has a password comes from the backend; until then a ?password=0 marks «code only».
-  const hasPassword = params?.get("password") !== "0"
   const returnTo = params?.get("return_to") ?? undefined
 
-  const [mode, setMode] = useState<Mode>(hasPassword ? "password" : "code")
+  // The pending link sits in an HttpOnly cookie of this browser: the page asks the backend which Google account it is
+  // (shown before the form) and whether the account has a password. «none» = no pending link (expired, other browser).
+  const [pending, setPending] = useState<PendingGoogleLink | "none" | { error: unknown } | null>(null)
+  const load = () => {
+    setPending(null)
+    getPendingGoogleLink().then(setPending).catch((err: unknown) => {
+      setPending(err instanceof ApiError && err.status >= 400 && err.status < 500 ? "none" : { error: err })
+    })
+  }
+  // eslint-disable-next-line @eslint-react/exhaustive-deps
+  useEffect(load, [])
+  const link = pending !== null && pending !== "none" && !("error" in pending) ? pending : null
+  const hasPassword = link?.HasPassword ?? false
+
+  const [mode, setMode] = useState<Mode>("password")
   const [password, setPassword] = useState("")
   const [code, setCode] = useState("")
   const [fieldError, setFieldError] = useState<string | null>(null)
@@ -48,7 +61,6 @@ export function GoogleConfirmScreen() {
   const signInHref = `/sign-in${returnTo ? `?return_to=${encodeURIComponent(returnTo)}` : ""}`
 
   const finish = (redirectUrl: string) => {
-    forgetUrlToken()
     // The button stays busy while the browser navigates.
     window.location.assign(redirectUrl || safeReturnTo(returnTo))
   }
@@ -60,7 +72,7 @@ export function GoogleConfirmScreen() {
     } catch {
       throw new CaptchaError(t("error.captcha"))
     }
-    return sendGoogleConfirmCode(ticket, token ?? "")
+    return sendGoogleConfirmCode(token ?? "")
   }
 
   const startCode = async () => {
@@ -88,8 +100,8 @@ export function GoogleConfirmScreen() {
     setBusy(true)
     try {
       const { RedirectURL } = effectiveMode === "password"
-        ? await confirmGoogleWithPassword(ticket, password)
-        : await confirmGoogleWithCode(ticket, code.trim())
+        ? await confirmGoogleWithPassword(password)
+        : await confirmGoogleWithCode(code.trim())
       finish(RedirectURL)
     } catch (err) {
       const message = fieldErrorMessage(err, effectiveMode === "password" ? [WRONG_PASSWORD] : WRONG_CODE)
@@ -99,7 +111,19 @@ export function GoogleConfirmScreen() {
     }
   }
 
-  if (params !== null && !ticket) {
+  if (pending === null || (typeof pending === "object" && "error" in pending)) {
+    return (
+      <AuthLayout reversed={false} variant="signin">
+        <AuthPane>
+          {pending === null
+            ? <LoadingArea label={t("common.loading")} />
+            : <LoadError message={t("googleConfirm.loadError")} error={pending.error} onRetry={load} />}
+        </AuthPane>
+      </AuthLayout>
+    )
+  }
+
+  if (pending === "none") {
     return (
       <AuthLayout reversed={false} variant="signin">
         <AuthPane>
@@ -119,6 +143,12 @@ export function GoogleConfirmScreen() {
           title={t("googleConfirm.title")}
           subtitle={effectiveMode === "password" ? t("googleConfirm.passwordSubtitle") : t("googleConfirm.codeSubtitle")}
         />
+        {link && (
+          <p className="rounded-md border border-line bg-soft p-3 text-sm">
+            <span className="block text-xs text-dim">{t("googleConfirm.linking")}</span>
+            <span className="block break-words font-medium">{link.GoogleName ? `${link.GoogleName} · ${link.GoogleEmail}` : link.GoogleEmail}</span>
+          </p>
+        )}
         <form onSubmit={(event) => void submit(event)} noValidate className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor={fieldId}>{effectiveMode === "password" ? t("common.password") : t("googleConfirm.code")}</Label>
