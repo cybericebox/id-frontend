@@ -442,12 +442,15 @@
   "googleConfirm.resendCode": "Send the code again",
   "googleConfirm.resendCodeIn": "Send the code again in {seconds} s",
   "googleConfirm.usePassword": "Confirm with the password",
-  "googleConfirm.missingTitle": "The link is not valid",
-  "googleConfirm.missingBody": "Start signing in with Google again.",
+  "googleConfirm.missingTitle": "The request has expired",
+  "googleConfirm.missingBody": "The Google link request was not found or has expired. Sign in again.",
   "googleConfirm.linking": "This Google account will be linked",
   "googleConfirm.loadError": "Could not load the link request",
   "signIn.notYou": "Not you?",
   "signIn.useOtherAddress": "Sign in with another address",
   "consent.functional.title": "Functional",
-  "consent.functional.text": "Remember conveniences: that you are signed in, your last email address, form drafts."
+  "consent.functional.text": "Remember conveniences: that you are signed in, your last email address, form drafts.",
+  "googleConfirm.toAccount": "To the account",
+  "googleConfirm.notMe": "Not you?",
+  "googleConfirm.notMeAction": "Cancel the link"
 }
