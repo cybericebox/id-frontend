@@ -24,10 +24,10 @@ import { AuthLayout } from "./AuthLayout"
 import { useOneShotParam } from "@/lib/useOneShotParam"
 import { useUrlParams } from "@/lib/useUrlParams"
 import { useGuestOnly } from "@/lib/useGuestOnly"
-import { AuthDivider, AuthHeading, AuthPane, AuthSwitch, GoogleIcon, authLinkClass } from "./parts"
+import { AuthDivider, AuthHeading, AuthPane, AuthSwitch, GoogleIcon, authLinkClass, inlineLinkClass } from "./parts"
 import { t } from "@/i18n/t"
 import { safeReturnTo } from "@/lib/auth"
-import { apiPost } from "@/api/client"
+import { apiDelete, apiGet, apiPost } from "@/api/client"
 import { googleHint, googleStartUrl } from "@/lib/googleStart"
 import { signInWithPasskey } from "@/api/passkeySignIn"
 import { conditionalPasskeysAvailable, isPasskeyDismissed, passkeysSupported } from "@/lib/passkey"
@@ -116,6 +116,31 @@ export function SignInScreen() {
     const hint = googleHint(undefined, callerHint)
     if (hint && !form.getValues("Email")) form.setValue("Email", hint)
   }, [callerHint, form])
+
+  // The last address that signed in on this browser (an HttpOnly cookie the page cannot read): the form is already on
+  // screen, the field fills in when the answer comes (no loader, no blink). An address from the caller (login_hint) or
+  // already typed wins; a failed answer just leaves the field empty. PROVISIONAL contract: GET → { Email } | empty.
+  const [lastEmail, setLastEmail] = useState<string | null>(null)
+  useEffect(() => {
+    if (params === null) return
+    let cancelled = false
+    apiGet<{ Email?: string } | null>("/api/auth/last-email", undefined, { required: false })
+      .then((data) => {
+        const email = data?.Email?.trim()
+        if (cancelled || !email || callerHint || form.getValues("Email")) return
+        form.setValue("Email", email)
+        setLastEmail(email)
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
+  }, [params === null])
+  const chooseOtherAddress = () => {
+    setLastEmail(null)
+    form.setValue("Email", "")
+    form.setFocus("Email")
+    apiDelete("/api/auth/last-email", undefined, undefined, undefined).catch(() => {})
+  }
 
   const onSubmit: SubmitHandler<SignInValues> = async (data) => {
     clearGoogleError()
@@ -261,6 +286,14 @@ export function SignInScreen() {
                       />
                     </FormControl>
                     <FormMessage />
+                    {lastEmail && field.value === lastEmail && (
+                      <p className="text-xs text-dim">
+                        {t("signIn.notYou")}{" "}
+                        <button type="button" className={inlineLinkClass} onClick={chooseOtherAddress}>
+                          {t("signIn.useOtherAddress")}
+                        </button>
+                      </p>
+                    )}
                   </FormItem>
                 )}
               />
