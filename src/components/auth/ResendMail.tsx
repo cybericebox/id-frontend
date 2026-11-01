@@ -35,12 +35,16 @@ export function retryAfterSeconds(err: unknown): number | undefined {
 export function ResendMail({
   resend,
   onChangeAddress,
+  resendLabel = t("mail.resend"),
+  resendInLabel = (seconds: number) => t("mail.resendIn", { seconds }),
   changeAddressLabel = t("mail.changeAddress"),
   initialSeconds = RESEND_COOLDOWN_SECONDS,
 }: {
   resend: () => Promise<number | void>
-  onChangeAddress: () => void
+  onChangeAddress?: () => void
   changeAddressLabel?: string
+  resendLabel?: string
+  resendInLabel?: (seconds: number) => string
   initialSeconds?: number
 }) {
   const [until, setUntil] = useState(() => Date.now() + initialSeconds * 1000)
@@ -88,11 +92,13 @@ export function ResendMail({
           busyLabel={t("common.busy.sending")}
           onClick={() => void send()}
         >
-          {waiting ? t("mail.resendIn", { seconds: left }) : t("mail.resend")}
+          {waiting ? resendInLabel(left) : resendLabel}
         </Button>
-        <Button type="button" variant="ghost" disabled={busy} onClick={onChangeAddress}>
-          {changeAddressLabel}
-        </Button>
+        {onChangeAddress && (
+          <Button type="button" variant="ghost" disabled={busy} onClick={onChangeAddress}>
+            {changeAddressLabel}
+          </Button>
+        )}
       </div>
     </div>
   )

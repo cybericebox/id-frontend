@@ -430,5 +430,18 @@
   "profile.account.resendPasswordHint": "Enter your current password to confirm.",
   "profile.passkeys.compromised": "Possibly compromised",
   "profile.passkeys.compromisedNote": "Signing in with this key is blocked, remove it.",
-  "profile.passkeys.compromisedNoteDate": "Signing in with this key has been blocked since {date}, remove it."
+  "profile.passkeys.compromisedNoteDate": "Signing in with this key has been blocked since {date}, remove it.",
+  "meta.googleConfirm": "Confirm your account",
+  "googleConfirm.title": "Confirm this is your account",
+  "googleConfirm.passwordSubtitle": "An account with this address already exists. Enter its password and we will link Google.",
+  "googleConfirm.codeSubtitle": "An account with this address already exists. Enter the code from the email and we will link Google.",
+  "googleConfirm.code": "Code from the email",
+  "googleConfirm.confirm": "Confirm",
+  "googleConfirm.confirming": "Confirming…",
+  "googleConfirm.sendCode": "Email me a code",
+  "googleConfirm.resendCode": "Send the code again",
+  "googleConfirm.resendCodeIn": "Send the code again in {seconds} s",
+  "googleConfirm.usePassword": "Confirm with the password",
+  "googleConfirm.missingTitle": "The link is not valid",
+  "googleConfirm.missingBody": "Start signing in with Google again."
 }
