@@ -443,5 +443,7 @@
   "googleConfirm.resendCodeIn": "Send the code again in {seconds} s",
   "googleConfirm.usePassword": "Confirm with the password",
   "googleConfirm.missingTitle": "The link is not valid",
-  "googleConfirm.missingBody": "Start signing in with Google again."
+  "googleConfirm.missingBody": "Start signing in with Google again.",
+  "googleConfirm.linking": "This Google account will be linked",
+  "googleConfirm.loadError": "Could not load the link request"
 }
