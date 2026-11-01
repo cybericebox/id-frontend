@@ -71,6 +71,13 @@ describe("GoogleConfirmScreen", () => {
     expect(buttons().some((b) => b.disabled && b.textContent?.includes("60"))).toBe(true)
   })
 
+  it("the mailed code is requested with the bot check token", async () => {
+    sendCode.mockResolvedValue(60)
+    await act(async () => { root.render(<GoogleConfirmScreen />) })
+    await act(async () => { buttons().find((b) => b.textContent?.includes("код на пошту"))!.click() })
+    expect(sendCode).toHaveBeenCalledWith("none")
+  })
+
   it("a code already mailed opens the code field with the wait that is left", async () => {
     pendingLink.mockResolvedValue({ Email: "o***@example.org", GoogleEmail: "o@corp.example", GoogleName: "", HasPassword: true, CodeSentAt: new Date(Date.now() - 20_000).toISOString(), ExpiresAt: "2030-01-01T00:00:00Z" })
     await act(async () => { root.render(<GoogleConfirmScreen />) })

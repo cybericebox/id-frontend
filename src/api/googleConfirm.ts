@@ -25,8 +25,9 @@ export function getPendingGoogleLink(): Promise<PendingGoogleLink> {
 }
 
 /** Mails a 6-digit code to the account address (10 minutes); resolves with the wait before the next mail. */
-export async function sendGoogleConfirmCode(): Promise<number | void> {
-  const data = await apiPost<{ ResendAfterSeconds?: number } | undefined>(`${BASE}/code`, undefined, undefined, { required: false })
+export async function sendGoogleConfirmCode(recaptchaToken: string): Promise<number | void> {
+  // PROVISIONAL field name (daemon-hardening adds the bot check): RecaptchaToken, as on the other mail requests.
+  const data = await apiPost<{ ResendAfterSeconds?: number } | undefined>(`${BASE}/code`, { RecaptchaToken: recaptchaToken }, undefined, { required: false })
   return data?.ResendAfterSeconds
 }
 

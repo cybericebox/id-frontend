@@ -10,7 +10,8 @@ import { PasswordInput } from "@/components/ui/password-input"
 import { FormError, fieldErrorMessage } from "@/components/ui/form-error"
 import { AuthLayout } from "./AuthLayout"
 import { AuthHeading, AuthPane, AuthSwitch } from "./parts"
-import { ResendMail } from "./ResendMail"
+import { ResendMail, CaptchaError } from "./ResendMail"
+import { executeCaptcha } from "@/lib/captcha"
 import { useUrlParams } from "@/lib/useUrlParams"
 import { safeReturnTo } from "@/lib/auth"
 import { localizedError } from "@/i18n/apiError"
@@ -70,8 +71,16 @@ export function GoogleConfirmScreen() {
     window.location.assign(redirectUrl || safeReturnTo(returnTo))
   }
 
-  // No captcha: the backend limits the mail itself (60 s between mails, 5 an hour).
-  const sendCode = (): Promise<number | void> => sendGoogleConfirmCode()
+  // The bot check is mandatory (like every mail request); the backend also limits the pace (60 s between mails, 5 an hour).
+  const sendCode = async (): Promise<number | void> => {
+    let token: string
+    try {
+      token = await executeCaptcha("googleLinkCode")
+    } catch {
+      throw new CaptchaError(t("error.captcha"))
+    }
+    return sendGoogleConfirmCode(token)
+  }
 
   // The ticket is gone (expired, used, other browser): the page says so instead of failing field by field.
   const gone = (err: unknown) => err instanceof ApiError && (err.code === GOOGLE_PENDING_GONE || err.status === 404)
@@ -86,7 +95,7 @@ export function GoogleConfirmScreen() {
       setMode("code")
     } catch (err) {
       if (gone(err)) setPending("none")
-      else setFormError(localizedError(err))
+      else setFormError(err instanceof CaptchaError ? err.message : localizedError(err))
     } finally {
       setSending(false)
     }
