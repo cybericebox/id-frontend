@@ -37,7 +37,7 @@ for (const main of VALUES) for (const terms of VALUES) for (const privacy of VAL
 describe("cfg.css", () => {
   it("has at least one rule per contract class", () => {
     expect(hidingSelectors.length).toBeGreaterThan(10)
-    for (const cls of ["cfg-main-only", "cfg-main-off", "cfg-terms", "cfg-privacy", "cfg-cookies", "cfg-ice-support", "cfg-consent-row", "cfg-v-both", "cfg-v-terms", "cfg-v-policy"]) {
+    for (const cls of ["cfg-main-only", "cfg-main-off", "cfg-terms", "cfg-privacy", "cfg-cookies", "cfg-ice-support", "cfg-ice-support-off", "cfg-consent-row", "cfg-v-both", "cfg-v-terms", "cfg-v-policy"]) {
       expect(hidingSelectors.some((selector) => selector.includes(`.${cls}`)), cls).toBe(true)
     }
   })
@@ -53,6 +53,7 @@ describe("cfg.css", () => {
       expect(hidden("cfg-privacy", s), `privacy ${label}`).toBe(!privacy)
       expect(hidden("cfg-cookies", s), `cookies ${label}`).toBe(!has(s.cookies))
       expect(hidden("cfg-ice-support", s), `ice ${label}`).toBe(s.ice !== "true")
+      expect(hidden("cfg-ice-support-off", s), `ice-off ${label}`).toBe(s.ice === "true")
       expect(hidden("cfg-consent-row", s), `row ${label}`).toBe(!terms && !privacy)
       expect(hidden("cfg-v-both", s), `both ${label}`).toBe(!(terms && privacy))
       expect(hidden("cfg-v-terms", s), `terms-only ${label}`).toBe(!(terms && !privacy))

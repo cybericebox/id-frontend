@@ -29,10 +29,10 @@ export type AuthVariant =
   | "reset"
   | "setup"
 
-// Partner links are fixed; NEXT_PUBLIC_SHOW_PARTNERS=false hides the partner block. The container entrypoint defaults it to true.
+// The department line («За підтримки кафедри…») is shown only when NEXT_PUBLIC_SHOW_ICE_DEPARTMENT_SUPPORT is `true` (default off): the full line and the
+// plain copyright are both in the markup and src/styles/cfg.css shows one of them. The links are fixed.
 const PARTNER_ICE_NURE_URL = "https://ice.nure.ua/ua/"
 const PARTNER_NURE_URL = "https://nure.ua"
-const SHOW_PARTNERS = process.env.NEXT_PUBLIC_SHOW_PARTNERS !== "false"
 
 type Item = { icon: React.ComponentType<{ size?: number; className?: string }>; key: string }
 
@@ -132,7 +132,8 @@ export function AuthSidePanel({
 
         <footer className="flex flex-col items-start gap-3 border-t border-brand-line pt-5 text-xs leading-relaxed text-on-brand-3">
           <p className="auth-legal text-2xs xl:text-xs">
-            {!SHOW_PARTNERS ? t("authPanel.legalPlain", { year: YEAR }) : tSegments("authPanel.legal", {
+            <span className="cfg-ice-support-off">{t("authPanel.legalPlain", { year: YEAR })}</span>
+            <span className="cfg-ice-support">{tSegments("authPanel.legal", {
               year: YEAR,
               department: (
                 <Tooltip content={t("authPanel.departmentFull")} align="start">
@@ -148,7 +149,7 @@ export function AuthSidePanel({
                   </a>
                 </Tooltip>
               ),
-            }, { groupFrom: 1 })}
+            }, { groupFrom: 1 })}</span>
           </p>
           <LegalLinks className="ib-tap text-on-brand-2 hover:text-on-brand" />
           <CookieSettingsLink className="ib-tap text-on-brand-2 hover:text-on-brand" />

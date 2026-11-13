@@ -13,7 +13,6 @@ import {
   shouldShowBanner,
   type ConsentPrefs,
 } from "@/lib/consent"
-import { mainOrigin } from "@/lib/origins"
 import "@/styles/consent.css"
 
 function subscribe(onChange: () => void) {
@@ -27,9 +26,6 @@ const snapshot = () => {
 }
 const serverSnapshot = () => "ssr"
 
-// The Cookie Policy lives on the main site.
-const POLICY_HREF = `${mainOrigin === "/" ? "" : mainOrigin}/cookies`
-
 // A message with a {link} placeholder, the policy link in its place (no tRich in this app).
 function WithPolicyLink({ k }: { k: string }) {
   const [before, after = ""] = t(k).split("{link}")
@@ -37,7 +33,7 @@ function WithPolicyLink({ k }: { k: string }) {
     <>
       {before}
       {/* New tab; the click must not reach any outer handler, so the banner/panel and its toggles stay. */}
-      <a href={POLICY_HREF} {...POLICY_LINK_ATTRS} aria-label={t("consent.policyLinkNewTab")} onClick={(e) => e.stopPropagation()}>
+      <a href={process.env.NEXT_PUBLIC_COOKIES_URL} className="cfg-cookies" {...POLICY_LINK_ATTRS} aria-label={t("consent.policyLinkNewTab")} onClick={(e) => e.stopPropagation()}>
         {t("consent.policyLink")}
       </a>
       {after}
@@ -153,7 +149,7 @@ export function ConsentBanner({ gaId }: { gaId?: string }) {
           </li>
         )}
       </ul>
-      <p className="cb-consent__policy">
+      <p className="cb-consent__policy cfg-cookies">
         <WithPolicyLink k="consent.policy" />
       </p>
       <div className="cb-consent__actions cb-consent__actions--panel">

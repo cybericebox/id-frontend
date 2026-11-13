@@ -1,23 +1,17 @@
 import { t } from "@/i18n/t"
-import { mainOrigin } from "@/lib/origins"
 import { cn } from "@/utils/cn"
 import { ThemeSwitch } from "@/components/ThemeToggle"
 import { FeedbackLink } from "@/components/FeedbackLink"
 import { EmailOff } from "@/components/EmailOff"
 import { CookieSettingsLink } from "@/components/CookieSettingsLink"
 
-const LEGAL_LINKS = [
-  { href: `${mainOrigin}/privacy`, label: "footer.privacy" },
-  { href: `${mainOrigin}/terms`, label: "footer.terms" },
-] as const
-
-// Legal pages live on the main site.
+// The Privacy Policy and Terms links lead to NEXT_PUBLIC_PRIVACY_URL and NEXT_PUBLIC_TERMS_URL. Both anchors are always in the markup; a link
+// whose setting is empty is hidden by src/styles/cfg.css (cfg-privacy, cfg-terms).
 export function LegalLinks({ className }: { className?: string }) {
   return (
     <>
-      {LEGAL_LINKS.map((link) => (
-        <a key={link.label} href={link.href} className={className}>{t(link.label)}</a>
-      ))}
+      <a href={process.env.NEXT_PUBLIC_PRIVACY_URL} className={cn("cfg-privacy", className)}>{t("footer.privacy")}</a>
+      <a href={process.env.NEXT_PUBLIC_TERMS_URL} className={cn("cfg-terms", className)}>{t("footer.terms")}</a>
     </>
   )
 }
