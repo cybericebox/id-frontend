@@ -11,6 +11,7 @@ import { THEME_BOOT_SCRIPT } from "@/lib/theme"
 import { ToastProvider } from "@/components/ui/toast"
 import { SiteBanners } from "@/components/SiteBanners"
 import { t } from "@/i18n/t"
+import { settingsAttrs } from "@/lib/settings"
 
 export const metadata: Metadata = {
   title: { default: t("meta.defaultTitle"), template: t("meta.titleTemplate") },
@@ -26,7 +27,7 @@ export default function RootLayout({
 }) {
   return (
     // data-theme is set by the boot script before hydration — hence suppressHydrationWarning.
-    <html lang="uk" className={`${GeistSans.variable} ${GeistMono.variable}`} suppressHydrationWarning>
+    <html lang="uk" className={`${GeistSans.variable} ${GeistMono.variable}`} {...settingsAttrs()} suppressHydrationWarning>
       <head>
         {/* eslint-disable-next-line @eslint-react/dom-no-dangerously-set-innerhtml */}
         <script dangerouslySetInnerHTML={{ __html: CHUNK_RECOVERY_BOOT_SCRIPT }} />

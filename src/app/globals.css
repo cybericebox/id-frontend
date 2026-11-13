@@ -2,6 +2,7 @@
 @import '../styles/ds-tokens.css';
 @import '../styles/ds-modal-motion.css';
 @import '../styles/layers.css';
+@import '../styles/cfg.css';
 
 @custom-variant dark (&:is([data-theme="dark"] *));
 
