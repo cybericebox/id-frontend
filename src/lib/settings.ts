@@ -1,5 +1,5 @@
 /**
- * Optional installation settings (docs/specs/2026-11-13-neutral-installation.md, 2.1 and 2.3).
+ * Optional installation settings (README, Configuration → Installation settings).
  *
  * Every setting is optional and "no value = not shown". The value of each one is written into an attribute of <html>
  * (settingsAttrs, spread in the root layout); src/styles/cfg.css hides the optional blocks by those attributes, so no JavaScript

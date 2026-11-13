@@ -1,4 +1,4 @@
-// CI check for the optional installation settings (docs/specs/2026-11-13-neutral-installation.md, 2.3 checks 1, 2 and 4).
+// CI check for the optional installation settings (README, Configuration → Installation settings).
 //
 // It builds the static export the way deploy/Dockerfile does (every NEXT_PUBLIC_* set to its placeholder __NEXT_PUBLIC_X__) and checks:
 //   1. every prerendered page has <html ... data-cfg-x="__NEXT_PUBLIC_X__"> for every setting, and every token is in the bundle

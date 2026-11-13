@@ -14,7 +14,7 @@ afterEach(() => vi.unstubAllGlobals())
 describe("cookie settings entry", () => {
   it("renders as a link to the cookie policy", () => {
     const html = renderToStaticMarkup(<CookieSettingsLink />)
-    expect(html).toMatch(/^<a href="[^"]*\/cookies"/)
+    expect(html).toMatch(/^<a href="https:\/\/example\.test\/cookies"/)
     expect(html).toContain("cb-consent-link")
   })
 

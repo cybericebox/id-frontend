@@ -1,7 +1,8 @@
 /* Optional installation settings hide the blocks that need them (src/lib/settings.ts writes the values into <html>).
    Every rule is "hide when"; no rule means shown. An absent attribute and an empty one both mean "empty".
    The class names are the contract: cfg-<setting> is shown only when the setting has a value, cfg-main-off is the "no value" twin of
-   cfg-main-only (the self link), cfg-ice-support is shown only when the flag is exactly "true". */
+   cfg-main-only (the self link), cfg-ice-support is shown only when the flag is exactly "true"
+   (cfg-ice-support-off is its twin, shown otherwise). */
 
 /* a block that needs a value */
 html:not([data-cfg-main-site-url]) .cfg-main-only,
@@ -20,8 +21,9 @@ html[data-cfg-main-site-url]:not([data-cfg-main-site-url=""]) .cfg-main-off {
   display: none !important;
 }
 
-/* the flag: shown only when exactly "true" */
-html:not([data-cfg-ice-support="true"]) .cfg-ice-support {
+/* the flag: cfg-ice-support is shown only when exactly "true", its twin cfg-ice-support-off only otherwise */
+html:not([data-cfg-ice-support="true"]) .cfg-ice-support,
+html[data-cfg-ice-support="true"] .cfg-ice-support-off {
   display: none !important;
 }
 
