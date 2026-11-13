@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "sync:ds": "node scripts/sync-ds.mjs",
     "check:ds": "node scripts/sync-ds.mjs --check",
+    "check:cfg": "node scripts/check-cfg.mjs",
     "sync:errors": "node scripts/sync-error-catalog.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

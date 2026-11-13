@@ -36,10 +36,17 @@ Production builds are a **static export** (`output: "export"`, written to `out/`
 | `NEXT_PUBLIC_SUPPORT_EMAIL` | yes | Support mailbox of the «Send feedback» `mailto:` link shown on every page (the subject carries the app and page path only). |
 | `NEXT_PUBLIC_SHOW_PARTNERS` | no (default `true`) | `false` hides the partner links in the sign-in panel footer. |
 | `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` | no | Google Analytics 4 measurement id. Analytics is off when unset. |
+| `NEXT_PUBLIC_MAIN_SITE_URL` | no | `https://` URL of the main site. Set: the logo leads there; empty: it leads to `/` of this site. |
+| `NEXT_PUBLIC_TERMS_URL` | no | `https://` URL of the Terms. Empty: no link. |
+| `NEXT_PUBLIC_PRIVACY_URL` | no | `https://` URL of the Privacy Policy. Empty: no link. |
+| `NEXT_PUBLIC_COOKIES_URL` | no | `https://` URL of the Cookie Policy. Empty: no link in the cookie banner. |
+| `NEXT_PUBLIC_SHOW_ICE_DEPARTMENT_SUPPORT` | no (default `false`) | `true` shows the line «за підтримки кафедри…» in the sign-in panel footer. |
 | `NEXT_PUBLIC_CAPTCHA_PROVIDER` | yes | Bot-check provider: `turnstile`, `recaptcha` or `none` (local development, nothing is loaded). Must match the backend. |
 | `NEXT_PUBLIC_CAPTCHA_SITE_KEY` | when the provider is not `none` | Public site key of the provider. |
 | `NEXT_PUBLIC_RECAPTCHA_PROJECT` | no (default empty) | Google Cloud project id (not secret). Non-empty switches `recaptcha` to Enterprise, empty means classic v3; must match the backend mode. |
 | `DEV_ALLOWED_ORIGINS` | no | Dev only: comma list for `allowedDevOrigins`; default is the configured hosts and `*.<event domain>`. |
+
+The installation settings (`MAIN_SITE_URL`, `TERMS_URL`, `PRIVACY_URL`, `COOKIES_URL`, `SHOW_ICE_DEPARTMENT_SUPPORT`) are optional and mean "no value = not shown": a third-party installation says nothing in our name. A URL is empty or `https://host[:port][/path][?query]` (no spaces, quotes, `<`, `>`, `\`, `#` or userinfo); the flag is `true` or `false`. A bad value fails the build, the container start and the Pages workflow. Each value is written into an attribute of `<html>` (`data-cfg-*`, `src/lib/settings.ts`) and `src/styles/cfg.css` hides the blocks that need it, so the same markup works in the image (placeholders substituted at start) and in a build with real values. `npm run check:cfg` builds the way the Dockerfile does and checks that every placeholder survives in the bundle.
 
 Required: `NEXT_PUBLIC_DOMAIN`, `NEXT_PUBLIC_SUPPORT_EMAIL`, `NEXT_PUBLIC_CAPTCHA_PROVIDER` (and the site key unless `none`). Everything else is optional. A missing required value fails the build (`next.config.ts`), the container start (entrypoint) and the Pages workflow. See `.env.example`.
 

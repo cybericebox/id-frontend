@@ -51,11 +51,22 @@ jobs:
           done
           if [ "$NEXT_PUBLIC_CAPTCHA_PROVIDER" != "none" ] && [ -z "$NEXT_PUBLIC_CAPTCHA_SITE_KEY" ]; then missing="$missing NEXT_PUBLIC_CAPTCHA_SITE_KEY"; fi
           if [ -n "$missing" ]; then echo "::error::Set the repository variables:$missing"; exit 1; fi
+          # Installation settings are optional (empty = not shown); a set one must follow the rule (deploy/cfg-check.sh).
+          . ./deploy/cfg-check.sh
+          for name in NEXT_PUBLIC_MAIN_SITE_URL NEXT_PUBLIC_TERMS_URL NEXT_PUBLIC_PRIVACY_URL NEXT_PUBLIC_COOKIES_URL; do
+            cfg_url_check "$name" || { echo "::error::Fix the repository variable $name"; exit 1; }
+          done
+          cfg_flag_check NEXT_PUBLIC_SHOW_ICE_DEPARTMENT_SUPPORT || { echo "::error::Fix the repository variable NEXT_PUBLIC_SHOW_ICE_DEPARTMENT_SUPPORT"; exit 1; }
         env:
           NEXT_PUBLIC_DOMAIN: ${{ vars.NEXT_PUBLIC_DOMAIN }}
           NEXT_PUBLIC_SUPPORT_EMAIL: ${{ vars.NEXT_PUBLIC_SUPPORT_EMAIL }}
           NEXT_PUBLIC_CAPTCHA_PROVIDER: ${{ vars.NEXT_PUBLIC_CAPTCHA_PROVIDER }}
           NEXT_PUBLIC_CAPTCHA_SITE_KEY: ${{ vars.NEXT_PUBLIC_CAPTCHA_SITE_KEY }}
+          NEXT_PUBLIC_MAIN_SITE_URL: ${{ vars.NEXT_PUBLIC_MAIN_SITE_URL }}
+          NEXT_PUBLIC_TERMS_URL: ${{ vars.NEXT_PUBLIC_TERMS_URL }}
+          NEXT_PUBLIC_PRIVACY_URL: ${{ vars.NEXT_PUBLIC_PRIVACY_URL }}
+          NEXT_PUBLIC_COOKIES_URL: ${{ vars.NEXT_PUBLIC_COOKIES_URL }}
+          NEXT_PUBLIC_SHOW_ICE_DEPARTMENT_SUPPORT: ${{ vars.NEXT_PUBLIC_SHOW_ICE_DEPARTMENT_SUPPORT }}
       - name: Build static export
         run: npm run build
         env:
@@ -67,6 +78,11 @@ jobs:
           NEXT_PUBLIC_SHOW_PARTNERS: ${{ vars.NEXT_PUBLIC_SHOW_PARTNERS }}
           NEXT_PUBLIC_CAPTCHA_SITE_KEY: ${{ vars.NEXT_PUBLIC_CAPTCHA_SITE_KEY }}
           NEXT_PUBLIC_RECAPTCHA_PROJECT: ${{ vars.NEXT_PUBLIC_RECAPTCHA_PROJECT }}
+          NEXT_PUBLIC_MAIN_SITE_URL: ${{ vars.NEXT_PUBLIC_MAIN_SITE_URL }}
+          NEXT_PUBLIC_TERMS_URL: ${{ vars.NEXT_PUBLIC_TERMS_URL }}
+          NEXT_PUBLIC_PRIVACY_URL: ${{ vars.NEXT_PUBLIC_PRIVACY_URL }}
+          NEXT_PUBLIC_COOKIES_URL: ${{ vars.NEXT_PUBLIC_COOKIES_URL }}
+          NEXT_PUBLIC_SHOW_ICE_DEPARTMENT_SUPPORT: ${{ vars.NEXT_PUBLIC_SHOW_ICE_DEPARTMENT_SUPPORT }}
       - name: Configure Pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
       - name: Upload artifact

@@ -1,4 +1,5 @@
 import type { NextConfig } from "next"
+import { flagSettingError, urlSettingError } from "./src/lib/settingRules.ts"
 
 // Static export for id-frontend (identity / auth portal).
 // - output: 'export' (production builds only) produces the `out/` directory for static hosting (nginx);
@@ -22,6 +23,18 @@ const missing = REQUIRED.filter((name) => !process.env[name]?.trim())
 if (missing.length > 0) {
   throw new Error(`Missing required environment variables: ${missing.join(", ")}`)
 }
+
+// Optional installation settings (src/lib/settings.ts): empty or unset = not shown; a set value must follow the one rule (deploy/cfg-check.sh,
+// tests/cfg-vectors.json). The image build bakes placeholders, which are not checked here: the entrypoint checks the real values.
+const settingProblems = [
+  ...["NEXT_PUBLIC_MAIN_SITE_URL", "NEXT_PUBLIC_TERMS_URL", "NEXT_PUBLIC_PRIVACY_URL", "NEXT_PUBLIC_COOKIES_URL"].map((name) => [name, urlSettingError] as const),
+  ["NEXT_PUBLIC_SHOW_ICE_DEPARTMENT_SUPPORT", flagSettingError] as const,
+].flatMap(([name, rule]) => {
+  const value = process.env[name] ?? ""
+  const problem = value.startsWith("__NEXT_PUBLIC_") ? null : rule(value)
+  return problem ? [`${name} ${problem}`] : []
+})
+if (settingProblems.length > 0) throw new Error(`Invalid optional settings: ${settingProblems.join("; ")}`)
 
 // Dev-only: the app is served through a proxy on the real hosts (not localhost), so Next's dev
 // resources (fonts, HMR) are cross-origin and blocked by default. DEV_ALLOWED_ORIGINS (comma
