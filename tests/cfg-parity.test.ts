@@ -38,6 +38,11 @@ describe("installation settings parity", () => {
     expect(read("README.md")).toContain(`\`${name}\``)
   })
 
+  it("passes only required values through a `for name in NEXT_PUBLIC_...` line of the entrypoint (scripts/test-nginx-tls.sh feeds those lines junk values)", () => {
+    const listed = read("deploy/docker-entrypoint.sh").split("\n").filter((line) => /^for [a-z]+ in NEXT_PUBLIC_/.test(line)).flatMap((line) => line.match(/NEXT_PUBLIC_[A-Z0-9_]+/g) ?? [])
+    expect(listed.sort()).toEqual(["NEXT_PUBLIC_CAPTCHA_PROVIDER", "NEXT_PUBLIC_SUPPORT_EMAIL"])
+  })
+
   it("keeps every attribute the stylesheet reads in settingsAttrs, and every cfg class that src uses in the stylesheet", () => {
     const css = read("src/styles/cfg.css")
     for (const attr of new Set([...css.matchAll(/data-cfg-[a-z-]+/g)].map((m) => m[0]))) expect(attrNames, attr).toContain(attr)
