@@ -27,7 +27,9 @@ export NEXT_PUBLIC_SHOW_PARTNERS="${NEXT_PUBLIC_SHOW_PARTNERS:-true}"
 # The root layout writes each value into an attribute of <html> and src/styles/cfg.css hides the blocks by it, so every one is exported to be substituted
 # (an empty value is substituted too: the placeholder must not stay).
 . /usr/local/lib/cfg-check.sh
-for name in NEXT_PUBLIC_MAIN_SITE_URL NEXT_PUBLIC_TERMS_URL NEXT_PUBLIC_PRIVACY_URL NEXT_PUBLIC_COOKIES_URL; do
+# The list is a variable, not a `for name in NEXT_PUBLIC_...` line: scripts/test-nginx-tls.sh reads those lines as the REQUIRED values.
+optional_urls="NEXT_PUBLIC_MAIN_SITE_URL NEXT_PUBLIC_TERMS_URL NEXT_PUBLIC_PRIVACY_URL NEXT_PUBLIC_COOKIES_URL"
+for name in $optional_urls; do
   cfg_url_check "$name" || exit 1
   eval "export $name=\"\${$name:-}\""
 done
