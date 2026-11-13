@@ -4,6 +4,7 @@ import type { RefObject } from "react"
 import { passwordError } from "@/components/ui/password-strength"
 import type { PasswordPolicy } from "@/lib/passwordPolicy"
 import { t } from "@/i18n/t"
+import { shownDocuments } from "@/lib/settings"
 
 // ---------------------------------------------------------------------------
 // Zod schema — client-side validation
@@ -65,11 +66,13 @@ export function buildSetupSchema(
       })
     }
 
-    // ToS must be accepted
-    if (!data.AcceptTos) {
+    // The consent is required exactly when the page shows a document (a checkbox that is not shown is not asked for). The wording follows
+    // what is shown: the Privacy Policy alone has its own text.
+    const shown = shownDocuments()
+    if (shown.length > 0 && !data.AcceptTos) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: t("validation.tosRequired"),
+        message: t(shown.length === 1 && shown[0] === "privacy" ? "validation.policyRequired" : "validation.tosRequired"),
         path: ["AcceptTos"],
       })
     }

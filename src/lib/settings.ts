@@ -20,6 +20,19 @@ export const settingsAttrs = () => ({
 
 export type SettingName = "main-site-url" | "terms-url" | "privacy-url" | "cookies-url" | "ice-support"
 
+export type LegalDocument = "terms" | "privacy"
+
+/**
+ * The legal documents the page shows (a document is shown when its URL setting has a value), in the order the backend lists them. This is what
+ * the sign-up consent sends as AcceptedDocuments and what makes the checkbox required. Like cfg(): only in handlers and validation, never in render.
+ */
+export function shownDocuments(): LegalDocument[] {
+  const documents: LegalDocument[] = []
+  if (cfg("terms-url") !== "") documents.push("terms")
+  if (cfg("privacy-url") !== "") documents.push("privacy")
+  return documents
+}
+
 /**
  * The value of a setting, read from <html>. Only in event handlers, effects and validation, never while rendering (a render-time read
  * would differ between the server and the client). "" when the setting is empty or absent.

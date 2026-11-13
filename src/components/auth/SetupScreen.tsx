@@ -28,17 +28,12 @@ import { AuthLayout } from "./AuthLayout"
 import { useOneShotParam } from "@/lib/useOneShotParam"
 import { useUrlParams } from "@/lib/useUrlParams"
 import { forgetUrlToken, useUrlToken } from "@/lib/useUrlToken"
-import { mainOrigin } from "@/lib/origins"
+import { shownDocuments } from "@/lib/settings"
 import { AuthHeading, AuthPane, AuthSwitch, GoogleIcon, inlineLinkClass } from "./parts"
 import { t } from "@/i18n/t"
 import { apiPost, apiUrl } from "@/api/client"
 import { setupDraftKey } from "@/lib/storageKeys"
 import { buildSetupSchema, type SetupValues } from "./setupSchema"
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-const TOS_VERSION = 1
 
 // ---------------------------------------------------------------------------
 // Setup info returned by GET /api/auth/setup?token=<token>
@@ -123,22 +118,23 @@ export function SetupScreen() {
   // Post-registration landing, carried from sign-up / Google (validated by the backend).
   const returnTo = params?.get("return_to") ?? ""
 
-  // Terms of Service live on the apex (main) frontend, not the id subdomain.
-  const termsUrl = `${mainOrigin}/terms`
-  const privacyUrl = `${mainOrigin}/privacy`
-  const legalLink = (href: string, label: string) => (
-    <a href={href} target="_blank" rel="noopener noreferrer" className={inlineLinkClass}>
-      {label}
-    </a>
+  // The documents are the Terms and the Privacy Policy (NEXT_PUBLIC_TERMS_URL, NEXT_PUBLIC_PRIVACY_URL). Each label variant carries {terms} and/or
+  // {privacy}; each placeholder becomes a link to its document. All three variants are in the markup and src/styles/cfg.css shows the one that matches the
+  // settings (none when neither document is set), so nothing is decided while rendering.
+  const termsLink = (
+    <a href={process.env.NEXT_PUBLIC_TERMS_URL} target="_blank" rel="noopener noreferrer" className={inlineLinkClass}>{t("setup.tosLink")}</a>
   )
-  // setup.tosAccept carries {terms} and {privacy}; each placeholder becomes a link.
-  const tosLabel = t("setup.tosAccept")
-    .split(/(\{terms\}|\{privacy\})/)
-    .map((part) =>
-      part === "{terms}" ? <React.Fragment key="terms">{legalLink(termsUrl, t("setup.tosLink"))}</React.Fragment>
-      : part === "{privacy}" ? <React.Fragment key="privacy">{legalLink(privacyUrl, t("setup.privacyLink"))}</React.Fragment>
-      : part,
-    )
+  const privacyLink = (
+    <a href={process.env.NEXT_PUBLIC_PRIVACY_URL} target="_blank" rel="noopener noreferrer" className={inlineLinkClass}>{t("setup.privacyLink")}</a>
+  )
+  const consentLabel = (key: string) =>
+    t(key)
+      .split(/(\{terms\}|\{privacy\})/)
+      .map((part) =>
+        part === "{terms}" ? <React.Fragment key="terms">{termsLink}</React.Fragment>
+        : part === "{privacy}" ? <React.Fragment key="privacy">{privacyLink}</React.Fragment>
+        : part,
+      )
 
   // Draft persistence: linking Google does a full-page redirect that wipes the
   // form. Persist the non-secret fields to sessionStorage (per-tab, cleared on
@@ -299,7 +295,8 @@ export function SetupScreen() {
         FirstName: data.FirstName,
         LastName: data.LastName,
         Password: data.Password,
-        TosVersion: data.AcceptTos ? TOS_VERSION : 0,
+        // exactly the documents the page shows (none when neither is set), read from <html> like the validation does
+        AcceptedDocuments: shownDocuments(),
       }
       if (returnTo) body.Redirect = returnTo
 
@@ -328,7 +325,8 @@ export function SetupScreen() {
         window.location.assign("/profile/")
       }
     } catch (err) {
-      reportFieldOrFormError(err, setFormError, form.setError, { 20407: "AcceptTos", 20409: "Password" })
+      // 20407 (the required documents are not covered) is a mismatch between the site's settings and the backend's, not a field the person can fix: it stays a form error.
+      reportFieldOrFormError(err, setFormError, form.setError, { 20409: "Password" })
       setIsSubmitting(false)
     }
   }
@@ -535,12 +533,12 @@ export function SetupScreen() {
                   />
               </div>
 
-              {/* Terms of Service */}
+              {/* Consent to the Terms and/or the Privacy Policy: shown when either document is set */}
               <FormField
                 control={form.control}
                 name="AcceptTos"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="cfg-consent-row">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
@@ -549,7 +547,13 @@ export function SetupScreen() {
                         name={field.name}
                         ref={field.ref}
                         required
-                        label={<span>{tosLabel}</span>}
+                        label={
+                          <span>
+                            <span className="cfg-v-both">{consentLabel("setup.tosAccept")}</span>
+                            <span className="cfg-v-terms">{consentLabel("setup.tosAcceptTermsOnly")}</span>
+                            <span className="cfg-v-policy">{consentLabel("setup.tosAcceptPolicyOnly")}</span>
+                          </span>
+                        }
                       />
                     </FormControl>
                     <FormMessage />
