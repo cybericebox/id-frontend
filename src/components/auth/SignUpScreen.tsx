@@ -94,7 +94,7 @@ export function SignUpScreen() {
     }
   }
 
-  // The mail with the setup link; the same request again is «Надіслати ще раз» (the backend limits the pace).
+  // The mail with the setup link; the same request again is "Send again" (the backend limits the pace).
   const sendSignUpMail = async (email: string) => {
     // The bot check is mandatory on the backend. Always obtain a token (provider none yields a fixed one).
     let recaptchaToken: string | undefined

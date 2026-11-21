@@ -64,7 +64,7 @@ describe("ServiceStatusGate", () => {
     expect(page.hasAttribute("inert")).toBe(false)
   })
 
-  it("«Спробувати зараз» retries at once; a failed try restarts the countdown, Esc does nothing", async () => {
+  it("'Try now' retries at once; a failed try restarts the countdown, Esc does nothing", async () => {
     show()
     probe.mockResolvedValue(false)
     const esc = new KeyboardEvent("keydown", { key: "Escape", cancelable: true })

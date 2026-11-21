@@ -36,7 +36,7 @@ export function confirmGoogle(proof: { Password: string } | { Code: string }): P
   return apiPost(`${BASE}/confirm`, proof, undefined, { required: false })
 }
 
-/** «Це не я»: drops the pending link. */
+/** "This is not me": drops the pending link. */
 export function declineGoogleLink(): Promise<void> {
   return apiDelete(BASE, undefined, { required: false })
 }

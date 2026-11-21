@@ -30,7 +30,7 @@ export function isServiceUnavailable(err: unknown): boolean {
 // AuthTooManyRequests (HTTP 429) and the bodiless 429 of the rate limiter: the wait comes from Retry-After.
 const CODE_TOO_MANY_REQUESTS = 70428
 
-/** waitText — a wait in seconds as «N с» / «N хв» (minutes rounded up). */
+/** waitText — a wait in seconds as "N s" / "N min" (minutes rounded up). */
 export function waitText(seconds: number): string {
   return seconds < 60
     ? t("error.wait.seconds", { n: Math.max(1, Math.ceil(seconds)) })

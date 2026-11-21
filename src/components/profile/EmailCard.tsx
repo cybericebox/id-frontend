@@ -64,7 +64,7 @@ export function EmailCard({ account }: { account: Account }) {
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem(draftKey)
-      // keepDefaultValues: the restored address counts as a change, so «Змінити пошту» stays enabled
+      // keepDefaultValues: the restored address counts as a change, so "Change email" stays enabled
       if (raw) form.reset({ Email: (JSON.parse(raw) as { Email?: string }).Email ?? "", CurrentPassword: "" }, { keepDefaultValues: true })
     } catch {
       /* ignore */
@@ -81,7 +81,7 @@ export function EmailCard({ account }: { account: Account }) {
     // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, [])
 
-  // The change mail; the same request again is «Надіслати ще раз» (the backend limits the pace and asks the bot check).
+  // The change mail; the same request again is "Send again" (the backend limits the pace and asks the bot check).
   const sendChange = async (newEmail: string, password: string) => {
     let recaptchaToken: string | undefined
     try {
@@ -100,7 +100,7 @@ export function EmailCard({ account }: { account: Account }) {
     window.setTimeout(() => form.setFocus("Email"), 0)
   }
 
-  // «Не підтверджено» without a request of this visit: resend asks for the password first.
+  // "Not confirmed" without a request of this visit: resend asks for the password first.
   const [resendOpen, setResendOpen] = useState(false)
   const [resendPassword, setResendPassword] = useState("")
   const [resendBusy, setResendBusy] = useState(false)

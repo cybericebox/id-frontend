@@ -1,4 +1,4 @@
-// «Налаштування файлів cookie» is always shown and the consent panel is mounted even without GA.
+// "Cookie settings" is always shown and the consent panel is mounted even without GA.
 import { readFileSync } from "node:fs"
 import path from "node:path"
 import { renderToStaticMarkup } from "react-dom/server"

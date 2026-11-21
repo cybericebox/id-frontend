@@ -35,7 +35,7 @@ describe("ResendMail", () => {
 
   const buttons = () => Array.from(host.querySelectorAll<HTMLButtonElement>("button"))
 
-  it("counts down 60 s, then resends and starts again; «Змінити адресу» stays available", async () => {
+  it("counts down 60 s, then resends and starts again; 'Change address' stays available", async () => {
     const resend = vi.fn().mockResolvedValue(undefined)
     const change = vi.fn()
     await act(async () => { root.render(<ResendMail resend={resend} onChangeAddress={change} />) })

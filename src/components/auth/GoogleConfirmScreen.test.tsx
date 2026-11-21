@@ -63,7 +63,7 @@ describe("GoogleConfirmScreen", () => {
     expect(host.querySelector("#google-confirm-code")).not.toBeNull()
   })
 
-  it("«Надіслати код на пошту» sends the mail and starts the 60 s countdown", async () => {
+  it("'Email me a code' sends the mail and starts the 60 s countdown", async () => {
     sendCode.mockResolvedValue(undefined)
     await act(async () => { root.render(<GoogleConfirmScreen />) })
     await act(async () => { buttons().find((b) => b.textContent?.includes("код на пошту"))!.click() })
