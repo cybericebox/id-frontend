@@ -8,7 +8,7 @@
 # NEXT_PUBLIC_SUPPORT_EMAIL and NEXT_PUBLIC_CAPTCHA_PROVIDER (+ NEXT_PUBLIC_CAPTCHA_SITE_KEY unless none). The rest is optional
 # (NEXT_PUBLIC_GOOGLE_ANALYTICS_ID, NEXT_PUBLIC_RECAPTCHA_PROJECT) and the installation settings: NEXT_PUBLIC_MAIN_SITE_URL,
 # NEXT_PUBLIC_TERMS_URL, NEXT_PUBLIC_PRIVACY_URL, NEXT_PUBLIC_COOKIES_URL, NEXT_PUBLIC_SHOW_ICE_DEPARTMENT_SUPPORT (empty or unset = not shown).
-FROM --platform=$BUILDPLATFORM mirror.gcr.io/library/node:26.10.0-alpine@sha256:0b36e8c136b94cd4fcf02188228e76c31ad5872eef3fec8cbd2eee500cfd9e80 AS build
+FROM --platform=$BUILDPLATFORM mirror.gcr.io/library/node:26.13.1-alpine@sha256:6bd9ab43c0ec0190ca7b2d193906cb8b7edf6e7f4afa43ddeccd6452710bffb5 AS build
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
@@ -27,7 +27,7 @@ ENV NEXT_PUBLIC_DOMAIN="__NEXT_PUBLIC_DOMAIN__" \
     NEXT_PUBLIC_SHOW_ICE_DEPARTMENT_SUPPORT="__NEXT_PUBLIC_SHOW_ICE_DEPARTMENT_SUPPORT__"
 RUN npm run build && node scripts/csp-inline.mjs
 
-FROM mirror.gcr.io/library/nginx:1.30.5-alpine-slim@sha256:32463212baf0e7d91aded2e9b843a4f2b9e017804b8c9d5bae7b51dcef64389c AS runner
+FROM mirror.gcr.io/library/nginx:1.31.9-alpine-slim@sha256:5bfced78d24d644270bedb0a9968697042e38d5c03fb6354603df025279c1cbe AS runner
 COPY --from=build /app/out /usr/share/nginx/html
 COPY deploy/nginx/nginx.conf deploy/nginx/server.conf /etc/nginx/
 COPY deploy/nginx/listen-http.conf deploy/nginx/listen-https.conf deploy/nginx/client-auth.conf deploy/nginx/health.conf /etc/nginx/snippets/
