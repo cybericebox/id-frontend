@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// «Продовження реєстрації» with Google: the name comes prefilled from Google (never over what the user typed), and
+// The "continue sign-up" screen with Google: the name comes prefilled from Google (never over what the user typed), and
 // a Google account with another address gets an inline error that names the address to pick.
 import { act } from "react"
 import { createRoot } from "react-dom/client"

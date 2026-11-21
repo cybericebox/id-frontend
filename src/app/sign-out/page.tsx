@@ -22,7 +22,7 @@ import { PageFooter } from "@/components/PageFooter"
 // Flow:
 //   1. The page asks: a GET never signs out, so a link or a redirect from
 //      another site cannot log anyone out (logout CSRF).
-//   2. «Вийти» sends POST /api/auth/sign-out — the daemon's DeAuthenticate
+//   2. "Sign out" sends POST /api/auth/sign-out — the daemon's DeAuthenticate
 //      clears the master + local cookies.
 //   3. Only a 2xx (or a 401: the session is already gone) counts as signed out:
 //      then the drafts go and the browser goes to a validated return_to, or

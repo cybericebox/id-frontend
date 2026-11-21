@@ -1,5 +1,5 @@
 import { siteBannerDismissedKey } from "@/lib/storageKeys"
-// Site banners (docs/BROADCASTS.md, «Банери»): pure model shared in spirit by every frontend.
+// Site banners (docs/BROADCASTS.md, "Banners"): pure model shared in spirit by every frontend.
 // GET /api/notifications/banners is refetched only when the pulse reports a new Banners version; the server
 // already filters by activity, window and audience. Personal banners are dismissed on the server.
 // Dismissal lives in the browser only, under `${ID}:${Version}` (an edited banner gets a new Version).

@@ -10,7 +10,7 @@ type Tone = "danger" | "warn" | "ok"
 const TONE_BG: Record<Tone, string> = { danger: "bg-danger", warn: "bg-warn", ok: "bg-ok" }
 const TONE_TEXT: Record<Tone, string> = { danger: "text-danger", warn: "text-warn", ok: "text-ok" }
 
-// Ukrainian plural forms: 1 символ · 2–4 символи · 5+ символів (en uses _one/_many only).
+// Ukrainian plural forms: one, few and many forms of the unit word (en uses _one/_many only).
 function pluralKey(base: string, n: number): string {
   const m10 = n % 10
   const m100 = n % 100
@@ -38,7 +38,7 @@ export function ruleMessage(rule: PasswordRule, min: number, value: string): str
   }
 }
 
-/** First unmet policy rule as a form error ("Додайте цифру"), or null when valid. */
+/** First unmet policy rule as a form error (for example, "add a digit"), or null when valid. */
 export function passwordError(value: string, policy: PasswordPolicy): string | null {
   const u = unmetRules(value, policy)[0]
   if (!u) return null
@@ -48,8 +48,8 @@ export function passwordError(value: string, policy: PasswordPolicy): string | n
 
 // Live password strength: 4-segment bar + status + hint, recomputed on every
 // keystroke against the backend policy.
-//  - a required rule is unmet → red/amber bar, «Слабкий/Середній» + what is missing
-//  - all required rules met   → «Добрий», or «Надійний» with 12+ chars and a symbol
+//  - a required rule is unmet → red/amber bar, "Weak/Fair" + what is missing
+//  - all required rules met   → "Good", or "Strong" with 12+ chars and a symbol
 export function PasswordStrength({
   value,
   policy,

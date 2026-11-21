@@ -28,7 +28,7 @@ const WRONG_CODE = 20437
 
 type Mode = "password" | "code"
 
-// «Підтвердіть, що це ваш обліковий запис»: Google found an account of this address that is not linked to Google yet.
+// "Confirm this is your account": Google found an account of this address that is not linked to Google yet.
 // The owner proves it with the account password or a code mailed to the address; then Google is linked and the user
 // is signed in. Accounts without a password (passkey only, Google-less) can use the code only.
 export function GoogleConfirmScreen() {
@@ -146,7 +146,7 @@ export function GoogleConfirmScreen() {
     )
   }
 
-  // «Це не я»: the link was not started by the owner; drop it and go to sign-in.
+  // "This is not me": the link was not started by the owner; drop it and go to sign-in.
   // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- A full load drops the pending client state.
   const notMe = () => { void declineGoogleLink().catch(() => {}).finally(() => window.location.assign(signInHref)) }
 

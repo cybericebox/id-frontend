@@ -25,7 +25,7 @@ export function goBack() {
 
 /**
  * The one error / not-found screen of the app (DS patterns/error-page): big muted status, title,
- * one line, actions and, for errors with a platform code, «Код помилки: {code}».
+ * one line, actions and, for errors with a platform code, "Error code: {code}".
  * `page` — the shell could not render (global error, route-level not found): centred in the viewport
  * with the thin footer. `block` — the shell is there and only the content failed: the same column
  * in the content area, no footer, no crest.
@@ -52,9 +52,9 @@ export function ErrorPage({ status, title, body, onRetry, error, report = false,
   body: string
   /** Retry action; without it the primary action goes home (not-found). */
   onRetry?: () => void
-  /** API error: its numeric platform code shows as «Код помилки». */
+  /** API error: its numeric platform code shows as "Error code". */
   error?: unknown
-  /** A 500 screen: the «Повідомити деталі» link and, for a journaled 5xx, the reference number. */
+  /** A 500 screen: the "Report details" link and, for a journaled 5xx, the reference number. */
   report?: boolean
   mode?: "page" | "block"
   fill?: boolean

@@ -19,21 +19,21 @@ describe("busy button", () => {
     host.remove()
   })
 
-  const render = (busy: boolean) => act(() => root.render(<Button busy={busy} busyLabel="Зберігаємо…">Зберегти</Button>))
+  const render = (busy: boolean) => act(() => root.render(<Button busy={busy} busyLabel="Saving…">Save</Button>))
   const visibleFace = (button: HTMLButtonElement) => button.querySelector(".ib-btn__face:not([aria-hidden])")
 
   it("names the running operation with the crest in place of the label and is disabled", () => {
     render(false)
     const button = host.querySelector("button")!
     expect(button.disabled).toBe(false)
-    expect(visibleFace(button)?.textContent).toBe("Зберегти")
+    expect(visibleFace(button)?.textContent).toBe("Save")
     expect(button.querySelector(".crest-loader")).toBeNull()
 
     render(true)
     expect(host.querySelector("button")).toBe(button)
     expect(button.disabled).toBe(true)
     expect(button.getAttribute("aria-busy")).toBe("true")
-    expect(visibleFace(button)?.textContent).toBe("Зберігаємо…")
+    expect(visibleFace(button)?.textContent).toBe("Saving…")
     expect(visibleFace(button)?.querySelector(".crest-loader")).not.toBeNull()
   })
 
@@ -41,7 +41,7 @@ describe("busy button", () => {
     render(false)
     const button = host.querySelector("button")!
     expect(button.querySelectorAll(".ib-btn__face")).toHaveLength(2)
-    expect(button.textContent).toContain("Зберігаємо…")
+    expect(button.textContent).toContain("Saving…")
     // the hidden face is out of the accessible name and carries no live status
     expect(button.querySelector(".ib-btn__face--busy")?.getAttribute("aria-hidden")).toBe("true")
     expect(button.querySelector('[role="status"]')).toBeNull()

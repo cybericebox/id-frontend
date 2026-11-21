@@ -28,7 +28,7 @@ export function retryAfterSeconds(err: unknown): number | undefined {
 }
 
 /**
- * «Надіслати ще раз» with a countdown, and «Змінити адресу», for every «Перевірте пошту» state. The button is
+ * "Send again" with a countdown, and "Change address", for every "Check your email" state. The button is
  * disabled while the countdown runs and says how long is left; a refusal from the backend (too soon, too many per hour)
  * restarts the countdown with the seconds it asks for. `resend` sends the mail again and may return the next wait.
  */

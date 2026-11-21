@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // Linking Google from the profile takes only the account's own address: when Google returned another account the
-// connections section names the address to pick, right under «Підключити Google».
+// connections section names the address to pick, right under "Connect Google".
 import { act } from "react"
 import { createRoot } from "react-dom/client"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// The consent on «Продовження реєстрації»: the checkbox, the validation and the request follow the documents the page shows (the Terms and the
+// The consent on the "continue sign-up" screen: the checkbox, the validation and the request follow the documents the page shows (the Terms and the
 // Privacy Policy, from the settings written into <html>). The request carries exactly the shown documents, never one that was not shown.
 import { act } from "react"
 import { createRoot } from "react-dom/client"

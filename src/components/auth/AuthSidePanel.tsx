@@ -29,7 +29,7 @@ export type AuthVariant =
   | "reset"
   | "setup"
 
-// The department line («За підтримки кафедри…») is shown only when NEXT_PUBLIC_SHOW_ICE_DEPARTMENT_SUPPORT is `true` (default off): the full line and the
+// The department line ("With the support of the department…") is shown only when NEXT_PUBLIC_SHOW_ICE_DEPARTMENT_SUPPORT is `true` (default off): the full line and the
 // plain copyright are both in the markup and src/styles/cfg.css shows one of them. The links are fixed.
 const PARTNER_ICE_NURE_URL = "https://ice.nure.ua/ua/"
 const PARTNER_NURE_URL = "https://nure.ua"

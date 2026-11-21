@@ -9,7 +9,7 @@ import "@/styles/consent.css"
 // empty they stay links and only lose their target.
 export const COOKIE_POLICY_HREF = process.env.NEXT_PUBLIC_COOKIES_URL
 
-// «Налаштування файлів cookie», always shown: a link to the cookie policy that, with JS, opens
+// "Cookie settings", always shown: a link to the cookie policy that, with JS, opens
 // the consent preferences panel instead (see lib/consent).
 export function CookieSettingsLink({ className }: { className?: string }) {
   return (

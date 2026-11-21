@@ -6,7 +6,7 @@ import { isServiceUnavailable, localizedError } from "@/i18n/apiError"
 
 /**
  * Form-level failure (expired link, rate limit): an inline alert next to the submit button that stays
- * until the next attempt, so a long message («Спробуйте ще раз через 5 хв») is not gone before it is read.
+ * until the next attempt, so a long message ("Try again in 5 min") is not gone before it is read.
  */
 export function FormError({ message }: { message: string | null }) {
   if (!message) return null

@@ -31,7 +31,7 @@ describe("sign-in: last address", () => {
   afterEach(() => { act(() => root.unmount()); host.remove() })
   const email = () => host.querySelector<HTMLInputElement>('input[type="email"]')!
 
-  it("fills the field in full when the answer comes; «Увійти з іншою адресою» clears it, focuses it and forgets the address", async () => {
+  it("fills the field in full when the answer comes; 'Sign in with another address' clears it, focuses it and forgets the address", async () => {
     get.mockResolvedValue({ Email: "olena@example.com" })
     await act(async () => { root.render(<SignInScreen />) })
     expect(email().value).toBe("olena@example.com")

@@ -166,7 +166,7 @@ describe("cookie policy link", () => {
     }
   })
 
-  it("the panel has only «Зберегти вибір» and «Прийняти всі» (no «Відхилити всі»)", async () => {
+  it("the panel has only 'Save choice' and 'Accept all' (no 'Reject all')", async () => {
     const { readFileSync } = await import("node:fs")
     const { join } = await import("node:path")
     const code = readFileSync(join(__dirname, "../components/ConsentBanner.tsx"), "utf8")
