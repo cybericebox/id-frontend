@@ -10,7 +10,7 @@ data:
   DOMAIN: ""
   # REQUIRED: event sites are <tag>.<EVENT_DOMAIN>; the event domain.
   # REQUIRED: Domain attribute of the shared theme/consent cookies (e.g. cybericebox.com); no implicit parent.
-  # REQUIRED: support mailbox of the «Надіслати відгук» (send feedback) link on every page.
+  # REQUIRED: support mailbox of the "Send feedback" (send feedback) link on every page.
   SUPPORT_EMAIL: ""
   # REQUIRED: bot-check provider, one for the whole platform: turnstile | recaptcha | none (none = local development).
   # Must match the backend CAPTCHA_PROVIDER.

@@ -9,6 +9,8 @@ export default defineConfig({
     env: {
       NEXT_PUBLIC_DOMAIN: "cybericebox.local",
       NEXT_PUBLIC_SUPPORT_EMAIL: "support@example.test",
+      // the owner-style value of one setting, so the markup tests see a link
+      NEXT_PUBLIC_COOKIES_URL: "https://example.test/cookies",
     },
     exclude: [...configDefaults.exclude, "e2e/**", "**/.worktrees/**", "**/.claude/worktrees/**"],
   },

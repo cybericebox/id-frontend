@@ -17,7 +17,7 @@ export function AuthHeading({ title, subtitle }: { title: string; subtitle?: Rea
   )
 }
 
-// «або» separator between the Google button and the email form.
+// "or" separator between the Google button and the email form.
 export function AuthDivider({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-3 text-xs text-faint">
@@ -28,7 +28,7 @@ export function AuthDivider({ label }: { label: string }) {
   )
 }
 
-// Bottom line: «Немає акаунта? Зареєструватися».
+// Bottom line: "No account? Sign up".
 // Links inside running text are told apart by an underline (WCAG 1.4.1), not by colour or weight alone (DS .ib-link:
 // 1 px, 45 % of the text colour at rest, full colour on hover).
 export const inlineLinkClass =

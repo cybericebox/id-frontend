@@ -36,7 +36,7 @@ describe("pop-in", () => {
     expect(popIn).toContain("onTouchStart")
   })
 
-  it("«Вирішено» is positioned and follows the stretched card link, so it paints above it", () => {
+  it("'Resolved' is positioned and follows the stretched card link, so it paints above it", () => {
     const lines = src("./InboxButton.tsx").split("\n")
     const link = lines.findIndex((l) => l.includes("after:absolute after:inset-0"))
     const resolve = lines.findIndex((l) => l.includes("canResolve(item) && <button"))
@@ -56,7 +56,7 @@ describe("links in text and busy states", () => {
     expect(inlineLinkClass).not.toContain("no-underline")
   })
 
-  it("the email change button shows the crest busy state, not «Завантаження…»", () => {
+  it("the email change button shows the crest busy state, not 'Loading'", () => {
     const account = src("./EmailCard.tsx")
     expect(account).not.toContain("common.loading")
     expect(account).toContain("busy={isSubmitting}")

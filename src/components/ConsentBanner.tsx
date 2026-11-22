@@ -13,7 +13,6 @@ import {
   shouldShowBanner,
   type ConsentPrefs,
 } from "@/lib/consent"
-import { mainOrigin } from "@/lib/origins"
 import "@/styles/consent.css"
 
 function subscribe(onChange: () => void) {
@@ -23,12 +22,9 @@ function subscribe(onChange: () => void) {
 // A primitive snapshot: "none" = no choice yet; "ssr" = server render, cookie unknown (render nothing).
 const snapshot = () => {
   const prefs = readConsent()
-  return prefs ? (prefs.analytics ? "granted" : "denied") : "none"
+  return prefs ? `${prefs.analytics ? "a" : "-"}${prefs.functional ? "f" : "-"}` : "none"
 }
 const serverSnapshot = () => "ssr"
-
-// The Cookie Policy lives on the main site.
-const POLICY_HREF = `${mainOrigin === "/" ? "" : mainOrigin}/cookies`
 
 // A message with a {link} placeholder, the policy link in its place (no tRich in this app).
 function WithPolicyLink({ k }: { k: string }) {
@@ -37,7 +33,7 @@ function WithPolicyLink({ k }: { k: string }) {
     <>
       {before}
       {/* New tab; the click must not reach any outer handler, so the banner/panel and its toggles stay. */}
-      <a href={POLICY_HREF} {...POLICY_LINK_ATTRS} aria-label={t("consent.policyLinkNewTab")} onClick={(e) => e.stopPropagation()}>
+      <a href={process.env.NEXT_PUBLIC_COOKIES_URL} className="cfg-cookies" {...POLICY_LINK_ATTRS} aria-label={t("consent.policyLinkNewTab")} onClick={(e) => e.stopPropagation()}>
         {t("consent.policyLink")}
       </a>
       {after}
@@ -46,16 +42,17 @@ function WithPolicyLink({ k }: { k: string }) {
 }
 
 // Cookie consent in two layers, fixed to the bottom, non-blocking.
-// 1. Banner: a general line, «Налаштувати» and «Прийняти всі».
-// 2. Panel: categories (Необхідні — always on; Аналітика — off by default),
-//    «Зберегти вибір» and «Прийняти всі».
-// Shown when GA is configured and no choice exists; «Налаштування файлів cookie» opens the panel.
+// 1. Banner: a general line, "Customize" and "Accept all".
+// 2. Panel: categories (Necessary — always on; Analytics — off by default),
+//    "Save choice" and "Accept all".
+// Shown when GA is configured and no choice exists; "Cookie settings" opens the panel.
 // Esc never counts as consent: it steps back from the panel, or closes a panel opened from settings.
 export function ConsentBanner({ gaId }: { gaId?: string }) {
   const stored = useSyncExternalStore(subscribe, snapshot, serverSnapshot)
   // null = follow the stored choice; "panel" = preferences open.
   const [layer, setLayer] = useState<"banner" | "panel" | null>(null)
   const [analytics, setAnalytics] = useState(false)
+  const [functional, setFunctional] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const returnToRef = useRef<HTMLElement | null>(null)
 
@@ -63,6 +60,7 @@ export function ConsentBanner({ gaId }: { gaId?: string }) {
     const onOpen = () => {
       returnToRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
       setAnalytics(readConsent()?.analytics ?? false)
+      setFunctional(readConsent()?.functional ?? false)
       setLayer("panel")
     }
     window.addEventListener(CONSENT_OPEN_EVENT, onOpen)
@@ -85,7 +83,7 @@ export function ConsentBanner({ gaId }: { gaId?: string }) {
   }
 
   if (stored === "ssr") return null
-  const asking = shouldShowBanner(gaId, stored === "none" ? null : { analytics: stored === "granted" })
+  const asking = shouldShowBanner(stored === "none" ? null : { analytics: stored[0] === "a", functional: stored[1] === "f" })
   const shown = layer ?? (asking ? "banner" : null)
   if (!shown) return null
 
@@ -133,18 +131,29 @@ export function ConsentBanner({ gaId }: { gaId?: string }) {
         <li>
           <label className="cb-consent__cat">
             <span>
-              <span className="cb-consent__name">{t("consent.analytics.title")}</span>
-              <span className="cb-consent__desc">{t("consent.analytics.text")}</span>
+              <span className="cb-consent__name">{t("consent.functional.title")}</span>
+              <span className="cb-consent__desc">{t("consent.functional.text")}</span>
             </span>
-            <input type="checkbox" role="switch" className="cb-switch" checked={analytics} onChange={(e) => setAnalytics(e.target.checked)} />
+            <input type="checkbox" role="switch" className="cb-switch" checked={functional} onChange={(e) => setFunctional(e.target.checked)} />
           </label>
         </li>
+        {gaId && (
+          <li>
+            <label className="cb-consent__cat">
+              <span>
+                <span className="cb-consent__name">{t("consent.analytics.title")}</span>
+                <span className="cb-consent__desc">{t("consent.analytics.text")}</span>
+              </span>
+              <input type="checkbox" role="switch" className="cb-switch" checked={analytics} onChange={(e) => setAnalytics(e.target.checked)} />
+            </label>
+          </li>
+        )}
       </ul>
-      <p className="cb-consent__policy">
+      <p className="cb-consent__policy cfg-cookies">
         <WithPolicyLink k="consent.policy" />
       </p>
       <div className="cb-consent__actions cb-consent__actions--panel">
-        <Button variant="secondary" size="sm" onClick={() => choose({ analytics })}>{t("consent.saveChoice")}</Button>
+        <Button variant="secondary" size="sm" onClick={() => choose({ analytics: Boolean(gaId) && analytics, functional })}>{t("consent.saveChoice")}</Button>
         <Button size="sm" onClick={() => choose(ACCEPT_ALL)}>{t("consent.acceptAll")}</Button>
       </div>
     </div>

@@ -16,7 +16,7 @@ const manifestPath = join(srcDir, "styles/ds/manifest.json")
 const check = process.argv.includes("--check")
 const sha = (text) => createHash("sha256").update(text).digest("hex")
 
-const up = Array.from({ length: 5 }, (_, i) => join(root, ...Array(i + 1).fill(".."), "docs/design-system"))
+const up = Array.from({ length: 5 }, (_, i) => join(root, ...Array(i + 1).fill(".."), "docs/internal-docs/design-system"))
 const src = [process.env.DS_DIR, ...up, join(root, "ds-source")].filter(Boolean).find((d) => existsSync(join(d, "tokens.css")))
 
 // copy (relative to src/) → source file in the DS

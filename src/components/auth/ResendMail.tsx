@@ -28,19 +28,23 @@ export function retryAfterSeconds(err: unknown): number | undefined {
 }
 
 /**
- * «Надіслати ще раз» with a countdown, and «Змінити адресу», for every «Перевірте пошту» state. The button is
+ * "Send again" with a countdown, and "Change address", for every "Check your email" state. The button is
  * disabled while the countdown runs and says how long is left; a refusal from the backend (too soon, too many per hour)
  * restarts the countdown with the seconds it asks for. `resend` sends the mail again and may return the next wait.
  */
 export function ResendMail({
   resend,
   onChangeAddress,
+  resendLabel = t("mail.resend"),
+  resendInLabel = (seconds: number) => t("mail.resendIn", { seconds }),
   changeAddressLabel = t("mail.changeAddress"),
   initialSeconds = RESEND_COOLDOWN_SECONDS,
 }: {
   resend: () => Promise<number | void>
-  onChangeAddress: () => void
+  onChangeAddress?: () => void
   changeAddressLabel?: string
+  resendLabel?: string
+  resendInLabel?: (seconds: number) => string
   initialSeconds?: number
 }) {
   const [until, setUntil] = useState(() => Date.now() + initialSeconds * 1000)
@@ -88,11 +92,13 @@ export function ResendMail({
           busyLabel={t("common.busy.sending")}
           onClick={() => void send()}
         >
-          {waiting ? t("mail.resendIn", { seconds: left }) : t("mail.resend")}
+          {waiting ? resendInLabel(left) : resendLabel}
         </Button>
-        <Button type="button" variant="ghost" disabled={busy} onClick={onChangeAddress}>
-          {changeAddressLabel}
-        </Button>
+        {onChangeAddress && (
+          <Button type="button" variant="ghost" disabled={busy} onClick={onChangeAddress}>
+            {changeAddressLabel}
+          </Button>
+        )}
       </div>
     </div>
   )

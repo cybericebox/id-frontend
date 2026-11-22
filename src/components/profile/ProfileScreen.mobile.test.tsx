@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // The phone profile is master-detail: the list of sections, then one section. The identity card shows only on the
-// list, and «Назад до розділів» never leaves a loop in the history.
+// list, and "Back to sections" never leaves a loop in the history.
 import { act } from "react"
 import { createRoot } from "react-dom/client"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"

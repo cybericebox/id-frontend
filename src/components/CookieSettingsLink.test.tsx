@@ -1,4 +1,4 @@
-// «Налаштування файлів cookie» is always shown and the consent panel is mounted even without GA.
+// "Cookie settings" is always shown and the consent panel is mounted even without GA.
 import { readFileSync } from "node:fs"
 import path from "node:path"
 import { renderToStaticMarkup } from "react-dom/server"
@@ -14,7 +14,7 @@ afterEach(() => vi.unstubAllGlobals())
 describe("cookie settings entry", () => {
   it("renders as a link to the cookie policy", () => {
     const html = renderToStaticMarkup(<CookieSettingsLink />)
-    expect(html).toMatch(/^<a href="[^"]*\/cookies"/)
+    expect(html).toMatch(/^<a href="https:\/\/example\.test\/cookies"/)
     expect(html).toContain("cb-consent-link")
   })
 

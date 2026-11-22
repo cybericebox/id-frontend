@@ -66,7 +66,7 @@ export function SessionsTab() {
   const [confirmBusy, setConfirmBusy] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmError, setConfirmError] = useState("")
-  // «Завершити» on one row asks first, like «Завершити всі інші сесії»
+  // "End" on one row asks first, like "End all other sessions"
   const [revokeTarget, setRevokeTarget] = useState<SessionInfo | null>(null)
   const [revokeBusy, setRevokeBusy] = useState(false)
   const [revokeError, setRevokeError] = useState("")

@@ -115,7 +115,7 @@ function ServiceDown({ onCheck }: { onCheck: () => Promise<void> }) {
  * App-wide «server unavailable» overlay (DS patterns/service-down), the same as the event
  * site's. API calls report network failures and 5xx into the status store; two probes 15 s
  * apart confirm before the overlay shows. The page stays rendered, dimmed and inert behind
- * it; it cannot be dismissed, retries on a 3/5/10/20/30 s backoff or on «Спробувати зараз»,
+ * it; it cannot be dismissed, retries on a 3/5/10/20/30 s backoff or on "Try now",
  * and closes by itself once the API answers.
  */
 export function ServiceStatusGate() {

@@ -18,10 +18,21 @@ for name in NEXT_PUBLIC_SUPPORT_EMAIL NEXT_PUBLIC_CAPTCHA_PROVIDER; do
     exit 1
   fi
 done
-# Optional values: NEXT_PUBLIC_GOOGLE_ANALYTICS_ID (empty → analytics off) and NEXT_PUBLIC_SHOW_PARTNERS (default true; "false" hides the
-# partner links). The build folded their placeholders, so they are exported to be substituted.
+# Optional value: NEXT_PUBLIC_GOOGLE_ANALYTICS_ID (empty → analytics off); exported so the placeholder is substituted.
 export NEXT_PUBLIC_GOOGLE_ANALYTICS_ID="${NEXT_PUBLIC_GOOGLE_ANALYTICS_ID:-}"
-export NEXT_PUBLIC_SHOW_PARTNERS="${NEXT_PUBLIC_SHOW_PARTNERS:-true}"
+
+# Installation settings (all optional, no value = not shown, deploy/cfg-check.sh): URLs are empty or https://; the flag is true or false (default false).
+# The root layout writes each value into an attribute of <html> and src/styles/cfg.css hides the blocks by it, so every one is exported to be substituted
+# (an empty value is substituted too: the placeholder must not stay).
+. /usr/local/lib/cfg-check.sh
+# The list is a variable, not a `for name in NEXT_PUBLIC_...` line: scripts/test-nginx-tls.sh reads those lines as the REQUIRED values.
+optional_urls="NEXT_PUBLIC_MAIN_SITE_URL NEXT_PUBLIC_TERMS_URL NEXT_PUBLIC_PRIVACY_URL NEXT_PUBLIC_COOKIES_URL"
+for name in $optional_urls; do
+  cfg_url_check "$name" || exit 1
+  eval "export $name=\"\${$name:-}\""
+done
+cfg_flag_check NEXT_PUBLIC_SHOW_ICE_DEPARTMENT_SUPPORT || exit 1
+export NEXT_PUBLIC_SHOW_ICE_DEPARTMENT_SUPPORT="${NEXT_PUBLIC_SHOW_ICE_DEPARTMENT_SUPPORT:-false}"
 
 # Bot check: the provider is turnstile, recaptcha or none (local development).
 case "$NEXT_PUBLIC_CAPTCHA_PROVIDER" in turnstile | recaptcha | none) ;; *)

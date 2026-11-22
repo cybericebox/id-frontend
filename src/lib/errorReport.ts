@@ -21,7 +21,7 @@ export function reference(error: unknown): string | undefined {
   return error.code ? `${error.code}-${rid}` : rid
 }
 
-/** mailto: «Повідомити деталі», prefilled with page, time and the reference (API) or the message and build (crash). */
+/** mailto: "Report details", prefilled with page, time and the reference (API) or the message and build (crash). */
 export function reportHref(error: unknown, ref?: string): string {
   const crash = errorKind(error) === "crash"
   const lines = [t("error.report.page", { url: window.location.href }), t("error.report.time", { time: new Date().toISOString() })]

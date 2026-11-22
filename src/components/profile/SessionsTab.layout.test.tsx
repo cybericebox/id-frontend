@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-// The session card on a phone: words never break in the middle (only the address may), and «Завершити» always sits
-// in its own right column, aligned to the top, whatever the length of «Браузер · ОС».
+// The session card on a phone: words never break in the middle (only the address may), and "End" always sits
+// in its own right column, aligned to the top, whatever the length of the "Browser · OS" cell.
 import { act } from "react"
 import { createRoot } from "react-dom/client"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -39,7 +39,7 @@ describe("SessionsTab card layout", () => {
     expect(address?.className).toContain("[overflow-wrap:anywhere]")
   })
 
-  it("keeps «Завершити» in the right column of a two-column grid", async () => {
+  it("keeps 'End' in the right column of a two-column grid", async () => {
     await act(async () => { root.render(<SessionsTab />) })
     const other = host.querySelectorAll("li")[1]
     expect(other.className).toContain("grid-cols-[minmax(0,1fr)_auto]")

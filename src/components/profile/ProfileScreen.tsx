@@ -49,7 +49,7 @@ const TABS: { key: TabKey; label: string; desc: string; icon: LucideIcon }[] = [
   { key: "privacy", label: "profile.tab.privacy", desc: "profile.tab.privacy.desc", icon: DatabaseZap },
 ]
 
-// Sections of earlier versions (old ?tab= links, the Google link callback) now live inside «Вхід і безпека».
+// Sections of earlier versions (old ?tab= links, the Google link callback) now live inside "Sign-in and security".
 const LEGACY_TABS: Record<string, TabKey> = { account: "security", connections: "security" }
 
 // Format the join date for "Member since"; returns "" for missing/invalid input.
@@ -58,7 +58,7 @@ function memberSince(createdAt: string): string {
   const d = new Date(createdAt)
   if (Number.isNaN(d.getTime())) return ""
   // Include the day so locales with grammatical cases (e.g. Ukrainian) render the
-  // month in the genitive ("27 червня 2026") rather than nominative ("червень").
+  // month in the genitive (a day number, the month name and the year) rather than nominative (the bare month name).
   return d.toLocaleDateString(locale, {
     day: "numeric",
     year: "numeric",
@@ -90,7 +90,7 @@ function ProfileShell() {
   // the first section and mobile shows the list of sections.
   const requestedTab = searchParams.get("tab")
   const urlTab = TABS.find((x) => x.key === requestedTab)?.key ?? (requestedTab ? LEGACY_TABS[requestedTab] ?? null : null)
-  // Coming back from a failed «Підключити Google» lands on the sign-in and security section.
+  // Coming back from a failed "Connect Google" lands on the sign-in and security section.
   const tab: TabKey | null = urlTab ?? (linkError ? "security" : null)
   const active: TabKey = tab ?? "profile"
 
@@ -104,7 +104,7 @@ function ProfileShell() {
     else router.replace(href, { scroll: false })
   }
 
-  // A section opened from the list pushed one entry: «Назад до розділів» goes back to it (no list → section → list
+  // A section opened from the list pushed one entry: "Back to sections" goes back to it (no list → section → list
   // loop in the history); a section that came from a link replaces its entry with the list.
   const openedFromListRef = useRef(false)
   const openSection = (key: TabKey) => {

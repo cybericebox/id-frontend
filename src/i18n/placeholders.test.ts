@@ -1,6 +1,6 @@
 /**
  * A placeholder is an example of the value, never a copy of the field label (it would repeat the label and, on a
- * narrow field, get cut by the «Показати» button). So no placeholder may equal any other text of the catalog.
+ * narrow field, get cut by the "Show" button). So no placeholder may equal any other text of the catalog.
  */
 import { describe, expect, it } from "vitest"
 import uk from "../../messages/uk.json"

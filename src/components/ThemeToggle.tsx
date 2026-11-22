@@ -40,7 +40,7 @@ export function useThemeChoice() {
   return [choice, onChange] as const
 }
 
-// Three icon buttons in a row (Світла / Темна / Системна), one click, no menu.
+// Three icon buttons in a row (Light / Dark / System), one click, no menu.
 // `onMass` = placed on the brand mass (panel footer).
 export function ThemeSwitch({ className, onMass = false }: { className?: string; onMass?: boolean }) {
   const [choice, onChange] = useThemeChoice()

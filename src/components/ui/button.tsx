@@ -47,7 +47,7 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
   }
 
 // Busy state (AGENTS.md «Busy buttons show the operation»): the button is disabled and shows the crest with the
-// operation in the present tense («Зберігаємо…») in place of its label. Both faces share one grid cell, so the button
+// operation in the present tense ("Saving") in place of its label. Both faces share one grid cell, so the button
 // keeps the width of the wider one and never jumps; the hidden face stays out of the accessible name.
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, busy = false, busyLabel, disabled, children, ...props }, ref) => {

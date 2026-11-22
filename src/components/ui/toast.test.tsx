@@ -24,7 +24,7 @@ describe("toast retry action", () => {
     host.remove()
   })
 
-  it("offers «Спробувати ще раз» on an overload error and runs the retry once, closing the toast", async () => {
+  it("offers 'Try again' on an overload error and runs the retry once, closing the toast", async () => {
     const retry = vi.fn()
     await show(() => toastApiError(new ApiError(503, null, "x", undefined, undefined, 1), retry))
     expect(host.querySelector('[role="alert"]')?.textContent).toContain("Сервер перевантажений, спробуйте за кілька секунд")

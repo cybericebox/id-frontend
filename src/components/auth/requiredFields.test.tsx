@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs"
-import { describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { renderToStaticMarkup } from "react-dom/server"
 import { useForm } from "react-hook-form"
 
@@ -71,6 +71,10 @@ describe("required-field asterisks", () => {
 })
 
 describe("setup validation", () => {
+  // the validation reads the shown documents from <html>: by default both are set
+  beforeEach(() => { vi.stubGlobal("document", { documentElement: { getAttribute: () => "https://example.org/x" } }) })
+  afterEach(() => { vi.unstubAllGlobals() })
+
   it("accepts a complete form", () => {
     expect(messages(valid)).toEqual({})
   })
@@ -83,8 +87,18 @@ describe("setup validation", () => {
     expect(messages({ ...valid, ConfirmPassword: "" }).ConfirmPassword).toBe(uk["validation.required"])
   })
 
-  it("requires the policy checkbox", () => {
+  it("requires the consent checkbox exactly when a document is shown, worded after what is shown", () => {
+    const shown = (terms: string, privacy: string) => vi.stubGlobal("document", { documentElement: { getAttribute: (name: string) => ({ "data-cfg-terms-url": terms, "data-cfg-privacy-url": privacy })[name] ?? null } })
+    shown("https://example.org/terms", "https://example.org/privacy")
     expect(messages({ ...valid, AcceptTos: false }).AcceptTos).toBe(uk["validation.tosRequired"])
+    shown("https://example.org/terms", "")
+    expect(messages({ ...valid, AcceptTos: false }).AcceptTos).toBe(uk["validation.tosRequired"])
+    shown("", "https://example.org/privacy")
+    expect(messages({ ...valid, AcceptTos: false }).AcceptTos).toBe(uk["validation.policyRequired"])
+    shown("", "")
+    expect(messages({ ...valid, AcceptTos: false }).AcceptTos).toBeUndefined()
+    shown("https://example.org/terms", "https://example.org/privacy")
+    expect(messages(valid).AcceptTos).toBeUndefined()
   })
 
   it("requires a password unless Google is linked", () => {

@@ -6,7 +6,7 @@ import { Input, type InputProps } from "@/components/ui/input"
 import { t } from "@/i18n/t"
 import { cn } from "@/utils/cn"
 
-// ds-v2 .ib-input-wrap--password: input + «Показати» / «Сховати» text button.
+// ds-v2 .ib-input-wrap--password: input + "Show" / "Hide" text button.
 const PasswordInput = React.forwardRef<HTMLInputElement, Omit<InputProps, "type">>(
   ({ className, ...props }, ref) => {
     const [shown, setShown] = React.useState(false)

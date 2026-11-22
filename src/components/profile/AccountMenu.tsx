@@ -43,7 +43,7 @@ export function AccountMenu({ account }: { account: Account }) {
     return () => { cancelled = true }
   }, [adminTier])
 
-  // One POST, no confirmation page; the sign-in page greets with «Ви вийшли». A failure stays here with a toast.
+  // One POST, no confirmation page; the sign-in page greets with "You have signed out". A failure stays here with a toast.
   const doSignOut = async () => {
     try {
       await signOutNow()
@@ -131,7 +131,7 @@ export function AccountMenu({ account }: { account: Account }) {
             // so the menu still sees the select and closes); the panel opens once focus is back on the trigger.
             return (
               <Fragment key={i}>
-                {/* the profile pages have no footer, so «Надіслати відгук» is a normal menu item here */}
+                {/* the profile pages have no footer, so "Send feedback" is a normal menu item here */}
                 <DropdownMenuItem asChild className="group gap-2">
                   <FeedbackLink><MessageSquare {...ACCOUNT_MENU_ICON_PROPS} className={ICON_CLASS} /><span className="account-menu__label">{t("feedback.link")}</span></FeedbackLink>
                 </DropdownMenuItem>
