@@ -14,4 +14,9 @@ describe("QrCode", () => {
     expect(html).toContain(`viewBox="-4 -4 ${n + 8} ${n + 8}"`)
     expect(html).toMatch(/<path d="M[^"]+"/)
   })
+
+  it("a value it cannot encode renders the fallback, never throws", () => {
+    const html = renderToStaticMarkup(<QrCode value={"x".repeat(8000)} label="QR" fallback={<p>manual</p>} />)
+    expect(html).toBe("<p>manual</p>")
+  })
 })

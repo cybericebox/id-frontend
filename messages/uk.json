@@ -535,5 +535,8 @@
   "recoverySignIn.codePlaceholder": "XXXX-XXXX-XXXX",
   "recoverySignIn.submit": "Увійти",
   "recoverySignIn.back": "Звичайний вхід",
-  "recoverySignIn.backText": "Маєте другий фактор?"
+  "recoverySignIn.backText": "Маєте другий фактор?",
+  "totp.qrUnavailable": "Не вдалося намалювати QR-код: введіть ключ нижче в застосунку.",
+  "recoveryCodes.closeHint": "Позначте пункт, щоб закрити це вікно.",
+  "recoveryCodes.clipboardNote": "Скопійовані коди лишаються в буфері обміну: очистьте його, коли збережете їх."
 }

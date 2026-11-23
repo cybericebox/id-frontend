@@ -64,7 +64,7 @@ describe("StepUpScreen", () => {
     await type(host.querySelector<HTMLInputElement>("#step-up-code")!, "123456")
     post.mockResolvedValueOnce({ Method: "totp", At: "", ExpiresAt: "" })
     await submit()
-    expect(post).toHaveBeenCalledWith("/api/auth/step-up", { Method: "totp", Code: "123456" }, undefined, { required: false })
+    expect(post).toHaveBeenCalledWith("/api/auth/step-up", { Method: "totp", Code: "123456" })
     expect(assign).toHaveBeenCalledWith(RETURN)
   })
 
@@ -85,8 +85,25 @@ describe("StepUpScreen", () => {
     await type(host.querySelector<HTMLInputElement>('input[type="password"]')!, "pw")
     post.mockResolvedValueOnce({ Method: "password", At: "", ExpiresAt: "" })
     await submit()
-    expect(post).toHaveBeenCalledWith("/api/auth/step-up", { Method: "password", Password: "pw" }, undefined, { required: false })
+    expect(post).toHaveBeenCalledWith("/api/auth/step-up", { Method: "password", Password: "pw" })
     expect(assign).toHaveBeenCalledWith("/profile/")
+  })
+
+  it.each([
+    "https://api.cybericebox.local/api/auth/me",
+    "javascript:alert(1)",
+    "http://admin.cybericebox.local/",
+    "//evil.test/",
+    "https://user:pw@admin.cybericebox.local/",
+  ])("return_to %s is not followed: the profile instead", async (bad) => {
+    search.value = `return_to=${encodeURIComponent(bad)}`
+    await render({ ...off, TOTPEnabled: true, HasSecondFactor: true })
+    await type(host.querySelector<HTMLInputElement>("#step-up-code")!, "123456")
+    post.mockResolvedValueOnce({ Method: "totp", At: "", ExpiresAt: "" })
+    await submit()
+    expect(assign).toHaveBeenCalledWith("/profile/")
+    const back = Array.from(host.querySelectorAll("a")).find((a) => a.textContent === "Повернутися без підтвердження")!
+    expect(back.getAttribute("href")).toBe("/profile/")
   })
 
   it("a passkey is the choice when it is the only factor; its check requires user verification on the server", async () => {
@@ -96,8 +113,8 @@ describe("StepUpScreen", () => {
     post.mockResolvedValueOnce({ CeremonyID: "c1", Options: { publicKey: {} } })
     post.mockResolvedValueOnce({ Method: "passkey", At: "", ExpiresAt: "" })
     await submit()
-    expect(post).toHaveBeenNthCalledWith(1, "/api/auth/step-up/passkey/begin", {}, undefined, { required: false })
-    expect(post).toHaveBeenNthCalledWith(2, "/api/auth/step-up", { Method: "passkey", CeremonyID: "c1", Credential: { id: "cred" } }, undefined, { required: false })
+    expect(post).toHaveBeenNthCalledWith(1, "/api/auth/step-up/passkey/begin", {})
+    expect(post).toHaveBeenNthCalledWith(2, "/api/auth/step-up", { Method: "passkey", CeremonyID: "c1", Credential: { id: "cred" } })
     expect(assign).toHaveBeenCalledWith(RETURN)
   })
 

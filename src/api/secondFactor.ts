@@ -1,6 +1,7 @@
-// The second factor of the account and the step-up (backend routes N25-N29, access-control design §6.6). Every call
-// passes required:false: a 401 here is a step-up request or a rejected confirmation, shown in place, never "go to sign-in".
-import { apiDelete, apiGet, apiPost, STEP_UP_REQUIRED, type ApiOptions } from "@/api/client"
+// The second factor of the account and the step-up (backend routes N25-N29, access-control design §6.6). The signed-in
+// calls keep the client's default: a dead session (401) goes to sign-in and back, while a 401 STEP_UP_REQUIRED reaches
+// the caller (api/client). Only the recovery sign-in opts out: its 401 is a rejected sign-in, shown on the form.
+import { apiDelete, apiGet, apiPost, STEP_UP_REQUIRED } from "@/api/client"
 import { getPasskey, type PasskeyCeremony } from "@/lib/passkey"
 
 export { STEP_UP_REQUIRED }
@@ -44,31 +45,29 @@ export type ConfirmMethod = "totp" | "passkey" | "password"
 /** What the person entered for the chosen method. */
 export type ConfirmInput = { code?: string; password?: string }
 
-const OPTS: ApiOptions = { required: false }
-
 export function getSecondFactorStatus(): Promise<SecondFactorStatus> {
   return apiGet<SecondFactorStatus>("/api/auth/second-factor")
 }
 
 /** N25: a new secret. The first factor confirms with the current password (or a fresh step-up). */
 export function beginTotp(currentPassword?: string): Promise<TotpEnrolment> {
-  return apiPost<TotpEnrolment>("/api/auth/totp/begin", currentPassword ? { CurrentPassword: currentPassword } : {}, undefined, OPTS)
+  return apiPost<TotpEnrolment>("/api/auth/totp/begin", currentPassword ? { CurrentPassword: currentPassword } : {})
 }
 
 /** N26: the first code. Returns the 10 recovery codes for the first factor, [] for a further one. */
 export async function finishTotp(code: string): Promise<string[]> {
-  const data = await apiPost<{ RecoveryCodes: string[] | null }>("/api/auth/totp/finish", { Code: code }, undefined, OPTS)
+  const data = await apiPost<{ RecoveryCodes: string[] | null }>("/api/auth/totp/finish", { Code: code })
   return data?.RecoveryCodes ?? []
 }
 
 /** N27: needs a step-up made with a factor or a recovery code. */
 export function removeTotp(): Promise<void> {
-  return apiDelete<void>("/api/auth/totp", undefined, OPTS)
+  return apiDelete<void>("/api/auth/totp")
 }
 
 /** N28: 10 new codes in place of the old ones, shown once. */
 export async function regenerateRecoveryCodes(): Promise<string[]> {
-  const data = await apiPost<{ RecoveryCodes: string[] | null }>("/api/auth/recovery-codes", {}, undefined, OPTS)
+  const data = await apiPost<{ RecoveryCodes: string[] | null }>("/api/auth/recovery-codes", {})
   return data?.RecoveryCodes ?? []
 }
 
@@ -78,17 +77,17 @@ export async function regenerateRecoveryCodes(): Promise<string[]> {
  */
 export async function stepUp(method: ConfirmMethod, input: ConfirmInput = {}): Promise<void> {
   if (method === "passkey") {
-    const ceremony = await apiPost<PasskeyCeremony>("/api/auth/step-up/passkey/begin", {}, undefined, OPTS)
+    const ceremony = await apiPost<PasskeyCeremony>("/api/auth/step-up/passkey/begin", {})
     const Credential = await getPasskey(ceremony.Options)
-    await apiPost("/api/auth/step-up", { Method: "passkey", CeremonyID: ceremony.CeremonyID, Credential }, undefined, OPTS)
+    await apiPost("/api/auth/step-up", { Method: "passkey", CeremonyID: ceremony.CeremonyID, Credential })
     return
   }
   const body = method === "totp" ? { Method: "totp", Code: input.code ?? "" } : { Method: "password", Password: input.password ?? "" }
-  await apiPost("/api/auth/step-up", body, undefined, OPTS)
+  await apiPost("/api/auth/step-up", body)
 }
 
 /** Recovery-code sign-in: the password is always checked, the code stands in for the lost factor. */
 export async function signInWithRecoveryCode(body: { Email: string; Password: string; Code: string; RecaptchaToken: string; Redirect?: string }): Promise<string> {
-  const { RedirectURL } = await apiPost<{ RedirectURL: string }>("/api/auth/sign-in/recovery", body, undefined, OPTS)
+  const { RedirectURL } = await apiPost<{ RedirectURL: string }>("/api/auth/sign-in/recovery", body, undefined, { required: false })
   return RedirectURL
 }

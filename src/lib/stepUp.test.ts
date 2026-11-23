@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import type { SecondFactorStatus } from "@/api/secondFactor"
-import { cleanTotpCode, confirmMethods, factorStepUpFresh, recoveryCodesText, stepUpHref } from "./stepUp"
+import { cleanTotpCode, confirmMethods, factorStepUpFresh, isRecoveryCode, normalizeRecoveryCode, recoveryCodesText } from "./stepUp"
 
 const NOW = Date.parse("2026-11-23T12:00:00Z")
 const status = (over: Partial<SecondFactorStatus> = {}): SecondFactorStatus => ({
@@ -51,8 +51,15 @@ describe("recoveryCodesText", () => {
   })
 })
 
-describe("stepUpHref", () => {
-  it("carries return_to", () => {
-    expect(stepUpHref("https://admin.cybericebox.local/users?x=1")).toBe("/step-up/?return_to=https%3A%2F%2Fadmin.cybericebox.local%2Fusers%3Fx%3D1")
+describe("recovery codes", () => {
+  it("normalise as the backend does: case, spaces and dashes; O as 0, I and L as 1", () => {
+    expect(normalizeRecoveryCode(" abcd-efgh 0123 ")).toBe("ABCDEFGH0123")
+    expect(normalizeRecoveryCode("oil-OIL")).toBe("011011")
+  })
+  it.each(["AAAA-BBBB-CCCC", "aaaa bbbb cccc", "0123456789AB", "ZZZZ-YYYY-XXXX", "OOOO-IIII-LLLL"])("accepts %s", (c) => {
+    expect(isRecoveryCode(c)).toBe(true)
+  })
+  it.each(["abc", "AAAA-BBBB-CCC", "AAAA-BBBB-CCCCD", "UUUU-BBBB-CCCC", "AAAA_BBBB_CCCC", "AAAA-BBBB-CC!C"])("refuses %s", (c) => {
+    expect(isRecoveryCode(c)).toBe(false)
   })
 })

@@ -14,19 +14,17 @@ import { PasswordInput } from "@/components/ui/password-input"
 import { t } from "@/i18n/t"
 import { safeReturnTo } from "@/lib/auth"
 import { executeCaptcha } from "@/lib/captcha"
+import { isRecoveryCode } from "@/lib/stepUp"
 import { hosts } from "@/lib/hosts"
 import { useGuestOnly } from "@/lib/useGuestOnly"
 import { useUrlParams } from "@/lib/useUrlParams"
 import { AuthLayout } from "./AuthLayout"
 import { AuthHeading, AuthPane, AuthSwitch } from "./parts"
 
-// A code is 12 characters of Crockford's base32 (backend secondFactorModel); spaces and dashes do not matter.
-const CODE = /^[0-9A-Z]{12}$/
-
 const Schema = z.object({
   Email: z.string().email({ message: t("validation.invalidEmail") }),
   Password: z.string().min(1, { message: t("validation.required") }),
-  Code: z.string().refine((v) => CODE.test(v.toUpperCase().replace(/[\s-]/g, "")), { message: t("validation.recoveryCode") }),
+  Code: z.string().refine(isRecoveryCode, { message: t("validation.recoveryCode") }),
 })
 type Values = z.infer<typeof Schema>
 

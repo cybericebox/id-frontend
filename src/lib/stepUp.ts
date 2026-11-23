@@ -33,9 +33,17 @@ export function recoveryCodesText(codes: readonly string[], heading: readonly st
   return [...heading, "", ...codes].join("\n") + "\n"
 }
 
-/** The step-up page for a page to come back to. */
-export function stepUpHref(returnTo: string): string {
-  return `/step-up/?return_to=${encodeURIComponent(returnTo)}`
+// Recovery codes are 12 characters of Crockford's base32 (backend secondFactorModel): no I, L, O or U.
+const RECOVERY_CODE = /^[0-9A-HJKMNP-TV-Z]{12}$/
+
+/** A recovery code as the backend reads it: case, spaces and dashes do not matter, O reads as 0, I and L as 1. */
+export function normalizeRecoveryCode(raw: string): string {
+  return raw.toUpperCase().replace(/[\s-]/g, "").replace(/O/g, "0").replace(/[IL]/g, "1")
+}
+
+/** The code has the shape of a recovery code (after normalizeRecoveryCode). */
+export function isRecoveryCode(raw: string): boolean {
+  return RECOVERY_CODE.test(normalizeRecoveryCode(raw))
 }
 
 /** A base32 secret in groups of four, easier to type into an app. */

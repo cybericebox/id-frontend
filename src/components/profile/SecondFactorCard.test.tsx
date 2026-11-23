@@ -91,7 +91,7 @@ describe("SecondFactorCard", () => {
     await type(input("totp-start-password"), "secret-pass")
     post.mockResolvedValueOnce({ Secret: "JBSWY3DPEHPK3PXP", URI })
     await submit(button("Продовжити"))
-    expect(post).toHaveBeenCalledWith("/api/auth/totp/begin", { CurrentPassword: "secret-pass" }, undefined, { required: false })
+    expect(post).toHaveBeenCalledWith("/api/auth/totp/begin", { CurrentPassword: "secret-pass" })
     expect(body().querySelector('svg[role="img"]')).not.toBeNull()
     expect(body().textContent).toContain("JBSW Y3DP EHPK 3PXP")
 
@@ -99,7 +99,7 @@ describe("SecondFactorCard", () => {
     await type(input("totp-code"), "123 456")
     expect(input("totp-code").value).toBe("123456")
     await submit(button("Підтвердити"))
-    expect(post).toHaveBeenLastCalledWith("/api/auth/totp/finish", { Code: "123456" }, undefined, { required: false })
+    expect(post).toHaveBeenLastCalledWith("/api/auth/totp/finish", { Code: "123456" })
 
     const items = Array.from(body().querySelectorAll("ol li")).map((li) => li.textContent)
     expect(items).toEqual(CODES)
@@ -110,6 +110,8 @@ describe("SecondFactorCard", () => {
     get.mockReturnValue(new Promise(() => {}))
     await click(done)
     expect(body().querySelector("ol")).toBeNull()
+    // the codes are gone from the page once the dialog is done
+    expect(body().textContent).not.toContain(CODES[0])
     expect(host.textContent).toContain("Двоетапну перевірку ввімкнено")
     expect(host.querySelector(".loading-area")).toBeNull()
   })
@@ -127,6 +129,47 @@ describe("SecondFactorCard", () => {
     expect(field.getAttribute("aria-invalid")).toBe("true")
     const describedBy = field.getAttribute("aria-describedby")!
     expect(body().querySelector(`#${describedBy}`)!.textContent).toBe("Неправильний код застосунку-автентифікатора")
+  })
+
+  it("closing a dialog forgets the typed password", async () => {
+    await render(off)
+    await click(button("Налаштувати"))
+    await type(input("totp-start-password"), "secret-pass")
+    await click(button("Скасувати"))
+    await click(button("Налаштувати"))
+    expect(input("totp-start-password").value).toBe("")
+  })
+
+  it("a code dialog closed and opened again starts empty", async () => {
+    await render(off)
+    await click(button("Налаштувати"))
+    await type(input("totp-start-password"), "secret-pass")
+    post.mockResolvedValueOnce({ Secret: "JBSWY3DPEHPK3PXP", URI })
+    await submit(button("Продовжити"))
+    await type(input("totp-code"), "123456")
+    await click(button("Скасувати"))
+    expect(body().querySelector("#totp-code")).toBeNull()
+    expect(body().textContent).not.toContain("JBSW Y3DP")
+    await click(button("Налаштувати"))
+    expect(input("totp-start-password").value).toBe("")
+  })
+
+  it("a dead session in a dialog goes to sign-in, not an error in the dialog", async () => {
+    const actual = await vi.importActual<typeof import("@/api/client")>("@/api/client")
+    const replace = vi.fn()
+    vi.stubGlobal("location", { ...window.location, replace, href: "https://id.cybericebox.local/profile/?tab=security", origin: "https://id.cybericebox.local" })
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("", { status: 401, headers: { "X-Sign-In-URL": "https://id.cybericebox.local/sign-in/" } })))
+    try {
+      await render({ ...on, StepUpMethod: "totp", StepUpExpiresAt: new Date(Date.now() + 120_000).toISOString() })
+      await click(body().querySelector('button[aria-label="Видалити застосунок-автентифікатор"]')!)
+      del.mockImplementationOnce((path: string) => actual.apiDelete(path))
+      await submit(button("Видалити"))
+      await act(async () => { await new Promise((r) => setTimeout(r, 20)) })
+      expect(replace).toHaveBeenCalledWith("https://id.cybericebox.local/sign-in/")
+      expect(body().querySelector('[role="dialog"] [role="alert"]')).toBeNull()
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 
   it("a wrong password stays beside the password field", async () => {
@@ -150,8 +193,8 @@ describe("SecondFactorCard", () => {
     del.mockResolvedValueOnce(undefined)
     get.mockReturnValue(new Promise(() => {}))
     await submit(confirm)
-    expect(post).toHaveBeenCalledWith("/api/auth/step-up", { Method: "totp", Code: "654321" }, undefined, { required: false })
-    expect(del).toHaveBeenCalledWith("/api/auth/totp", undefined, { required: false })
+    expect(post).toHaveBeenCalledWith("/api/auth/step-up", { Method: "totp", Code: "654321" })
+    expect(del).toHaveBeenCalledWith("/api/auth/totp")
     expect(post.mock.invocationCallOrder[0]).toBeLessThan(del.mock.invocationCallOrder[0])
     expect(host.textContent).toContain("Двоетапну перевірку вимкнено")
   })

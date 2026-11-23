@@ -535,5 +535,8 @@
   "recoverySignIn.codePlaceholder": "XXXX-XXXX-XXXX",
   "recoverySignIn.submit": "Sign in",
   "recoverySignIn.back": "Sign in as usual",
-  "recoverySignIn.backText": "Have your second factor?"
+  "recoverySignIn.backText": "Have your second factor?",
+  "totp.qrUnavailable": "The QR code could not be drawn: enter the key below in the app.",
+  "recoveryCodes.closeHint": "Tick the box to close this window.",
+  "recoveryCodes.clipboardNote": "Copied codes stay on the clipboard: clear it once they are saved."
 }

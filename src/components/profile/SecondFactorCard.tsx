@@ -108,6 +108,8 @@ export function SecondFactorCard({ account, refreshKey = 0 }: { account: Account
   const startReady = status?.HasSecondFactor ? fresh || (startMethods.length > 0 && startForm.ready) : startForm.ready
 
   const openStart = () => { startForm.reset(); setStartError(""); setStartOpen(true) }
+  // Closing or finishing a dialog forgets what was typed (the password, a code).
+  const closeStart = () => { setStartOpen(false); startForm.reset(); setStartError("") }
   const start = async () => {
     setStartBusy(true)
     setStartError("")
@@ -128,7 +130,7 @@ export function SecondFactorCard({ account, refreshKey = 0 }: { account: Account
         confirmed = null
         enrolment = await beginTotp()
       }
-      setStartOpen(false)
+      closeStart()
       setScanCode("")
       setScanCodeError(null)
       setScanError("")
@@ -147,6 +149,8 @@ export function SecondFactorCard({ account, refreshKey = 0 }: { account: Account
   const [scanBusy, setScanBusy] = useState(false)
   const codeRef = useRef<HTMLInputElement>(null)
   const [shownCodes, setShownCodes] = useState<string[] | null>(null)
+  // The secret and the typed code go with the dialog.
+  const closeScan = () => { setEnrolment(null); setScanCode(""); setScanCodeError(null); setScanError("") }
 
   const finish = async () => {
     if (scanCode.length !== TOTP_DIGITS) { setScanCodeError(t("validation.totpCode")); return }
@@ -165,7 +169,7 @@ export function SecondFactorCard({ account, refreshKey = 0 }: { account: Account
         StepUpMethod: null,
         StepUpExpiresAt: null,
       }))
-      setEnrolment(null)
+      closeScan()
       toast.success(t("totp.added"))
       if (codes.length > 0) setShownCodes(codes)
     } catch (err) {
@@ -194,6 +198,7 @@ export function SecondFactorCard({ account, refreshKey = 0 }: { account: Account
   const [removeError, setRemoveError] = useState("")
   const removeForm = useConfirmForm(methods, account.HasPassword)
   const openRemove = () => { removeForm.reset(); setRemoveError(""); setRemoveOpen(true) }
+  const closeRemove = () => { setRemoveOpen(false); removeForm.reset(); setRemoveError("") }
   const remove = async () => {
     setRemoveBusy(true)
     setRemoveError("")
@@ -217,7 +222,7 @@ export function SecondFactorCard({ account, refreshKey = 0 }: { account: Account
         StepUpMethod: null,
         StepUpExpiresAt: null,
       }))
-      setRemoveOpen(false)
+      closeRemove()
       toast.success(t("totp.removed"))
     } catch (err) {
       fail(err, confirmed, removeForm, setRemoveError)
@@ -232,6 +237,7 @@ export function SecondFactorCard({ account, refreshKey = 0 }: { account: Account
   const [regenError, setRegenError] = useState("")
   const regenForm = useConfirmForm(methods, account.HasPassword)
   const openRegen = () => { regenForm.reset(); setRegenError(""); setRegenOpen(true) }
+  const closeRegen = () => { setRegenOpen(false); regenForm.reset(); setRegenError("") }
   const regenerate = async () => {
     setRegenBusy(true)
     setRegenError("")
@@ -246,7 +252,7 @@ export function SecondFactorCard({ account, refreshKey = 0 }: { account: Account
       confirmed = null
       const codes = await regenerateRecoveryCodes()
       change((s) => ({ ...s, RecoveryCodesLeft: codes.length }))
-      setRegenOpen(false)
+      closeRegen()
       setShownCodes(codes)
     } catch (err) {
       fail(err, confirmed, regenForm, setRegenError)
@@ -328,7 +334,7 @@ export function SecondFactorCard({ account, refreshKey = 0 }: { account: Account
 
         <ConfirmDialog
           open={startOpen}
-          onCancel={() => setStartOpen(false)}
+          onCancel={closeStart}
           busy={startBusy}
           busyLabel={t("common.busy.preparingSetup")}
           error={startError}
@@ -343,7 +349,7 @@ export function SecondFactorCard({ account, refreshKey = 0 }: { account: Account
           )}
         </ConfirmDialog>
 
-        <Dialog open={enrolment !== null} onOpenChange={(next) => { if (!next && !scanBusy) setEnrolment(null) }}>
+        <Dialog open={enrolment !== null} onOpenChange={(next) => { if (!next && !scanBusy) closeScan() }}>
           <DialogContent className="max-w-md" onOpenAutoFocus={(event) => { event.preventDefault(); codeRef.current?.focus() }}>
             <DialogHeader>
               <DialogTitle>{t("totp.scanTitle")}</DialogTitle>
@@ -352,7 +358,12 @@ export function SecondFactorCard({ account, refreshKey = 0 }: { account: Account
             {enrolment && (
               <form className="flex flex-col gap-4" noValidate onSubmit={(event) => { event.preventDefault(); if (!scanBusy) void finish() }}>
                 <div className="flex justify-center">
-                  <QrCode value={enrolment.URI} label={t("totp.qrLabel")} className="rounded-md border" />
+                  <QrCode
+                    value={enrolment.URI}
+                    label={t("totp.qrLabel")}
+                    className="rounded-md border"
+                    fallback={<p className="text-sm text-dim">{t("totp.qrUnavailable")}</p>}
+                  />
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm text-dim">{t("totp.manual")}</p>
@@ -381,7 +392,7 @@ export function SecondFactorCard({ account, refreshKey = 0 }: { account: Account
                 </div>
                 {scanError && <p role="alert" className="text-sm text-destructive">{scanError}</p>}
                 <DialogFooter>
-                  <Button type="button" variant="outline" disabled={scanBusy} onClick={() => setEnrolment(null)}>{t("common.cancel")}</Button>
+                  <Button type="button" variant="outline" disabled={scanBusy} onClick={closeScan}>{t("common.cancel")}</Button>
                   <Button type="submit" busy={scanBusy} busyLabel={t("common.busy.checking")} disabled={scanCode.length !== TOTP_DIGITS}>{t("totp.confirm")}</Button>
                 </DialogFooter>
               </form>
@@ -391,7 +402,7 @@ export function SecondFactorCard({ account, refreshKey = 0 }: { account: Account
 
         <ConfirmDialog
           open={removeOpen}
-          onCancel={() => setRemoveOpen(false)}
+          onCancel={closeRemove}
           tone="danger"
           busy={removeBusy}
           busyLabel={t("common.busy.removing")}
@@ -407,7 +418,7 @@ export function SecondFactorCard({ account, refreshKey = 0 }: { account: Account
 
         <ConfirmDialog
           open={regenOpen}
-          onCancel={() => setRegenOpen(false)}
+          onCancel={closeRegen}
           tone="danger"
           busy={regenBusy}
           busyLabel={t("common.busy.replacing")}

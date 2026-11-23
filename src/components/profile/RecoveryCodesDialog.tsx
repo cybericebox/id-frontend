@@ -56,7 +56,15 @@ export function RecoveryCodesDialog({ codes, email, onDone }: { codes: string[] 
           <Button type="button" variant="outline" onClick={() => void copy()}><Copy aria-hidden="true" />{t("common.copy")}</Button>
           <Button type="button" variant="outline" onClick={download}><Download aria-hidden="true" />{t("common.download")}</Button>
         </div>
-        <Checkbox id="recovery-codes-saved" checked={saved} onChange={(e) => setSaved(e.target.checked)} label={t("recoveryCodes.saved")} />
+        <p className="text-xs text-dim">{t("recoveryCodes.clipboardNote")}</p>
+        <Checkbox
+          id="recovery-codes-saved"
+          checked={saved}
+          onChange={(e) => setSaved(e.target.checked)}
+          label={t("recoveryCodes.saved")}
+          aria-describedby={saved ? undefined : "recovery-codes-close-hint"}
+        />
+        {!saved && <p id="recovery-codes-close-hint" className="text-xs text-dim">{t("recoveryCodes.closeHint")}</p>}
         <DialogFooter>
           <Button type="button" disabled={!saved} onClick={done}>{t("recoveryCodes.done")}</Button>
         </DialogFooter>
