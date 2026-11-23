@@ -336,6 +336,13 @@ export function SignInScreen() {
             </form>
           </Form>
 
+        {/* a lost passkey or authenticator app: the password plus a one-time recovery code */}
+        <p className="flex justify-center">
+          <Link href={`/sign-in/recovery${returnQuery}`} className={authLinkClass}>
+            {t("signIn.withRecoveryCode")}
+          </Link>
+        </p>
+
         <AuthSwitch text={t("signIn.noAccount")} href={registerHref} action={t("signIn.createAccount")} />
       </AuthPane>
     </AuthLayout>

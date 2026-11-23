@@ -18,12 +18,14 @@ password and manage their profile here. The other platform sites send visitors h
 |---|---|
 | `/` | Redirects a signed-in visitor to the profile and everyone else to sign-in |
 | `/sign-in` | Sign in with email and password, a passkey or Google |
+| `/sign-in/recovery` | Sign in with the password and a one-time recovery code when the second factor is lost |
 | `/sign-up` | Create an account (email or Google) |
 | `/confirm-email` | Confirm an email address from the link in the message |
 | `/forgot-password`, `/reset-password` | Ask for and complete a password reset |
 | `/google-link` | Confirm the account when signing in with Google |
 | `/setup` | Finish sign-up from a token link |
-| `/profile` | Profile and photo, email, password, passkeys, linked Google account, privacy |
+| `/profile` | Profile and photo, email, password, passkeys, two-step verification (authenticator app, recovery codes), linked Google account, privacy |
+| `/step-up?return_to=` | Confirm it is you for 5 minutes (passkey, authenticator code, or the password without a second factor), then go back |
 | `/sign-out` | End the session |
 
 Sign-up and sign-in forms are protected by a captcha (reCAPTCHA v3 or Cloudflare Turnstile, chosen in the config).

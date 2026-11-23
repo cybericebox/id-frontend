@@ -5,6 +5,7 @@ import { ForgotPasswordScreen } from "./ForgotPasswordScreen"
 import { ResetPasswordScreen } from "./ResetPasswordScreen"
 import { SignInScreen } from "./SignInScreen"
 import { SignUpScreen } from "./SignUpScreen"
+import { RecoverySignInScreen } from "./RecoverySignInScreen"
 import { AuthLayout } from "./AuthLayout"
 import { Logo } from "@/components/brand/Logo"
 
@@ -22,7 +23,7 @@ const at = (html: string, needle: string) => {
 }
 
 describe("auth pages in the static HTML", () => {
-  const screens = { signIn: SignInScreen, signUp: SignUpScreen, forgot: ForgotPasswordScreen, reset: ResetPasswordScreen }
+  const screens = { signIn: SignInScreen, signUp: SignUpScreen, forgot: ForgotPasswordScreen, reset: ResetPasswordScreen, recovery: RecoverySignInScreen }
 
   for (const [name, Screen] of Object.entries(screens)) {
     it(`${name}: h1 and the form are rendered without a loader`, () => {
