@@ -24,6 +24,15 @@ describe("api client session check", () => {
     expect(settled).not.toHaveBeenCalled()
   })
 
+  it("a 401 asking for a step-up is no dead session: it rejects with the code, nothing redirects", async () => {
+    const body = JSON.stringify({ Status: { Code: 53801, Message: "Confirm it is you to continue" } })
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(body, { status: 401, headers: { "content-type": "application/json" } })))
+    const err = await apiGet("/api/auth/recovery-codes").catch((e: unknown) => e)
+    expect(err).toBeInstanceOf(ApiError)
+    expect((err as ApiError).code).toBe(53801)
+    expect(replace).not.toHaveBeenCalled()
+  })
+
   it("5xx rejects with ApiError carrying the request id", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response("", { status: 503, headers: { "X-Request-ID": "abc-123" } })))
     const err = await apiGet("/api/auth/account").catch((e: unknown) => e)

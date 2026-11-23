@@ -40,7 +40,8 @@ function formatDate(value: string): string {
   return new Date(value).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" })
 }
 
-export function PasskeysCard({ account }: { account: Account }) {
+// onChanged: a passkey was added or removed (it counts as a second factor).
+export function PasskeysCard({ account, onChanged }: { account: Account; onChanged?: () => void }) {
   const [items, setItems] = useState<Passkey[] | null>(null)
   const [loadError, setLoadError] = useState<unknown>(null)
   const supported = passkeysSupported()
@@ -84,6 +85,7 @@ export function PasskeysCard({ account }: { account: Account }) {
       })
       setItems((list) => [...(list ?? []), created])
       setAddOpen(false)
+      onChanged?.()
       toast.success(t("profile.passkeys.added"))
     } catch (err) {
       if (isPasskeyDismissed(err)) setAddError(t("profile.passkeys.cancelled"))
@@ -118,6 +120,7 @@ export function PasskeysCard({ account }: { account: Account }) {
       )
       setItems((list) => (list ?? []).filter((p) => p.ID !== removeTarget.ID))
       setRemoveTarget(null)
+      onChanged?.()
       toast.success(t("profile.passkeys.removed"))
     } catch (err) {
       const passwordError = account.HasPassword ? fieldErrorMessage(err, [WRONG_PASSWORD]) : null

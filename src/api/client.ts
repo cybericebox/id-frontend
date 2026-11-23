@@ -46,6 +46,10 @@ export class ApiError extends Error {
 //   retry: false — return the first answer (a caller that retries on its own).
 export type ApiOptions = { required?: boolean; retry?: boolean }
 
+// STEP_UP_REQUIRED (HTTP 401): the action needs a fresh confirmation (POST /api/auth/step-up), the session is alive. It is
+// never sent to the sign-in page: the caller asks for the confirmation and repeats the request.
+export const STEP_UP_REQUIRED = 53801
+
 // portless strips the port from a URL and forces https:, matching the backend's
 // expectations for return_to (port-free, https-only). Returns the input unchanged
 // in non-browser contexts (SSR/static export safety).
@@ -112,16 +116,6 @@ async function request<T>(
   // Keep the modal until its session-aware recovery probe succeeds.
   if (isUnreachableResponse(res.status, res.headers.get("X-Request-ID"), res.headers.get("Retry-After"))) reportServiceUnavailable()
 
-  // Centralized auth handling: required (default true) → write cib_return_to cookie
-  // and redirect to sign-in. Returning a never-resolving promise stops the
-  // caller's success/catch paths from running while the browser navigates away.
-  // required:false → fall through to throw ApiError so callers treat it as anon.
-  if (res.status === 401 && (opts.required ?? true)) {
-    writeReturnToCookie()
-    redirectToSignInPage(res.headers.get("X-Sign-In-URL"))
-    return new Promise<never>(() => {})
-  }
-
   const contentType = res.headers.get("content-type") ?? ""
   const raw = await res.text()
   let parsed: unknown = raw
@@ -134,6 +128,19 @@ async function request<T>(
     }
   }
   // (empty body → parsed stays "" → envelope undefined → handled below)
+
+  // Centralized auth handling: required (default true) → write cib_return_to cookie
+  // and redirect to sign-in. Returning a never-resolving promise stops the
+  // caller's success/catch paths from running while the browser navigates away.
+  // required:false → fall through to throw ApiError so callers treat it as anon.
+  // A step-up request is no dead session: it is thrown to the caller whatever `required` says.
+  const code401 = res.status === 401 && parsed && typeof parsed === "object"
+    ? (parsed as { Status?: { Code?: number } }).Status?.Code : undefined
+  if (res.status === 401 && (opts.required ?? true) && code401 !== STEP_UP_REQUIRED) {
+    writeReturnToCookie()
+    redirectToSignInPage(res.headers.get("X-Sign-In-URL"))
+    return new Promise<never>(() => {})
+  }
 
   // The backend wraps every JSON response in an envelope: { Status: { Code,
   // Message }, Data }. Unwrap it here so callers receive the payload directly.
